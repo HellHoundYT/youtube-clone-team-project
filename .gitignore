@@ -1,0 +1,40 @@
+# Frontend
+
+**/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Backend
+
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Visual Studio
+
+.vs/
+
+# VS Code
+
+.vscode/
+
+# Environment files
+
+.env
+.env.*
+!.env.example
+
+# Local storage
+
+backend/Storage/uploads/
+
+# System files
+
+Thumbs.db
+.DS_Store
+
+# Logs
+
+*.log
+npm_debug.log*
