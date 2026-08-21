@@ -110,21 +110,19 @@ function App() {
           }
         />
 
-          <Route
-  path="watch/:videoId"
-  element={
-    <PlaceholderPage
-      title="Watch video"
-      description="The full video player page will be connected here."
-    />
-  }
-/>
+        <Route
+          path="watch/:videoId"
+          element={
+            <PlaceholderPage
+              title="Watch video"
+              description="The full video player page will be connected here."
+            />
+          }
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-
-          
   )
 }
 
