@@ -1,22 +1,15 @@
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
   type RefObject,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-interface VideoCard {
-  id: number
-  title: string
-  channel: string
-  views: string
-  date: string
-  duration: string
-  tone: string
-  category: string
-  progress?: number
-}
+import {
+  getVideos,
+  type VideoListItem,
+} from '../api/videos'
 
 interface HeroSlide {
   id: number
@@ -24,7 +17,12 @@ interface HeroSlide {
   title: string
   description: string
   accent: string
-  videoId: number
+}
+
+interface CategoryLoadState {
+  category: string
+  videos: VideoListItem[]
+  error: boolean
 }
 
 const categories = [
@@ -46,7 +44,6 @@ const heroSlides: HeroSlide[] = [
     description:
       'Watch stories, streams, music and creators you love. Discover something new every day.',
     accent: 'purple',
-    videoId: 1,
   },
   {
     id: 2,
@@ -55,7 +52,6 @@ const heroSlides: HeroSlide[] = [
     description:
       'Watch creators, tournaments and live events together with the AMTLIS community.',
     accent: 'blue',
-    videoId: 2,
   },
   {
     id: 3,
@@ -64,116 +60,16 @@ const heroSlides: HeroSlide[] = [
     description:
       'Explore popular videos, new releases and creators that are growing right now.',
     accent: 'pink',
-    videoId: 4,
   },
 ]
 
-const videos: VideoCard[] = [
-  {
-    id: 1,
-    title: 'Midnight City',
-    channel: 'AMTLIS Music',
-    views: '2.4M views',
-    date: '2 weeks ago',
-    duration: '12:48',
-    tone: 'purple',
-    category: 'Music',
-    progress: 32,
-  },
-  {
-    id: 2,
-    title: 'Cyber Arena Finals',
-    channel: 'Arena Live',
-    views: '842K views',
-    date: '4 days ago',
-    duration: '28:16',
-    tone: 'blue',
-    category: 'Cybersport',
-    progress: 46,
-  },
-  {
-    id: 3,
-    title: 'Beyond The Horizon',
-    channel: 'Movie Space',
-    views: '1.7M views',
-    date: '1 month ago',
-    duration: '18:42',
-    tone: 'orange',
-    category: 'Films',
-    progress: 59,
-  },
-  {
-    id: 4,
-    title: 'Night Drive Mix',
-    channel: 'Deep Waves',
-    views: '956K views',
-    date: '6 days ago',
-    duration: '45:02',
-    tone: 'pink',
-    category: 'Mixes',
-    progress: 74,
-  },
-  {
-    id: 5,
-    title: 'Inside The Game',
-    channel: 'Play Zone',
-    views: '634K views',
-    date: '3 days ago',
-    duration: '21:10',
-    tone: 'green',
-    category: 'Games',
-    progress: 21,
-  },
-  {
-    id: 6,
-    title: 'Future Technology',
-    channel: 'Next Level',
-    views: '1.1M views',
-    date: '1 week ago',
-    duration: '15:36',
-    tone: 'cyan',
-    category: 'Education',
-  },
-  {
-    id: 7,
-    title: 'Sound Of Tomorrow',
-    channel: 'Wave Records',
-    views: '764K views',
-    date: '5 days ago',
-    duration: '33:14',
-    tone: 'purple',
-    category: 'Music',
-  },
-  {
-    id: 8,
-    title: 'The Last Match',
-    channel: 'Competitive Hub',
-    views: '1.3M views',
-    date: '8 days ago',
-    duration: '24:51',
-    tone: 'blue',
-    category: 'Cybersport',
-  },
-  {
-    id: 9,
-    title: 'Learn React',
-    channel: 'Code Academy',
-    views: '438K views',
-    date: '2 days ago',
-    duration: '38:25',
-    tone: 'green',
-    category: 'Education',
-  },
-  {
-    id: 10,
-    title: 'Stories After Midnight',
-    channel: 'Night Podcast',
-    views: '512K views',
-    date: '1 week ago',
-    duration: '54:08',
-    tone: 'pink',
-    category: 'Podcasts',
-  },
+const tones = [
+  'purple',
+  'blue',
+  'orange',
+  'pink',
+  'green',
+  'cyan',
 ]
 
 function PlayIcon() {
@@ -192,49 +88,194 @@ function AddIcon() {
   )
 }
 
-function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
+function ArrowIcon({
+  direction,
+}: {
+  direction: 'left' | 'right'
+}) {
   return (
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className={direction === 'left' ? 'is-left' : ''}
+      className={
+        direction === 'left'
+          ? 'is-left'
+          : ''
+      }
     >
       <path d="m9 5 7 7-7 7" />
     </svg>
   )
 }
 
+function formatDuration(seconds: number) {
+  const safeSeconds = Math.max(
+    0,
+    Math.floor(seconds),
+  )
+
+  const hours = Math.floor(
+    safeSeconds / 3600,
+  )
+
+  const minutes = Math.floor(
+    (safeSeconds % 3600) / 60,
+  )
+
+  const remainingSeconds =
+    safeSeconds % 60
+
+  if (hours > 0) {
+    return [
+      hours,
+      minutes
+        .toString()
+        .padStart(2, '0'),
+      remainingSeconds
+        .toString()
+        .padStart(2, '0'),
+    ].join(':')
+  }
+
+  return [
+    minutes,
+    remainingSeconds
+      .toString()
+      .padStart(2, '0'),
+  ].join(':')
+}
+
+function formatViews(value: number) {
+  const formatted =
+    new Intl.NumberFormat('en-US', {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(value)
+
+  return `${formatted} views`
+}
+
+function formatDate(
+  publishedAt: string | null,
+) {
+  if (!publishedAt) {
+    return 'Not published'
+  }
+
+  const date = new Date(publishedAt)
+
+  return new Intl.DateTimeFormat(
+    'en-US',
+    {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    },
+  ).format(date)
+}
+
+function getVideoTone(
+  video: VideoListItem,
+  index: number,
+) {
+  const categoryIndex =
+    categories.indexOf(
+      video.category ?? '',
+    )
+
+  if (categoryIndex > 0) {
+    return tones[
+      (categoryIndex - 1) %
+        tones.length
+    ]
+  }
+
+  return tones[
+    index % tones.length
+  ]
+}
+
 function VideoCardItem({
   video,
+  index,
   onOpen,
 }: {
-  video: VideoCard
-  onOpen: (videoId: number) => void
+  video: VideoListItem
+  index: number
+  onOpen: (videoId: string) => void
 }) {
+  const tone = getVideoTone(
+    video,
+    index,
+  )
+
   return (
     <button
       type="button"
       className="video-card"
-      onClick={() => onOpen(video.id)}
+      onClick={() =>
+        onOpen(video.id)
+      }
     >
-      <div className={`video-thumbnail tone-${video.tone}`}>
-        <div className="thumbnail-glow" />
-        <div className="thumbnail-mark">A</div>
+      <div
+        className={`video-thumbnail tone-${tone}`}
+      >
+        {video.thumbnailPath ? (
+          <img
+            className="video-thumbnail-image"
+            src={video.thumbnailPath}
+            alt=""
+          />
+        ) : (
+          <>
+            <div className="thumbnail-glow" />
 
-        <span className="video-duration">{video.duration}</span>
+            <div className="thumbnail-mark">
+              A
+            </div>
+          </>
+        )}
+
+        <span className="video-duration">
+          {formatDuration(
+            video.durationSeconds,
+          )}
+        </span>
       </div>
 
       <div className="video-card-info">
         <div className="channel-avatar">
-          {video.channel.charAt(0)}
+          {video.channelAvatarPath ? (
+            <img
+              src={
+                video.channelAvatarPath
+              }
+              alt=""
+            />
+          ) : (
+            video.channelName
+              .charAt(0)
+              .toUpperCase()
+          )}
         </div>
 
         <div className="video-card-copy">
-          <h3>{video.title}</h3>
-          <p>{video.channel}</p>
+          <h3>
+            {video.title}
+          </h3>
+
+          <p>
+            {video.channelName}
+          </p>
 
           <span>
-            {video.views} · {video.date}
+            {formatViews(
+              video.viewCount,
+            )}{' '}
+            ·{' '}
+            {formatDate(
+              video.publishedAt,
+            )}
           </span>
         </div>
       </div>
@@ -253,7 +294,9 @@ function SectionHeader({
 }) {
   return (
     <div className="content-section-header">
-      <h2>{title}</h2>
+      <h2>
+        {title}
+      </h2>
 
       <div className="section-controls">
         <button
@@ -278,35 +321,293 @@ function SectionHeader({
   )
 }
 
+function HomeLoadingState() {
+  return (
+    <div className="home-api-state">
+      <div className="watch-loading-spinner" />
+
+      <span>
+        Loading videos...
+      </span>
+    </div>
+  )
+}
+
+function HomeErrorState({
+  onRetry,
+}: {
+  onRetry: () => void
+}) {
+  return (
+    <div className="home-api-state home-api-error">
+      <strong>
+        Videos could not be loaded.
+      </strong>
+
+      <span>
+        Check that the API is running
+        and try again.
+      </span>
+
+      <button
+        type="button"
+        onClick={onRetry}
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+
+function HomeEmptyState() {
+  return (
+    <div className="home-api-state">
+      <strong>
+        No videos found.
+      </strong>
+
+      <span>
+        There are no videos in this
+        category yet.
+      </span>
+    </div>
+  )
+}
+
 function HomePage() {
   const navigate = useNavigate()
 
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [activeHero, setActiveHero] = useState(0)
+  const [
+    activeCategory,
+    setActiveCategory,
+  ] = useState('All')
 
-  const topRef = useRef<HTMLDivElement>(null)
-  const continueRef = useRef<HTMLDivElement>(null)
-  const popularRef = useRef<HTMLDivElement>(null)
-  const allVideoRef = useRef<HTMLDivElement>(null)
+  const [
+    activeHero,
+    setActiveHero,
+  ] = useState(0)
 
-  const selectedHero = heroSlides[activeHero]
+  const [
+    reloadToken,
+    setReloadToken,
+  ] = useState(0)
 
-  const filteredVideos = useMemo(() => {
-    if (activeCategory === 'All') {
-      return videos
+  const [
+    allVideosState,
+    setAllVideosState,
+  ] = useState<{
+    token: number
+    videos: VideoListItem[]
+    error: boolean
+  } | null>(null)
+
+  const [
+    categoryState,
+    setCategoryState,
+  ] =
+    useState<CategoryLoadState | null>(
+      null,
+    )
+
+  const topRef =
+    useRef<HTMLDivElement>(null)
+
+  const popularRef =
+    useRef<HTMLDivElement>(null)
+
+  const allVideoRef =
+    useRef<HTMLDivElement>(null)
+
+  const selectedHero =
+    heroSlides[activeHero]
+
+  useEffect(() => {
+    const controller =
+      new AbortController()
+
+    void getVideos(
+      {
+        page: 1,
+        pageSize: 50,
+      },
+      controller.signal,
+    )
+      .then((videos) => {
+        if (
+          controller.signal.aborted
+        ) {
+          return
+        }
+
+        setAllVideosState({
+          token: reloadToken,
+          videos,
+          error: false,
+        })
+      })
+      .catch(() => {
+        if (
+          controller.signal.aborted
+        ) {
+          return
+        }
+
+        setAllVideosState({
+          token: reloadToken,
+          videos: [],
+          error: true,
+        })
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [reloadToken])
+
+  useEffect(() => {
+    if (
+      activeCategory === 'All'
+    ) {
+      return
     }
 
-    return videos.filter(
-      (video) => video.category === activeCategory,
+    const controller =
+      new AbortController()
+
+    void getVideos(
+      {
+        page: 1,
+        pageSize: 50,
+        category:
+          activeCategory,
+      },
+      controller.signal,
     )
-  }, [activeCategory])
+      .then((videos) => {
+        if (
+          controller.signal.aborted
+        ) {
+          return
+        }
+
+        setCategoryState({
+          category:
+            activeCategory,
+          videos,
+          error: false,
+        })
+      })
+      .catch(() => {
+        if (
+          controller.signal.aborted
+        ) {
+          return
+        }
+
+        setCategoryState({
+          category:
+            activeCategory,
+          videos: [],
+          error: true,
+        })
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [
+    activeCategory,
+    reloadToken,
+  ])
+
+  const allVideos =
+    useMemo(() => {
+      if (
+        allVideosState?.token !==
+          reloadToken ||
+        allVideosState.error
+      ) {
+        return []
+      }
+
+      return allVideosState.videos
+    }, [
+      allVideosState,
+      reloadToken,
+    ])
+
+  const isAllLoading =
+    allVideosState?.token !==
+    reloadToken
+
+  const isAllError =
+    allVideosState?.token ===
+      reloadToken &&
+    allVideosState.error
+
+  const isCategoryLoading =
+    activeCategory !== 'All' &&
+    categoryState?.category !==
+      activeCategory
+
+  const isCategoryError =
+    activeCategory !== 'All' &&
+    categoryState?.category ===
+      activeCategory &&
+    categoryState.error
+
+  const filteredVideos =
+    useMemo(() => {
+      if (
+        activeCategory === 'All'
+      ) {
+        return allVideos
+      }
+
+      if (
+        categoryState?.category !==
+          activeCategory ||
+        categoryState.error
+      ) {
+        return []
+      }
+
+      return categoryState.videos
+    }, [
+      activeCategory,
+      allVideos,
+      categoryState,
+    ])
 
   const popularVideos =
-    filteredVideos.length > 0 ? filteredVideos : videos
+    useMemo(() => {
+      return [
+        ...filteredVideos,
+      ].sort(
+        (left, right) =>
+          right.viewCount -
+          left.viewCount,
+      )
+    }, [filteredVideos])
+
+  const topVideos =
+    useMemo(() => {
+      return [
+        ...allVideos,
+      ]
+        .sort(
+          (left, right) =>
+            right.viewCount -
+            left.viewCount,
+        )
+        .slice(0, 10)
+    }, [allVideos])
 
   const scrollRow = (
-    ref: RefObject<HTMLDivElement | null>,
-    direction: 'left' | 'right',
+    ref:
+      RefObject<HTMLDivElement | null>,
+    direction:
+      'left' | 'right',
   ) => {
     const element = ref.current
 
@@ -317,31 +618,69 @@ function HomePage() {
     element.scrollBy({
       left:
         direction === 'right'
-          ? element.clientWidth * 0.72
-          : element.clientWidth * -0.72,
+          ? element.clientWidth *
+            0.72
+          : element.clientWidth *
+            -0.72,
       behavior: 'smooth',
     })
   }
 
-  const openVideo = (videoId: number) => {
-    navigate(`/watch/${videoId}`)
+  const openVideo = (
+    videoId: string,
+  ) => {
+    navigate(
+      `/watch/${videoId}`,
+    )
+  }
+
+  const openHeroVideo = () => {
+    if (
+      allVideos.length === 0
+    ) {
+      return
+    }
+
+    const video =
+      allVideos[
+        activeHero %
+          allVideos.length
+      ]
+
+    openVideo(video.id)
+  }
+
+  const retry = () => {
+    setReloadToken(
+      (current) =>
+        current + 1,
+    )
   }
 
   return (
     <div className="amtlis-home">
       <div className="category-strip">
-        {categories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            className={`category-chip ${
-              activeCategory === category ? 'is-active' : ''
-            }`}
-            onClick={() => setActiveCategory(category)}
-          >
-            {category}
-          </button>
-        ))}
+        {categories.map(
+          (category) => (
+            <button
+              key={category}
+              type="button"
+              className={`category-chip ${
+                activeCategory ===
+                category
+                  ? 'is-active'
+                  : ''
+              }`}
+              onClick={() =>
+                setActiveCategory(
+                  category,
+                )
+              }
+            >
+              {category}
+            </button>
+          ),
+        )}
       </div>
 
       <section
@@ -349,7 +688,9 @@ function HomePage() {
       >
         <div className="hero-background">
           <div className="hero-light hero-light-one" />
+
           <div className="hero-light hero-light-two" />
+
           <div className="hero-grid-decoration" />
         </div>
 
@@ -358,185 +699,299 @@ function HomePage() {
             {selectedHero.label}
           </span>
 
-          <h1>{selectedHero.title}</h1>
+          <h1>
+            {selectedHero.title}
+          </h1>
 
-          <p>{selectedHero.description}</p>
+          <p>
+            {selectedHero.description}
+          </p>
 
           <div className="hero-actions">
             <button
               type="button"
               className="hero-primary-button"
-              onClick={() => openVideo(selectedHero.videoId)}
+              disabled={
+                allVideos.length ===
+                0
+              }
+              onClick={
+                openHeroVideo
+              }
             >
               <PlayIcon />
-              <span>Watch now</span>
+
+              <span>
+                Watch now
+              </span>
             </button>
 
             <button
               type="button"
               className="hero-secondary-button"
-              onClick={() => navigate('/playlists')}
+              onClick={() =>
+                navigate(
+                  '/playlists',
+                )
+              }
             >
               <AddIcon />
-              <span>My list</span>
+
+              <span>
+                My list
+              </span>
             </button>
           </div>
         </div>
 
         <div className="hero-visual">
           <div className="hero-card hero-card-back">
-            <span>02</span>
+            <span>
+              02
+            </span>
           </div>
 
           <div className="hero-card hero-card-middle">
-            <span>01</span>
+            <span>
+              01
+            </span>
           </div>
 
           <div className="hero-card hero-card-main">
-            <div className="hero-card-logo">A</div>
+            <div className="hero-card-logo">
+              A
+            </div>
 
             <div>
-              <span>{selectedHero.label}</span>
-              <strong>AMTLIS</strong>
+              <span>
+                {selectedHero.label}
+              </span>
+
+              <strong>
+                AMTLIS
+              </strong>
             </div>
           </div>
         </div>
 
         <div className="hero-pagination">
-          {heroSlides.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              className={activeHero === index ? 'is-active' : ''}
-              aria-label={`Open hero slide ${index + 1}`}
-              onClick={() => setActiveHero(index)}
-            />
-          ))}
+          {heroSlides.map(
+            (slide, index) => (
+              <button
+                key={slide.id}
+                type="button"
+                className={
+                  activeHero === index
+                    ? 'is-active'
+                    : ''
+                }
+                aria-label={`Open hero slide ${
+                  index + 1
+                }`}
+                onClick={() =>
+                  setActiveHero(
+                    index,
+                  )
+                }
+              />
+            ),
+          )}
         </div>
       </section>
 
       <section className="home-section">
         <SectionHeader
           title="Top 10"
-          onPrevious={() => scrollRow(topRef, 'left')}
-          onNext={() => scrollRow(topRef, 'right')}
+          onPrevious={() =>
+            scrollRow(
+              topRef,
+              'left',
+            )
+          }
+          onNext={() =>
+            scrollRow(
+              topRef,
+              'right',
+            )
+          }
         />
 
-        <div className="top-ten-row horizontal-row" ref={topRef}>
-          {videos.map((video) => (
-            <button
-              type="button"
-              className="top-card"
-              key={video.id}
-              onClick={() => openVideo(video.id)}
-            >
-              <div className={`top-thumbnail tone-${video.tone}`}>
-                <div className="thumbnail-glow" />
+        {isAllLoading ? (
+          <HomeLoadingState />
+        ) : isAllError ? (
+          <HomeErrorState
+            onRetry={retry}
+          />
+        ) : topVideos.length ===
+          0 ? (
+          <HomeEmptyState />
+        ) : (
+          <div
+            className="top-ten-row horizontal-row"
+            ref={topRef}
+          >
+            {topVideos.map(
+              (video, index) => (
+                <button
+                  type="button"
+                  className="top-card"
+                  key={video.id}
+                  onClick={() =>
+                    openVideo(
+                      video.id,
+                    )
+                  }
+                >
+                  <div
+                    className={`top-thumbnail tone-${getVideoTone(
+                      video,
+                      index,
+                    )}`}
+                  >
+                    <div className="thumbnail-glow" />
 
-                <span className="top-card-title">
-                  {video.title}
-                </span>
+                    <span className="top-card-title">
+                      {video.title}
+                    </span>
 
-                <span className="video-duration">
-                  {video.duration}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
+                    <span className="video-duration">
+                      {formatDuration(
+                        video.durationSeconds,
+                      )}
+                    </span>
+                  </div>
+                </button>
+              ),
+            )}
+          </div>
+        )}
       </section>
 
       <section className="home-section">
         <SectionHeader
           title="Continue Watching"
-          onPrevious={() => scrollRow(continueRef, 'left')}
-          onNext={() => scrollRow(continueRef, 'right')}
+          onPrevious={() => {}}
+          onNext={() => {}}
         />
 
-        <div
-          className="continue-row horizontal-row"
-          ref={continueRef}
-        >
-          {videos
-            .filter((video) => video.progress !== undefined)
-            .map((video) => (
-              <button
-                type="button"
-                className="continue-card"
-                key={video.id}
-                onClick={() => openVideo(video.id)}
-              >
-                <div
-                  className={`continue-thumbnail tone-${video.tone}`}
-                >
-                  <div className="thumbnail-glow" />
+        <div className="home-api-state home-history-state">
+          <strong>
+            Your watch progress
+            will appear here.
+          </strong>
 
-                  <span className="video-duration">
-                    {video.duration}
-                  </span>
-
-                  <div className="watch-progress">
-                    <span
-                      style={{
-                        width: `${video.progress ?? 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="continue-copy">
-                  <h3>{video.title}</h3>
-                  <p>{video.channel}</p>
-                </div>
-              </button>
-            ))}
+          <span>
+            Continue Watching will
+            be connected to Watch
+            History instead of using
+            fake progress values.
+          </span>
         </div>
       </section>
 
       <section className="home-section">
         <SectionHeader
           title={
-            activeCategory === 'All'
+            activeCategory ===
+            'All'
               ? 'Popular'
               : `Popular in ${activeCategory}`
           }
-          onPrevious={() => scrollRow(popularRef, 'left')}
-          onNext={() => scrollRow(popularRef, 'right')}
+          onPrevious={() =>
+            scrollRow(
+              popularRef,
+              'left',
+            )
+          }
+          onNext={() =>
+            scrollRow(
+              popularRef,
+              'right',
+            )
+          }
         />
 
-        <div
-          className="video-horizontal-row horizontal-row"
-          ref={popularRef}
-        >
-          {popularVideos.map((video) => (
-            <VideoCardItem
-              key={video.id}
-              video={video}
-              onOpen={openVideo}
-            />
-          ))}
-        </div>
+        {isCategoryLoading ||
+        (activeCategory ===
+          'All' &&
+          isAllLoading) ? (
+          <HomeLoadingState />
+        ) : isCategoryError ||
+          (activeCategory ===
+            'All' &&
+            isAllError) ? (
+          <HomeErrorState
+            onRetry={retry}
+          />
+        ) : popularVideos.length ===
+          0 ? (
+          <HomeEmptyState />
+        ) : (
+          <div
+            className="video-horizontal-row horizontal-row"
+            ref={popularRef}
+          >
+            {popularVideos.map(
+              (video, index) => (
+                <VideoCardItem
+                  key={video.id}
+                  video={video}
+                  index={index}
+                  onOpen={
+                    openVideo
+                  }
+                />
+              ),
+            )}
+          </div>
+        )}
       </section>
 
       <section className="home-section">
         <SectionHeader
           title="All Video"
-          onPrevious={() => scrollRow(allVideoRef, 'left')}
-          onNext={() => scrollRow(allVideoRef, 'right')}
+          onPrevious={() =>
+            scrollRow(
+              allVideoRef,
+              'left',
+            )
+          }
+          onNext={() =>
+            scrollRow(
+              allVideoRef,
+              'right',
+            )
+          }
         />
 
-        <div
-          className="video-horizontal-row horizontal-row"
-          ref={allVideoRef}
-        >
-          {[...videos].reverse().map((video) => (
-            <VideoCardItem
-              key={video.id}
-              video={video}
-              onOpen={openVideo}
-            />
-          ))}
-        </div>
+        {isAllLoading ? (
+          <HomeLoadingState />
+        ) : isAllError ? (
+          <HomeErrorState
+            onRetry={retry}
+          />
+        ) : allVideos.length ===
+          0 ? (
+          <HomeEmptyState />
+        ) : (
+          <div
+            className="video-horizontal-row horizontal-row"
+            ref={allVideoRef}
+          >
+            {allVideos.map(
+              (video, index) => (
+                <VideoCardItem
+                  key={video.id}
+                  video={video}
+                  index={index}
+                  onOpen={
+                    openVideo
+                  }
+                />
+              ),
+            )}
+          </div>
+        )}
       </section>
     </div>
   )

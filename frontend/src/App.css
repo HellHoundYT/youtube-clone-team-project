@@ -2311,3 +2311,83 @@
     padding-top: 15px;
   }
 }
+
+/* HOME API STATES */
+
+.home-api-state {
+  min-height: 150px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 24px;
+
+  color: #717582;
+  background: #0e0f14;
+
+  border: 1px solid #1d1f27;
+  border-radius: 12px;
+
+  text-align: center;
+}
+
+.home-api-state strong {
+  color: #d9d9df;
+
+  font-size: 12px;
+}
+
+.home-api-state span {
+  max-width: 390px;
+
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.home-api-error button {
+  margin-top: 7px;
+  padding: 8px 13px;
+
+  color: #ffffff;
+  background: #6849df;
+
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.home-api-error button:hover {
+  background: #7657ed;
+}
+
+.home-history-state {
+  min-height: 120px;
+}
+
+.video-thumbnail-image {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.channel-avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  border-radius: inherit;
+}
+
+.hero-primary-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
