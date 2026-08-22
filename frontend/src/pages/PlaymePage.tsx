@@ -12,9 +12,7 @@ import {
 } from '../api/videos'
 import './PlaymePage.css'
 
-function formatViews(
-  value: number,
-) {
+function formatViews(value: number) {
   return new Intl.NumberFormat(
     'en-US',
     {
@@ -435,8 +433,8 @@ function PlaymePage() {
           void video
             .play()
             .catch(() => {
-              // Browser autoplay can be
-              // temporarily blocked.
+              // Browser autoplay can
+              // temporarily be blocked.
             })
 
           return
@@ -589,10 +587,6 @@ function PlaymePage() {
           activeIndex
         ]
 
-      if (!activeVideo) {
-        return
-      }
-
       setLikedVideoIds(
         (
           current,
@@ -639,18 +633,22 @@ function PlaymePage() {
           activeIndex
         ]
 
-      if (!activeVideo) {
-        return
-      }
-
       const shareUrl =
         `${window.location.origin}/watch/${activeVideo.id}`
 
       try {
+        const nativeShare =
+          Reflect.get(
+            navigator,
+            'share',
+          )
+
         if (
-          navigator.share
+          typeof nativeShare ===
+          'function'
         ) {
-          await navigator.share(
+          await nativeShare.call(
+            navigator,
             {
               title:
                 activeVideo.title,
@@ -672,6 +670,10 @@ function PlaymePage() {
       ) {
         console.error(
           shareError,
+        )
+
+        setActionNotice(
+          'Could not share this video.',
         )
       }
     }
@@ -769,11 +771,9 @@ function PlaymePage() {
     ]
 
   const isActiveLiked =
-    activeVideo
-      ? likedVideoIds.has(
-          activeVideo.id,
-        )
-      : false
+    likedVideoIds.has(
+      activeVideo.id,
+    )
 
   return (
     <section className="playme-page">
