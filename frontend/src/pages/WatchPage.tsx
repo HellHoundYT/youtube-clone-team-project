@@ -8,6 +8,10 @@ import {
   useParams,
 } from 'react-router-dom'
 import {
+  getWatchHistory,
+  updateWatchHistory,
+} from '../api/library'
+import {
   getVideoById,
   getVideoRecommendations,
   registerVideoView,
@@ -21,6 +25,7 @@ interface WatchLoadState {
   videoId: string
   video: VideoDetails | null
   recommendations: VideoListItem[]
+  initialProgressSeconds: number
   error: string | null
 }
 
@@ -99,7 +104,8 @@ function formatDuration(
 }
 
 function WatchPage() {
-  const { videoId } = useParams()
+  const { videoId } =
+    useParams()
 
   const navigate =
     useNavigate()
@@ -132,6 +138,9 @@ function WatchPage() {
           let recommendations:
             VideoListItem[] = []
 
+          let initialProgressSeconds =
+            0
+
           try {
             recommendations =
               await getVideoRecommendations(
@@ -140,10 +149,44 @@ function WatchPage() {
               )
           } catch {
             if (
-              controller.signal.aborted
+              controller.signal
+                .aborted
             ) {
               return
             }
+          }
+
+          try {
+            const history =
+              await getWatchHistory(
+                controller.signal,
+              )
+
+            const historyItem =
+              history.find(
+                (item) =>
+                  item.videoId ===
+                  video.id,
+              )
+
+            if (
+              historyItem &&
+              !historyItem.completed
+            ) {
+              initialProgressSeconds =
+                historyItem
+                  .progressSeconds
+            }
+          } catch {
+            if (
+              controller.signal
+                .aborted
+            ) {
+              return
+            }
+
+            // History must never
+            // prevent video playback.
           }
 
           if (
@@ -156,6 +199,7 @@ function WatchPage() {
             videoId,
             video,
             recommendations,
+            initialProgressSeconds,
             error: null,
           })
         } catch {
@@ -169,6 +213,8 @@ function WatchPage() {
             videoId,
             video: null,
             recommendations: [],
+            initialProgressSeconds:
+              0,
             error:
               'The video could not be loaded.',
           })
@@ -210,7 +256,8 @@ function WatchPage() {
   }
 
   const isLoading =
-    loadState?.videoId !== videoId
+    loadState?.videoId !==
+    videoId
 
   if (isLoading) {
     return (
@@ -300,6 +347,29 @@ function WatchPage() {
       }
     }
 
+  const handleProgress =
+    async (
+      currentTime: number,
+      duration: number,
+      completed: boolean,
+    ) => {
+      try {
+        await updateWatchHistory(
+          video.id,
+          {
+            progressSeconds:
+              completed
+                ? duration
+                : currentTime,
+            completed,
+          },
+        )
+      } catch {
+        // History errors must never
+        // interrupt playback.
+      }
+    }
+
   return (
     <section className="watch-page">
       <div className="watch-main-column">
@@ -309,8 +379,23 @@ function WatchPage() {
           poster={
             video.thumbnailPath
           }
+          initialTime={
+            loadState
+              .initialProgressSeconds
+          }
           onFirstPlay={() => {
             void handleFirstPlay()
+          }}
+          onProgress={(
+            currentTime,
+            duration,
+            completed,
+          ) => {
+            void handleProgress(
+              currentTime,
+              duration,
+              completed,
+            )
           }}
         />
 
@@ -448,7 +533,9 @@ function WatchPage() {
 
                       <div className="watch-recommendation-copy">
                         <strong>
-                          {recommendation.title}
+                          {
+                            recommendation.title
+                          }
                         </strong>
 
                         <span>

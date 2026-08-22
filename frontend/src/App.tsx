@@ -5,7 +5,10 @@ import {
 } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import CategoryPage from './pages/CategoryPage'
+import FavoritesPage from './pages/FavoritesPage'
+import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
+import LibraryPage from './pages/LibraryPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import SearchPage from './pages/SearchPage'
 import UploadPage from './pages/UploadPage'
@@ -43,32 +46,17 @@ function App() {
 
         <Route
           path="library"
-          element={
-            <PlaceholderPage
-              title="Library"
-              description="User library content will be connected here."
-            />
-          }
+          element={<LibraryPage />}
         />
 
         <Route
           path="history"
-          element={
-            <PlaceholderPage
-              title="History"
-              description="Watch history will be connected here."
-            />
-          }
+          element={<HistoryPage />}
         />
 
         <Route
           path="favorites"
-          element={
-            <PlaceholderPage
-              title="Favorites"
-              description="Favorite videos will be connected here."
-            />
-          }
+          element={<FavoritesPage />}
         />
 
         <Route
