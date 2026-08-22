@@ -4,6 +4,7 @@ using YouTubeClone.Api.Data;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Api.Services.Favorites;
 using YouTubeClone.Api.Services.History;
+using YouTubeClone.Api.Services.Media;
 using YouTubeClone.Api.Services.Streams;
 using YouTubeClone.Api.Services.Videos;
 using YouTubeClone.Api.Storage;
@@ -25,8 +26,9 @@ builder.Services.Configure<FormOptions>(
     });
 
 var connectionString =
-    builder.Configuration.GetConnectionString(
-        "DefaultConnection");
+    builder.Configuration
+        .GetConnectionString(
+            "DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(
     options =>
@@ -52,6 +54,10 @@ builder.Services.AddSingleton<
 builder.Services.AddSingleton<
     IFileStorageService,
     LocalFileStorageService>();
+
+builder.Services.AddSingleton<
+    IMediaProbeService,
+    FfprobeMediaProbeService>();
 
 var app =
     builder.Build();
