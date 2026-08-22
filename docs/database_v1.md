@@ -254,10 +254,10 @@ Playlist містить Videos через PlaylistVideos.
 
 Ця схема є спільним архітектурним контрактом Backend.
 
-Ілля відповідає за структуру бази даних, AppDbContext, загальні зв'язки та інтеграцію модулів.
+Илья відповідає за структуру бази даних, AppDbContext, загальні зв'язки та інтеграцію модулів.
 
-Реалізація Auth, User Profile, Channels, Subscriptions, Comments та Playlists виконується Тетяною відповідно до окремих задач Trello.
+Реалізацію Auth, User Profile, Channels, Subscriptions, Comments та Playlists виконує Таня відповідно до окремих задач Trello.
 
-Ілля реалізує Video, History, Favorites, Search та іншу серверну логіку зі своєї зони відповідальності.
+Илья реалізує Video, History, Favorites, Search та іншу серверну логіку зі своєї зони відповідальності.
 
 Спільні сутності не змінюються одним учасником без узгодження контракту.
