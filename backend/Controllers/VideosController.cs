@@ -20,6 +20,7 @@ public sealed class VideosController : ControllerBase
             "Games",
             "Cybersport",
             "Education",
+            "Programming",
             "Films",
             "Podcasts",
             "Mixes"
