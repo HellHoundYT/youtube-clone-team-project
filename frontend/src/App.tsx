@@ -14,9 +14,11 @@ import PlaceholderPage from './pages/PlaceholderPage'
 import PlaymePage from './pages/PlaymePage'
 import SearchPage from './pages/SearchPage'
 import StreamsPage from './pages/StreamsPage'
+import ThemesPage from './pages/ThemesPage'
 import UploadPage from './pages/UploadPage'
 import WatchPage from './pages/WatchPage'
 import './App.css'
+import './theme/theme-runtime.css'
 
 function App() {
   return (
@@ -75,6 +77,11 @@ function App() {
         <Route
           path="streamers/:streamId"
           element={<LiveStreamPage />}
+        />
+
+        <Route
+          path="themes"
+          element={<ThemesPage />}
         />
 
         <Route

@@ -1,0 +1,635 @@
+:root {
+  --theme-app-background:
+    #08090d;
+
+  --theme-header-background:
+    rgba(
+      8,
+      9,
+      13,
+      0.96
+    );
+
+  --theme-sidebar-background:
+    #090a0e;
+
+  --theme-surface:
+    #101117;
+
+  --theme-surface-hover:
+    #181920;
+
+  --theme-border:
+    #252630;
+
+  --theme-accent:
+    #7557ef;
+
+  --theme-accent-strong:
+    #8665ff;
+
+  --theme-accent-soft:
+    rgba(
+      117,
+      87,
+      239,
+      0.24
+    );
+
+  --theme-text:
+    #f5f4fa;
+
+  --theme-muted:
+    #858a98;
+
+  --theme-glow:
+    rgba(
+      116,
+      82,
+      255,
+      0.18
+    );
+
+  --theme-banner:
+    linear-gradient(
+      135deg,
+      #171122,
+      #2b1953,
+      #141018
+    );
+
+  --theme-avatar:
+    linear-gradient(
+      135deg,
+      #8662ff,
+      #6946e8
+    );
+
+  --theme-pattern:
+    linear-gradient(
+      rgba(
+        117,
+        87,
+        239,
+        0.035
+      )
+      1px,
+      transparent
+      1px
+    );
+
+  --theme-small-radius:
+    8px;
+
+  --theme-medium-radius:
+    13px;
+
+  --theme-large-radius:
+    18px;
+
+  --theme-button-radius:
+    8px;
+}
+
+body {
+  color:
+    var(
+      --theme-text
+    );
+
+  background:
+    var(
+      --theme-app-background
+    );
+}
+
+.app-shell {
+  background:
+    var(
+      --theme-pattern
+    ),
+    radial-gradient(
+      circle at 72% 0%,
+      var(
+        --theme-glow
+      ),
+      transparent
+        30rem
+    ),
+    var(
+      --theme-app-background
+    );
+}
+
+.app-header {
+  background:
+    var(
+      --theme-header-background
+    );
+
+  border-color:
+    var(
+      --theme-border
+    );
+}
+
+.app-sidebar {
+  background:
+    var(
+      --theme-sidebar-background
+    );
+
+  border-color:
+    var(
+      --theme-border
+    );
+}
+
+.sidebar-footer {
+  border-color:
+    var(
+      --theme-border
+    );
+}
+
+.sidebar-divider {
+  background:
+    var(
+      --theme-border
+    );
+}
+
+.brand-mark {
+  background:
+    linear-gradient(
+      135deg,
+      var(
+        --theme-accent-strong
+      ),
+      var(
+        --theme-accent
+      )
+    );
+
+  box-shadow:
+    0 0 24px
+    var(
+      --theme-glow
+    );
+}
+
+.profile-button {
+  background:
+    var(
+      --theme-avatar
+    );
+}
+
+.header-search {
+  background:
+    var(
+      --theme-surface
+    );
+
+  border-color:
+    var(
+      --theme-border
+    );
+
+  border-radius:
+    var(
+      --theme-small-radius
+    );
+}
+
+.header-search:focus-within {
+  border-color:
+    var(
+      --theme-accent
+    );
+
+  box-shadow:
+    0 0 0 1px
+      var(
+        --theme-accent
+      ),
+    0 0 24px
+      var(
+        --theme-glow
+      );
+}
+
+.search-button,
+.header-create-button {
+  background:
+    var(
+      --theme-surface
+    );
+
+  border-color:
+    var(
+      --theme-border
+    );
+
+  border-radius:
+    var(
+      --theme-small-radius
+    );
+}
+
+.search-button:hover,
+.header-create-button:hover,
+.icon-button:hover {
+  background:
+    var(
+      --theme-surface-hover
+    );
+}
+
+.sidebar-link {
+  border-radius:
+    var(
+      --theme-small-radius
+    );
+}
+
+.sidebar-link.is-active {
+  color:
+    var(
+      --theme-text
+    );
+
+  background:
+    linear-gradient(
+      90deg,
+      var(
+        --theme-accent-soft
+      ),
+      transparent
+    );
+}
+
+.sidebar-link.is-active
+  .sidebar-icon {
+  color:
+    var(
+      --theme-accent
+    );
+}
+
+.category-chip.is-active {
+  background:
+    var(
+      --theme-accent
+    );
+
+  border-color:
+    var(
+      --theme-accent-strong
+    );
+}
+
+.playme-brand-dot {
+  background:
+    var(
+      --theme-accent
+    );
+
+  box-shadow:
+    0 0 0 5px
+    var(
+      --theme-accent-soft
+    );
+}
+
+.playme-follow-button {
+  background:
+    var(
+      --theme-accent
+    );
+}
+
+/* CITY */
+
+html[data-theme-family="city"] {
+  --theme-small-radius:
+    4px;
+
+  --theme-medium-radius:
+    7px;
+
+  --theme-large-radius:
+    10px;
+
+  --theme-button-radius:
+    4px;
+}
+
+html[data-theme-family="city"]
+  .app-shell {
+  background:
+    linear-gradient(
+      90deg,
+      transparent
+        0 92%,
+      var(
+        --theme-accent-soft
+      )
+      92% 92.15%,
+      transparent
+        92.15%
+    ),
+    var(
+      --theme-pattern
+    ),
+    var(
+      --theme-app-background
+    );
+}
+
+html[data-theme-family="city"]
+  .app-header {
+  border-bottom:
+    1px solid
+    var(
+      --theme-accent-soft
+    );
+}
+
+html[data-theme-family="city"]
+  .brand-mark {
+  border-radius: 4px;
+}
+
+/* HUD */
+
+html[data-theme-family="hud"] {
+  --theme-small-radius:
+    1px;
+
+  --theme-medium-radius:
+    2px;
+
+  --theme-large-radius:
+    3px;
+
+  --theme-button-radius:
+    1px;
+}
+
+html[data-theme-family="hud"]
+  .app-shell {
+  background-image:
+    linear-gradient(
+      var(
+        --theme-accent-soft
+      )
+      1px,
+      transparent
+      1px
+    ),
+    linear-gradient(
+      90deg,
+      var(
+        --theme-accent-soft
+      )
+      1px,
+      transparent
+      1px
+    );
+
+  background-size:
+    42px 42px;
+
+  background-color:
+    var(
+      --theme-app-background
+    );
+}
+
+html[data-theme-family="hud"]
+  .app-header {
+  border-bottom:
+    1px solid
+    var(
+      --theme-accent
+    );
+
+  box-shadow:
+    0 6px 24px
+    var(
+      --theme-glow
+    );
+}
+
+html[data-theme-family="hud"]
+  .brand-mark,
+html[data-theme-family="hud"]
+  .profile-button {
+  clip-path:
+    polygon(
+      20% 0,
+      80% 0,
+      100% 20%,
+      100% 80%,
+      80% 100%,
+      20% 100%,
+      0 80%,
+      0 20%
+    );
+
+  border-radius: 0;
+}
+
+html[data-theme-family="hud"]
+  .sidebar-link.is-active {
+  box-shadow:
+    inset 3px 0 0
+    var(
+      --theme-accent
+    );
+}
+
+/* CYBER */
+
+html[data-theme-family="cyber"] {
+  --theme-small-radius:
+    3px;
+
+  --theme-medium-radius:
+    5px;
+
+  --theme-large-radius:
+    7px;
+
+  --theme-button-radius:
+    3px;
+}
+
+html[data-theme-family="cyber"]
+  .app-shell {
+  background:
+    repeating-linear-gradient(
+      120deg,
+      var(
+        --theme-accent-soft
+      )
+      0,
+      transparent 1px,
+      transparent 28px
+    ),
+    var(
+      --theme-app-background
+    );
+}
+
+html[data-theme-family="cyber"]
+  .brand-mark {
+  border-radius: 0;
+
+  clip-path:
+    polygon(
+      0 0,
+      78% 0,
+      100% 22%,
+      100% 100%,
+      22% 100%,
+      0 78%
+    );
+}
+
+html[data-theme-family="cyber"]
+  .header-search,
+html[data-theme-family="cyber"]
+  .header-create-button {
+  clip-path:
+    polygon(
+      0 0,
+      calc(
+        100% - 8px
+      )
+      0,
+      100% 8px,
+      100% 100%,
+      0 100%
+    );
+}
+
+/* WAVE */
+
+html[data-theme-family="wave"] {
+  --theme-small-radius:
+    18px;
+
+  --theme-medium-radius:
+    22px;
+
+  --theme-large-radius:
+    28px;
+
+  --theme-button-radius:
+    999px;
+}
+
+html[data-theme-family="wave"]
+  .app-shell {
+  background:
+    radial-gradient(
+      circle at 75% 10%,
+      var(
+        --theme-accent-soft
+      ),
+      transparent 32rem
+    ),
+    radial-gradient(
+      circle at 18% 82%,
+      var(
+        --theme-glow
+      ),
+      transparent 28rem
+    ),
+    var(
+      --theme-app-background
+    );
+}
+
+html[data-theme-family="wave"]
+  .brand-mark,
+html[data-theme-family="wave"]
+  .profile-button {
+  box-shadow:
+    0 0 26px
+    var(
+      --theme-glow
+    );
+}
+
+/* SPACE */
+
+html[data-theme-family="space"] {
+  --theme-small-radius:
+    10px;
+
+  --theme-medium-radius:
+    16px;
+
+  --theme-large-radius:
+    22px;
+
+  --theme-button-radius:
+    12px;
+}
+
+html[data-theme-family="space"]
+  .app-shell {
+  background:
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(
+        255,
+        255,
+        255,
+        0.08
+      )
+      1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 72% 36%,
+      rgba(
+        255,
+        255,
+        255,
+        0.06
+      )
+      1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 82% 5%,
+      var(
+        --theme-accent-soft
+      ),
+      transparent 30rem
+    ),
+    var(
+      --theme-app-background
+    );
+
+  background-size:
+    71px 71px,
+    103px 103px,
+    auto,
+    auto;
+}
+
+html[data-theme-family="space"]
+  .brand-mark {
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 28px
+    var(
+      --theme-glow
+    );
+}
