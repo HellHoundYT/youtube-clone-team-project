@@ -12,6 +12,7 @@ const categories = [
   'Games',
   'Cybersport',
   'Education',
+  'Programming',
   'Films',
   'Podcasts',
   'Mixes',
