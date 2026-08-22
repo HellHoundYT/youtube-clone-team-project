@@ -13,10 +13,11 @@ public sealed class LocalFileStorageService :
     public LocalFileStorageService(
         IWebHostEnvironment environment)
     {
-        _rootPath = Path.Combine(
-            environment.ContentRootPath,
-            "Storage",
-            "media");
+        _rootPath =
+            Path.Combine(
+                environment.ContentRootPath,
+                "Storage",
+                "media");
 
         Directory.CreateDirectory(
             _rootPath);
@@ -26,28 +27,33 @@ public sealed class LocalFileStorageService :
         string relativePath)
     {
         return File.Exists(
-            ResolveFullPath(relativePath));
+            GetPhysicalPath(
+                relativePath));
     }
 
     public Stream OpenRead(
         string relativePath)
     {
         var fullPath =
-            ResolveFullPath(relativePath);
+            GetPhysicalPath(
+                relativePath);
 
         return new FileStream(
             fullPath,
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read,
-            bufferSize: 64 * 1024,
-            useAsync: true);
+            bufferSize:
+                64 * 1024,
+            useAsync:
+                true);
     }
 
     public string GetContentType(
         string relativePath)
     {
-        if (_contentTypeProvider.TryGetContentType(
+        if (_contentTypeProvider
+            .TryGetContentType(
                 relativePath,
                 out var contentType))
         {
@@ -57,52 +63,7 @@ public sealed class LocalFileStorageService :
         return "application/octet-stream";
     }
 
-    public async Task SaveAsync(
-        string relativePath,
-        Stream source,
-        CancellationToken cancellationToken = default)
-    {
-        var fullPath =
-            ResolveFullPath(relativePath);
-
-        var directory =
-            Path.GetDirectoryName(
-                fullPath);
-
-        if (!string.IsNullOrWhiteSpace(
-                directory))
-        {
-            Directory.CreateDirectory(
-                directory);
-        }
-
-        await using var destination =
-            new FileStream(
-                fullPath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 64 * 1024,
-                useAsync: true);
-
-        await source.CopyToAsync(
-            destination,
-            cancellationToken);
-    }
-
-    public void Delete(
-        string relativePath)
-    {
-        var fullPath =
-            ResolveFullPath(relativePath);
-
-        if (File.Exists(fullPath))
-        {
-            File.Delete(fullPath);
-        }
-    }
-
-    private string ResolveFullPath(
+    public string GetPhysicalPath(
         string relativePath)
     {
         if (string.IsNullOrWhiteSpace(
@@ -139,5 +100,56 @@ public sealed class LocalFileStorageService :
         }
 
         return fullPath;
+    }
+
+    public async Task SaveAsync(
+        string relativePath,
+        Stream source,
+        CancellationToken cancellationToken = default)
+    {
+        var fullPath =
+            GetPhysicalPath(
+                relativePath);
+
+        var directory =
+            Path.GetDirectoryName(
+                fullPath);
+
+        if (!string.IsNullOrWhiteSpace(
+                directory))
+        {
+            Directory.CreateDirectory(
+                directory);
+        }
+
+        await using var destination =
+            new FileStream(
+                fullPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize:
+                    64 * 1024,
+                useAsync:
+                    true);
+
+        await source.CopyToAsync(
+            destination,
+            cancellationToken);
+    }
+
+    public void Delete(
+        string relativePath)
+    {
+        var fullPath =
+            GetPhysicalPath(
+                relativePath);
+
+        if (File.Exists(
+                fullPath))
+        {
+            File.Delete(
+                fullPath);
+        }
     }
 }

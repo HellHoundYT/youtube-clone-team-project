@@ -11,6 +11,9 @@ public interface IFileStorageService
     string GetContentType(
         string relativePath);
 
+    string GetPhysicalPath(
+        string relativePath);
+
     Task SaveAsync(
         string relativePath,
         Stream source,
