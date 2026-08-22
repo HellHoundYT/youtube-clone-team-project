@@ -6,6 +6,7 @@ import {
 import AppLayout from './components/layout/AppLayout'
 import HomePage from './pages/HomePage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import UploadPage from './pages/UploadPage'
 import WatchPage from './pages/WatchPage'
 import './App.css'
 
@@ -100,12 +101,7 @@ function App() {
 
         <Route
           path="upload"
-          element={
-            <PlaceholderPage
-              title="Upload"
-              description="Video upload flow will be connected here."
-            />
-          }
+          element={<UploadPage />}
         />
 
         <Route

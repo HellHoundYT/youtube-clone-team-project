@@ -2,7 +2,7 @@ using YouTubeClone.Api.DTOs.Videos;
 
 namespace YouTubeClone.Api.Services.Videos;
 
-public interface IVideoReadService
+public interface IVideoService
 {
     Task<IReadOnlyList<VideoListItemDto>> GetVideosAsync(
         int page,
@@ -16,5 +16,9 @@ public interface IVideoReadService
 
     Task<long?> RegisterViewAsync(
         Guid videoId,
+        CancellationToken cancellationToken = default);
+
+    Task<VideoDetailsDto> CreateVideoAsync(
+        VideoDetailsDto video,
         CancellationToken cancellationToken = default);
 }

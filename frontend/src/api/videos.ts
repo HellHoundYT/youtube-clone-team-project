@@ -1,4 +1,6 @@
-import axios from 'axios'
+import axios, {
+  type AxiosProgressEvent,
+} from 'axios'
 
 export interface VideoListItem {
   id: string
@@ -27,13 +29,17 @@ export interface GetVideosParams {
   category?: string
 }
 
+export interface UploadVideoRequest {
+  title: string
+  description: string
+  category: string
+  durationSeconds: number
+  file: File
+}
+
 export type VideoReactionType =
   | 'Like'
   | 'Dislike'
-
-export interface VideoReactionRequest {
-  type: VideoReactionType
-}
 
 export async function getVideos(
   params: GetVideosParams = {},
@@ -133,18 +139,82 @@ export async function getVideoRecommendations(
     .slice(0, 5)
 }
 
+export async function uploadVideo(
+  request: UploadVideoRequest,
+  onProgress?: (
+    progress: number,
+  ) => void,
+): Promise<VideoDetails> {
+  const formData =
+    new FormData()
+
+  formData.append(
+    'title',
+    request.title,
+  )
+
+  formData.append(
+    'description',
+    request.description,
+  )
+
+  formData.append(
+    'category',
+    request.category,
+  )
+
+  formData.append(
+    'durationSeconds',
+    request.durationSeconds.toString(),
+  )
+
+  formData.append(
+    'file',
+    request.file,
+  )
+
+  const response =
+    await axios.post<VideoDetails>(
+      '/api/v1/videos/upload',
+      formData,
+      {
+        onUploadProgress: (
+          event:
+            AxiosProgressEvent,
+        ) => {
+          if (!event.total) {
+            return
+          }
+
+          const progress =
+            Math.round(
+              (event.loaded /
+                event.total) *
+                100,
+            )
+
+          onProgress?.(
+            Math.min(
+              progress,
+              100,
+            ),
+          )
+        },
+      },
+    )
+
+  return response.data
+}
+
 export async function setVideoReaction(
   videoId: string,
   type: VideoReactionType,
 ): Promise<void> {
-  const request:
-    VideoReactionRequest = {
-      type,
-    }
-
   await axios.put(
     `/api/v1/videos/${videoId}/reaction`,
-    request,
+    {
+      type,
+    },
   )
 }
 

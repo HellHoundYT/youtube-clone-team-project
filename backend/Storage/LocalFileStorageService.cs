@@ -2,33 +2,38 @@ using Microsoft.AspNetCore.StaticFiles;
 
 namespace YouTubeClone.Api.Storage;
 
-public sealed class LocalFileStorageService : IFileStorageService
+public sealed class LocalFileStorageService :
+    IFileStorageService
 {
     private readonly string _rootPath;
 
-    private readonly FileExtensionContentTypeProvider _contentTypeProvider =
-        new();
+    private readonly FileExtensionContentTypeProvider
+        _contentTypeProvider = new();
 
-    public LocalFileStorageService(IWebHostEnvironment environment)
+    public LocalFileStorageService(
+        IWebHostEnvironment environment)
     {
         _rootPath = Path.Combine(
             environment.ContentRootPath,
             "Storage",
             "media");
 
-        Directory.CreateDirectory(_rootPath);
+        Directory.CreateDirectory(
+            _rootPath);
     }
 
-    public bool Exists(string relativePath)
+    public bool Exists(
+        string relativePath)
     {
-        var fullPath = ResolveFullPath(relativePath);
-
-        return File.Exists(fullPath);
+        return File.Exists(
+            ResolveFullPath(relativePath));
     }
 
-    public Stream OpenRead(string relativePath)
+    public Stream OpenRead(
+        string relativePath)
     {
-        var fullPath = ResolveFullPath(relativePath);
+        var fullPath =
+            ResolveFullPath(relativePath);
 
         return new FileStream(
             fullPath,
@@ -39,7 +44,8 @@ public sealed class LocalFileStorageService : IFileStorageService
             useAsync: true);
     }
 
-    public string GetContentType(string relativePath)
+    public string GetContentType(
+        string relativePath)
     {
         if (_contentTypeProvider.TryGetContentType(
                 relativePath,
@@ -51,24 +57,78 @@ public sealed class LocalFileStorageService : IFileStorageService
         return "application/octet-stream";
     }
 
-    private string ResolveFullPath(string relativePath)
+    public async Task SaveAsync(
+        string relativePath,
+        Stream source,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(relativePath))
+        var fullPath =
+            ResolveFullPath(relativePath);
+
+        var directory =
+            Path.GetDirectoryName(
+                fullPath);
+
+        if (!string.IsNullOrWhiteSpace(
+                directory))
+        {
+            Directory.CreateDirectory(
+                directory);
+        }
+
+        await using var destination =
+            new FileStream(
+                fullPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 64 * 1024,
+                useAsync: true);
+
+        await source.CopyToAsync(
+            destination,
+            cancellationToken);
+    }
+
+    public void Delete(
+        string relativePath)
+    {
+        var fullPath =
+            ResolveFullPath(relativePath);
+
+        if (File.Exists(fullPath))
+        {
+            File.Delete(fullPath);
+        }
+    }
+
+    private string ResolveFullPath(
+        string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(
+                relativePath))
         {
             throw new ArgumentException(
                 "Relative path is required.",
                 nameof(relativePath));
         }
 
-        var rootFullPath = Path.GetFullPath(_rootPath);
+        var rootFullPath =
+            Path.GetFullPath(
+                _rootPath);
 
-        var fullPath = Path.GetFullPath(
-            Path.Combine(rootFullPath, relativePath));
+        var fullPath =
+            Path.GetFullPath(
+                Path.Combine(
+                    rootFullPath,
+                    relativePath));
 
-        var safeRoot = rootFullPath.EndsWith(
-            Path.DirectorySeparatorChar)
-            ? rootFullPath
-            : rootFullPath + Path.DirectorySeparatorChar;
+        var safeRoot =
+            rootFullPath.EndsWith(
+                Path.DirectorySeparatorChar)
+                ? rootFullPath
+                : rootFullPath +
+                  Path.DirectorySeparatorChar;
 
         if (!fullPath.StartsWith(
                 safeRoot,
