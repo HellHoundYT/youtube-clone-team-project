@@ -11,6 +11,7 @@ import HomePage from './pages/HomePage'
 import LibraryPage from './pages/LibraryPage'
 import LiveStreamPage from './pages/LiveStreamPage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import PlaymePage from './pages/PlaymePage'
 import SearchPage from './pages/SearchPage'
 import StreamsPage from './pages/StreamsPage'
 import UploadPage from './pages/UploadPage'
@@ -28,12 +29,7 @@ function App() {
 
         <Route
           path="playme"
-          element={
-            <PlaceholderPage
-              title="Playme"
-              description="Vertical video feed will be connected here."
-            />
-          }
+          element={<PlaymePage />}
         />
 
         <Route
