@@ -193,7 +193,7 @@ public sealed class VideoService : IVideoService
                 "music",
                 "Midnight City",
                 "A late night electronic music session.",
-                768,
+                131,
                 2_400_000,
                 new DateTimeOffset(
                     2026, 8, 8, 18, 0, 0,

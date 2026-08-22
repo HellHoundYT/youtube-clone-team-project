@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Api.Data;
+using YouTubeClone.Api.Services.Favorites;
+using YouTubeClone.Api.Services.History;
 using YouTubeClone.Api.Services.Videos;
 using YouTubeClone.Api.Storage;
 
@@ -30,6 +32,14 @@ builder.Services.AddDbContext<AppDbContext>(
 builder.Services.AddSingleton<
     IVideoService,
     VideoService>();
+
+builder.Services.AddSingleton<
+    IWatchHistoryService,
+    WatchHistoryService>();
+
+builder.Services.AddSingleton<
+    IFavoritesService,
+    FavoritesService>();
 
 builder.Services.AddSingleton<
     IFileStorageService,

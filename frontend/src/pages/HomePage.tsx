@@ -7,6 +7,10 @@ import {
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  getWatchHistory,
+  type WatchHistoryItem,
+} from '../api/library'
+import {
   getVideos,
   type VideoListItem,
 } from '../api/videos'
@@ -22,6 +26,12 @@ interface HeroSlide {
 interface CategoryLoadState {
   category: string
   videos: VideoListItem[]
+  error: boolean
+}
+
+interface HistoryLoadState {
+  token: number
+  items: WatchHistoryItem[]
   error: boolean
 }
 
@@ -74,7 +84,10 @@ const tones = [
 
 function PlayIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="m9 7 8 5-8 5Z" />
     </svg>
   )
@@ -82,7 +95,10 @@ function PlayIcon() {
 
 function AddIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 5v14M5 12h14" />
     </svg>
   )
@@ -108,19 +124,25 @@ function ArrowIcon({
   )
 }
 
-function formatDuration(seconds: number) {
-  const safeSeconds = Math.max(
-    0,
-    Math.floor(seconds),
-  )
+function formatDuration(
+  seconds: number,
+) {
+  const safeSeconds =
+    Math.max(
+      0,
+      Math.floor(seconds),
+    )
 
-  const hours = Math.floor(
-    safeSeconds / 3600,
-  )
+  const hours =
+    Math.floor(
+      safeSeconds / 3600,
+    )
 
-  const minutes = Math.floor(
-    (safeSeconds % 3600) / 60,
-  )
+  const minutes =
+    Math.floor(
+      (safeSeconds % 3600) /
+        60,
+    )
 
   const remainingSeconds =
     safeSeconds % 60
@@ -145,12 +167,17 @@ function formatDuration(seconds: number) {
   ].join(':')
 }
 
-function formatViews(value: number) {
+function formatViews(
+  value: number,
+) {
   const formatted =
-    new Intl.NumberFormat('en-US', {
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    }).format(value)
+    new Intl.NumberFormat(
+      'en-US',
+      {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      },
+    ).format(value)
 
   return `${formatted} views`
 }
@@ -162,7 +189,8 @@ function formatDate(
     return 'Not published'
   }
 
-  const date = new Date(publishedAt)
+  const date =
+    new Date(publishedAt)
 
   return new Intl.DateTimeFormat(
     'en-US',
@@ -202,12 +230,15 @@ function VideoCardItem({
 }: {
   video: VideoListItem
   index: number
-  onOpen: (videoId: string) => void
+  onOpen: (
+    videoId: string,
+  ) => void
 }) {
-  const tone = getVideoTone(
-    video,
-    index,
-  )
+  const tone =
+    getVideoTone(
+      video,
+      index,
+    )
 
   return (
     <button
@@ -223,7 +254,9 @@ function VideoCardItem({
         {video.thumbnailPath ? (
           <img
             className="video-thumbnail-image"
-            src={video.thumbnailPath}
+            src={
+              video.thumbnailPath
+            }
             alt=""
           />
         ) : (
@@ -283,6 +316,112 @@ function VideoCardItem({
   )
 }
 
+function ContinueCardItem({
+  item,
+  index,
+  onOpen,
+}: {
+  item: WatchHistoryItem
+  index: number
+  onOpen: (
+    videoId: string,
+  ) => void
+}) {
+  const video =
+    item.video
+
+  const tone =
+    getVideoTone(
+      video,
+      index,
+    )
+
+  const duration =
+    Math.max(
+      1,
+      video.durationSeconds,
+    )
+
+  const progress =
+    Math.min(
+      100,
+      Math.max(
+        0,
+        (
+          item.progressSeconds /
+          duration
+        ) * 100,
+      ),
+    )
+
+  return (
+    <button
+      type="button"
+      className="continue-card"
+      onClick={() =>
+        onOpen(
+          item.videoId,
+        )
+      }
+    >
+      <div
+        className={`continue-thumbnail video-thumbnail tone-${tone}`}
+      >
+        {video.thumbnailPath ? (
+          <img
+            className="video-thumbnail-image"
+            src={
+              video.thumbnailPath
+            }
+            alt=""
+          />
+        ) : (
+          <>
+            <div className="thumbnail-glow" />
+
+            <div className="thumbnail-mark">
+              A
+            </div>
+          </>
+        )}
+
+        <span className="video-duration">
+          {formatDuration(
+            video.durationSeconds,
+          )}
+        </span>
+
+        <div className="watch-progress">
+          <span
+            style={{
+              width:
+                `${progress}%`,
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="continue-copy">
+        <h3>
+          {video.title}
+        </h3>
+
+        <p>
+          {video.channelName}
+          {' · '}
+          {formatDuration(
+            item.progressSeconds,
+          )}
+          {' / '}
+          {formatDuration(
+            video.durationSeconds,
+          )}
+        </p>
+      </div>
+    </button>
+  )
+}
+
 function SectionHeader({
   title,
   onPrevious,
@@ -303,18 +442,26 @@ function SectionHeader({
           type="button"
           className="section-arrow"
           aria-label={`Previous ${title}`}
-          onClick={onPrevious}
+          onClick={
+            onPrevious
+          }
         >
-          <ArrowIcon direction="left" />
+          <ArrowIcon
+            direction="left"
+          />
         </button>
 
         <button
           type="button"
           className="section-arrow"
           aria-label={`Next ${title}`}
-          onClick={onNext}
+          onClick={
+            onNext
+          }
         >
-          <ArrowIcon direction="right" />
+          <ArrowIcon
+            direction="right"
+          />
         </button>
       </div>
     </div>
@@ -375,7 +522,8 @@ function HomeEmptyState() {
 }
 
 function HomePage() {
-  const navigate = useNavigate()
+  const navigate =
+    useNavigate()
 
   const [
     activeCategory,
@@ -409,7 +557,18 @@ function HomePage() {
       null,
     )
 
+  const [
+    historyState,
+    setHistoryState,
+  ] =
+    useState<HistoryLoadState | null>(
+      null,
+    )
+
   const topRef =
+    useRef<HTMLDivElement>(null)
+
+  const continueRef =
     useRef<HTMLDivElement>(null)
 
   const popularRef =
@@ -434,26 +593,30 @@ function HomePage() {
     )
       .then((videos) => {
         if (
-          controller.signal.aborted
+          controller.signal
+            .aborted
         ) {
           return
         }
 
         setAllVideosState({
-          token: reloadToken,
+          token:
+            reloadToken,
           videos,
           error: false,
         })
       })
       .catch(() => {
         if (
-          controller.signal.aborted
+          controller.signal
+            .aborted
         ) {
           return
         }
 
         setAllVideosState({
-          token: reloadToken,
+          token:
+            reloadToken,
           videos: [],
           error: true,
         })
@@ -465,8 +628,52 @@ function HomePage() {
   }, [reloadToken])
 
   useEffect(() => {
+    const controller =
+      new AbortController()
+
+    void getWatchHistory(
+      controller.signal,
+    )
+      .then((items) => {
+        if (
+          controller.signal
+            .aborted
+        ) {
+          return
+        }
+
+        setHistoryState({
+          token:
+            reloadToken,
+          items,
+          error: false,
+        })
+      })
+      .catch(() => {
+        if (
+          controller.signal
+            .aborted
+        ) {
+          return
+        }
+
+        setHistoryState({
+          token:
+            reloadToken,
+          items: [],
+          error: true,
+        })
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [reloadToken])
+
+  useEffect(() => {
     if (
-      activeCategory === 'All'
+      activeCategory ===
+      'All'
     ) {
       return
     }
@@ -485,7 +692,8 @@ function HomePage() {
     )
       .then((videos) => {
         if (
-          controller.signal.aborted
+          controller.signal
+            .aborted
         ) {
           return
         }
@@ -499,7 +707,8 @@ function HomePage() {
       })
       .catch(() => {
         if (
-          controller.signal.aborted
+          controller.signal
+            .aborted
         ) {
           return
         }
@@ -536,6 +745,40 @@ function HomePage() {
       reloadToken,
     ])
 
+  const continueWatching =
+    useMemo(() => {
+      if (
+        historyState?.token !==
+          reloadToken ||
+        historyState.error
+      ) {
+        return []
+      }
+
+      return historyState.items
+        .filter(
+          (item) =>
+            !item.completed &&
+            item.progressSeconds >
+              0 &&
+            item.video
+              .durationSeconds >
+              0,
+        )
+        .sort(
+          (left, right) =>
+            new Date(
+              right.lastWatchedAt,
+            ).getTime() -
+            new Date(
+              left.lastWatchedAt,
+            ).getTime(),
+        )
+    }, [
+      historyState,
+      reloadToken,
+    ])
+
   const isAllLoading =
     allVideosState?.token !==
     reloadToken
@@ -545,13 +788,24 @@ function HomePage() {
       reloadToken &&
     allVideosState.error
 
+  const isHistoryLoading =
+    historyState?.token !==
+    reloadToken
+
+  const isHistoryError =
+    historyState?.token ===
+      reloadToken &&
+    historyState.error
+
   const isCategoryLoading =
-    activeCategory !== 'All' &&
+    activeCategory !==
+      'All' &&
     categoryState?.category !==
       activeCategory
 
   const isCategoryError =
-    activeCategory !== 'All' &&
+    activeCategory !==
+      'All' &&
     categoryState?.category ===
       activeCategory &&
     categoryState.error
@@ -559,7 +813,8 @@ function HomePage() {
   const filteredVideos =
     useMemo(() => {
       if (
-        activeCategory === 'All'
+        activeCategory ===
+        'All'
       ) {
         return allVideos
       }
@@ -605,11 +860,14 @@ function HomePage() {
 
   const scrollRow = (
     ref:
-      RefObject<HTMLDivElement | null>,
+      RefObject<
+        HTMLDivElement | null
+      >,
     direction:
       'left' | 'right',
   ) => {
-    const element = ref.current
+    const element =
+      ref.current
 
     if (!element) {
       return
@@ -617,10 +875,13 @@ function HomePage() {
 
     element.scrollBy({
       left:
-        direction === 'right'
-          ? element.clientWidth *
+        direction ===
+        'right'
+          ? element
+              .clientWidth *
             0.72
-          : element.clientWidth *
+          : element
+              .clientWidth *
             -0.72,
       behavior: 'smooth',
     })
@@ -634,21 +895,23 @@ function HomePage() {
     )
   }
 
-  const openHeroVideo = () => {
-    if (
-      allVideos.length === 0
-    ) {
-      return
+  const openHeroVideo =
+    () => {
+      if (
+        allVideos.length ===
+        0
+      ) {
+        return
+      }
+
+      const video =
+        allVideos[
+          activeHero %
+            allVideos.length
+        ]
+
+      openVideo(video.id)
     }
-
-    const video =
-      allVideos[
-        activeHero %
-          allVideos.length
-      ]
-
-    openVideo(video.id)
-  }
 
   const retry = () => {
     setReloadToken(
@@ -704,7 +967,9 @@ function HomePage() {
           </h1>
 
           <p>
-            {selectedHero.description}
+            {
+              selectedHero.description
+            }
           </p>
 
           <div className="hero-actions">
@@ -764,7 +1029,9 @@ function HomePage() {
 
             <div>
               <span>
-                {selectedHero.label}
+                {
+                  selectedHero.label
+                }
               </span>
 
               <strong>
@@ -776,12 +1043,16 @@ function HomePage() {
 
         <div className="hero-pagination">
           {heroSlides.map(
-            (slide, index) => (
+            (
+              slide,
+              index,
+            ) => (
               <button
                 key={slide.id}
                 type="button"
                 className={
-                  activeHero === index
+                  activeHero ===
+                  index
                     ? 'is-active'
                     : ''
                 }
@@ -831,11 +1102,16 @@ function HomePage() {
             ref={topRef}
           >
             {topVideos.map(
-              (video, index) => (
+              (
+                video,
+                index,
+              ) => (
                 <button
                   type="button"
                   className="top-card"
-                  key={video.id}
+                  key={
+                    video.id
+                  }
                   onClick={() =>
                     openVideo(
                       video.id,
@@ -851,7 +1127,9 @@ function HomePage() {
                     <div className="thumbnail-glow" />
 
                     <span className="top-card-title">
-                      {video.title}
+                      {
+                        video.title
+                      }
                     </span>
 
                     <span className="video-duration">
@@ -870,23 +1148,90 @@ function HomePage() {
       <section className="home-section">
         <SectionHeader
           title="Continue Watching"
-          onPrevious={() => {}}
-          onNext={() => {}}
+          onPrevious={() =>
+            scrollRow(
+              continueRef,
+              'left',
+            )
+          }
+          onNext={() =>
+            scrollRow(
+              continueRef,
+              'right',
+            )
+          }
         />
 
-        <div className="home-api-state home-history-state">
-          <strong>
-            Your watch progress
-            will appear here.
-          </strong>
+        {isHistoryLoading ? (
+          <div className="home-api-state">
+            <div className="watch-loading-spinner" />
 
-          <span>
-            Continue Watching will
-            be connected to Watch
-            History instead of using
-            fake progress values.
-          </span>
-        </div>
+            <span>
+              Loading watch
+              history...
+            </span>
+          </div>
+        ) : isHistoryError ? (
+          <div className="home-api-state home-api-error">
+            <strong>
+              Watch history could
+              not be loaded.
+            </strong>
+
+            <span>
+              Check that the API
+              is running and try
+              again.
+            </span>
+
+            <button
+              type="button"
+              onClick={retry}
+            >
+              Try again
+            </button>
+          </div>
+        ) : continueWatching.length ===
+          0 ? (
+          <div className="home-api-state home-history-state">
+            <strong>
+              Nothing to continue
+              yet.
+            </strong>
+
+            <span>
+              Start watching a
+              video and your
+              playback progress
+              will appear here.
+            </span>
+          </div>
+        ) : (
+          <div
+            className="continue-row horizontal-row"
+            ref={
+              continueRef
+            }
+          >
+            {continueWatching.map(
+              (
+                item,
+                index,
+              ) => (
+                <ContinueCardItem
+                  key={
+                    item.videoId
+                  }
+                  item={item}
+                  index={index}
+                  onOpen={
+                    openVideo
+                  }
+                />
+              ),
+            )}
+          </div>
+        )}
       </section>
 
       <section className="home-section">
@@ -929,12 +1274,19 @@ function HomePage() {
         ) : (
           <div
             className="video-horizontal-row horizontal-row"
-            ref={popularRef}
+            ref={
+              popularRef
+            }
           >
             {popularVideos.map(
-              (video, index) => (
+              (
+                video,
+                index,
+              ) => (
                 <VideoCardItem
-                  key={video.id}
+                  key={
+                    video.id
+                  }
                   video={video}
                   index={index}
                   onOpen={
@@ -976,12 +1328,19 @@ function HomePage() {
         ) : (
           <div
             className="video-horizontal-row horizontal-row"
-            ref={allVideoRef}
+            ref={
+              allVideoRef
+            }
           >
             {allVideos.map(
-              (video, index) => (
+              (
+                video,
+                index,
+              ) => (
                 <VideoCardItem
-                  key={video.id}
+                  key={
+                    video.id
+                  }
                   video={video}
                   index={index}
                   onOpen={
