@@ -28,6 +28,7 @@ frontend/.vite/
 # Local storage
 
 backend/Storage/uploads/
+backend/Storage/media/
 
 # System files
 

@@ -3,8 +3,8 @@
 Командний навчальний проєкт команди FrameSync.
 
 Учасники:
-Ілля, Team Lead та Full Stack Developer.
-Овсянко Тетяна, Full Stack Developer.
+Илья, Team Lead та Full Stack Developer.
+Таня, Full Stack Developer.
 
 Мета проєкту:
 розробка веб застосунку для перегляду та публікації відеоконтенту за мотивами YouTube з власним сучасним дизайном та функціоналом відповідно до Figma макету.

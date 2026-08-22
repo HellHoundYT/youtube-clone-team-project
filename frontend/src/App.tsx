@@ -1,14 +1,23 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import {
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import HomePage from './pages/HomePage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import UploadPage from './pages/UploadPage'
+import WatchPage from './pages/WatchPage'
 import './App.css'
 
 function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route index element={<HomePage />} />
+        <Route
+          index
+          element={<HomePage />}
+        />
 
         <Route
           path="playme"
@@ -92,12 +101,7 @@ function App() {
 
         <Route
           path="upload"
-          element={
-            <PlaceholderPage
-              title="Upload"
-              description="Video upload flow will be connected here."
-            />
-          }
+          element={<UploadPage />}
         />
 
         <Route
@@ -112,16 +116,19 @@ function App() {
 
         <Route
           path="watch/:videoId"
-          element={
-            <PlaceholderPage
-              title="Watch video"
-              description="The full video player page will be connected here."
-            />
-          }
+          element={<WatchPage />}
         />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to="/"
+            replace
+          />
+        }
+      />
     </Routes>
   )
 }
