@@ -4,8 +4,10 @@ import {
   Routes,
 } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
+import CategoryPage from './pages/CategoryPage'
 import HomePage from './pages/HomePage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import SearchPage from './pages/SearchPage'
 import UploadPage from './pages/UploadPage'
 import WatchPage from './pages/WatchPage'
 import './App.css'
@@ -91,12 +93,12 @@ function App() {
 
         <Route
           path="search"
-          element={
-            <PlaceholderPage
-              title="Search"
-              description="Search results will be connected here."
-            />
-          }
+          element={<SearchPage />}
+        />
+
+        <Route
+          path="categories/:slug"
+          element={<CategoryPage />}
         />
 
         <Route
