@@ -13,4 +13,8 @@ public interface IVideoReadService
     Task<VideoDetailsDto?> GetVideoByIdAsync(
         Guid videoId,
         CancellationToken cancellationToken = default);
+
+    Task<long?> RegisterViewAsync(
+        Guid videoId,
+        CancellationToken cancellationToken = default);
 }

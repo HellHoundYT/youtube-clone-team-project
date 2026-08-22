@@ -1,0 +1,158 @@
+.watch-recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+.watch-recommendation {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 11px;
+
+  padding: 8px;
+
+  color: inherit;
+  background: #0c0d12;
+
+  border: 1px solid #1c1e25;
+  border-radius: 10px;
+
+  text-align: left;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.watch-recommendation:hover {
+  background: #13141a;
+  border-color: #2b2d37;
+
+  transform: translateY(-1px);
+}
+
+.watch-recommendation-thumbnail {
+  position: relative;
+
+  width: 128px;
+  aspect-ratio: 16 / 9;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  color: #ffffff;
+
+  background:
+    radial-gradient(
+      circle at 60% 30%,
+      rgba(125, 91, 255, 0.36),
+      transparent 48%
+    ),
+    #17131f;
+
+  border-radius: 7px;
+
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.watch-recommendation-thumbnail img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.watch-recommendation-thumbnail small {
+  position: absolute;
+
+  right: 5px;
+  bottom: 5px;
+
+  padding: 3px 5px;
+
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.78);
+
+  border-radius: 4px;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.watch-recommendation-copy {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  padding-top: 2px;
+}
+
+.watch-recommendation-copy strong {
+  display: -webkit-box;
+
+  overflow: hidden;
+
+  color: #e9e9ee;
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  -webkit-box-orient: vertical;
+
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+}
+
+.watch-recommendation-copy span {
+  overflow: hidden;
+
+  color: #707481;
+
+  font-size: 9px;
+  line-height: 1.3;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1120px) {
+  .watch-side-panel {
+    display: block;
+  }
+
+  .watch-side-card {
+    margin-top: 4px;
+  }
+
+  .watch-recommendations {
+    display: grid;
+    grid-template-columns:
+      repeat(
+        auto-fit,
+        minmax(240px, 1fr)
+      );
+  }
+}
+
+@media (max-width: 620px) {
+  .watch-recommendation {
+    grid-template-columns:
+      112px minmax(0, 1fr);
+  }
+
+  .watch-recommendation-thumbnail {
+    width: 112px;
+  }
+}

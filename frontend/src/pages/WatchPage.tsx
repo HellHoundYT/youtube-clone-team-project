@@ -1,77 +1,181 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import {
+  useEffect,
+  useState,
+} from 'react'
+import {
+  Link,
+  useNavigate,
+  useParams,
+} from 'react-router-dom'
 import {
   getVideoById,
+  getVideoRecommendations,
+  registerVideoView,
   type VideoDetails,
+  type VideoListItem,
 } from '../api/videos'
 import VideoPlayer from '../components/video/VideoPlayer'
+import './WatchPage.css'
 
-interface VideoLoadState {
+interface WatchLoadState {
   videoId: string
   video: VideoDetails | null
+  recommendations: VideoListItem[]
   error: string | null
 }
 
-function formatViews(viewCount: number) {
-  return new Intl.NumberFormat('en-US', {
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(viewCount)
+function formatViews(
+  viewCount: number,
+) {
+  return new Intl.NumberFormat(
+    'en-US',
+    {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    },
+  ).format(viewCount)
 }
 
-function formatPublishedDate(value: string | null) {
+function formatPublishedDate(
+  value: string | null,
+) {
   if (!value) {
     return 'Not published'
   }
 
   const date = new Date(value)
 
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date)
+  return new Intl.DateTimeFormat(
+    'en-US',
+    {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    },
+  ).format(date)
+}
+
+function formatDuration(
+  seconds: number,
+) {
+  const safeSeconds =
+    Math.max(
+      0,
+      Math.floor(seconds),
+    )
+
+  const hours =
+    Math.floor(
+      safeSeconds / 3600,
+    )
+
+  const minutes =
+    Math.floor(
+      (safeSeconds % 3600) /
+        60,
+    )
+
+  const remainingSeconds =
+    safeSeconds % 60
+
+  if (hours > 0) {
+    return [
+      hours,
+      minutes
+        .toString()
+        .padStart(2, '0'),
+      remainingSeconds
+        .toString()
+        .padStart(2, '0'),
+    ].join(':')
+  }
+
+  return [
+    minutes,
+    remainingSeconds
+      .toString()
+      .padStart(2, '0'),
+  ].join(':')
 }
 
 function WatchPage() {
   const { videoId } = useParams()
 
-  const [loadState, setLoadState] =
-    useState<VideoLoadState | null>(null)
+  const navigate =
+    useNavigate()
+
+  const [
+    loadState,
+    setLoadState,
+  ] =
+    useState<WatchLoadState | null>(
+      null,
+    )
 
   useEffect(() => {
     if (!videoId) {
       return
     }
 
-    const controller = new AbortController()
+    const controller =
+      new AbortController()
 
-    void getVideoById(
-      videoId,
-      controller.signal,
-    )
-      .then((result) => {
-        if (controller.signal.aborted) {
-          return
+    const loadWatchPage =
+      async () => {
+        try {
+          const video =
+            await getVideoById(
+              videoId,
+              controller.signal,
+            )
+
+          let recommendations:
+            VideoListItem[] = []
+
+          try {
+            recommendations =
+              await getVideoRecommendations(
+                video,
+                controller.signal,
+              )
+          } catch {
+            if (
+              controller.signal.aborted
+            ) {
+              return
+            }
+          }
+
+          if (
+            controller.signal.aborted
+          ) {
+            return
+          }
+
+          setLoadState({
+            videoId,
+            video,
+            recommendations,
+            error: null,
+          })
+        } catch {
+          if (
+            controller.signal.aborted
+          ) {
+            return
+          }
+
+          setLoadState({
+            videoId,
+            video: null,
+            recommendations: [],
+            error:
+              'The video could not be loaded.',
+          })
         }
+      }
 
-        setLoadState({
-          videoId,
-          video: result,
-          error: null,
-        })
-      })
-      .catch(() => {
-        if (controller.signal.aborted) {
-          return
-        }
-
-        setLoadState({
-          videoId,
-          video: null,
-          error: 'The video could not be loaded.',
-        })
-      })
+    void loadWatchPage()
 
     return () => {
       controller.abort()
@@ -86,7 +190,9 @@ function WatchPage() {
             400
           </span>
 
-          <h1>Video unavailable</h1>
+          <h1>
+            Video unavailable
+          </h1>
 
           <p>
             Video identifier is missing.
@@ -112,7 +218,9 @@ function WatchPage() {
         <div className="watch-state">
           <div className="watch-loading-spinner" />
 
-          <p>Loading video...</p>
+          <p>
+            Loading video...
+          </p>
         </div>
       </section>
     )
@@ -129,7 +237,9 @@ function WatchPage() {
             404
           </span>
 
-          <h1>Video unavailable</h1>
+          <h1>
+            Video unavailable
+          </h1>
 
           <p>
             {loadState.error ??
@@ -147,10 +257,48 @@ function WatchPage() {
     )
   }
 
-  const video = loadState.video
+  const video =
+    loadState.video
 
   const formattedViews =
-    formatViews(video.viewCount)
+    formatViews(
+      video.viewCount,
+    )
+
+  const handleFirstPlay =
+    async () => {
+      try {
+        await registerVideoView(
+          video.id,
+        )
+
+        setLoadState(
+          (current) => {
+            if (
+              !current ||
+              current.videoId !==
+                video.id ||
+              !current.video
+            ) {
+              return current
+            }
+
+            return {
+              ...current,
+              video: {
+                ...current.video,
+                viewCount:
+                  current.video
+                    .viewCount + 1,
+              },
+            }
+          },
+        )
+      } catch {
+        // A failed view counter must
+        // never interrupt playback.
+      }
+    }
 
   return (
     <section className="watch-page">
@@ -158,7 +306,12 @@ function WatchPage() {
         <VideoPlayer
           src={video.videoPath}
           title={video.title}
-          poster={video.thumbnailPath}
+          poster={
+            video.thumbnailPath
+          }
+          onFirstPlay={() => {
+            void handleFirstPlay()
+          }}
         />
 
         <div className="watch-video-info">
@@ -170,7 +323,9 @@ function WatchPage() {
                 </span>
               )}
 
-              <h1>{video.title}</h1>
+              <h1>
+                {video.title}
+              </h1>
             </div>
 
             <span className="watch-visibility">
@@ -197,7 +352,9 @@ function WatchPage() {
               <div className="watch-channel-avatar">
                 {video.channelAvatarPath ? (
                   <img
-                    src={video.channelAvatarPath}
+                    src={
+                      video.channelAvatarPath
+                    }
                     alt=""
                   />
                 ) : (
@@ -214,7 +371,9 @@ function WatchPage() {
                   {video.channelName}
                 </strong>
 
-                <span>Channel</span>
+                <span>
+                  Channel
+                </span>
               </div>
             </div>
           </div>
@@ -235,13 +394,81 @@ function WatchPage() {
             Up next
           </span>
 
-          <h2>Recommendations</h2>
+          <h2>
+            Recommendations
+          </h2>
 
-          <p>
-            Recommended videos will be
-            connected in the next Video
-            module stage.
-          </p>
+          {loadState
+            .recommendations
+            .length === 0 ? (
+            <p>
+              No recommendations
+              are available yet.
+            </p>
+          ) : (
+            <div className="watch-recommendations">
+              {loadState
+                .recommendations
+                .map(
+                  (
+                    recommendation,
+                  ) => (
+                    <button
+                      key={
+                        recommendation.id
+                      }
+                      type="button"
+                      className="watch-recommendation"
+                      onClick={() =>
+                        navigate(
+                          `/watch/${recommendation.id}`,
+                        )
+                      }
+                    >
+                      <div className="watch-recommendation-thumbnail">
+                        {recommendation.thumbnailPath ? (
+                          <img
+                            src={
+                              recommendation.thumbnailPath
+                            }
+                            alt=""
+                          />
+                        ) : (
+                          <span>
+                            A
+                          </span>
+                        )}
+
+                        <small>
+                          {formatDuration(
+                            recommendation.durationSeconds,
+                          )}
+                        </small>
+                      </div>
+
+                      <div className="watch-recommendation-copy">
+                        <strong>
+                          {recommendation.title}
+                        </strong>
+
+                        <span>
+                          {
+                            recommendation.channelName
+                          }
+                        </span>
+
+                        <span>
+                          {formatViews(
+                            recommendation.viewCount,
+                          )}{' '}
+                          views
+                        </span>
+                      </div>
+                    </button>
+                  ),
+                )}
+            </div>
+          )}
         </div>
       </aside>
     </section>
