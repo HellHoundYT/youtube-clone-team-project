@@ -9,8 +9,10 @@ import FavoritesPage from './pages/FavoritesPage'
 import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
 import LibraryPage from './pages/LibraryPage'
+import LiveStreamPage from './pages/LiveStreamPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import SearchPage from './pages/SearchPage'
+import StreamsPage from './pages/StreamsPage'
 import UploadPage from './pages/UploadPage'
 import WatchPage from './pages/WatchPage'
 import './App.css'
@@ -71,12 +73,12 @@ function App() {
 
         <Route
           path="streamers"
-          element={
-            <PlaceholderPage
-              title="Streamers"
-              description="Live streams and streamers will be connected here."
-            />
-          }
+          element={<StreamsPage />}
+        />
+
+        <Route
+          path="streamers/:streamId"
+          element={<LiveStreamPage />}
         />
 
         <Route

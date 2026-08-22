@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Api.Data;
+using YouTubeClone.Api.Hubs;
 using YouTubeClone.Api.Services.Favorites;
 using YouTubeClone.Api.Services.History;
+using YouTubeClone.Api.Services.Streams;
 using YouTubeClone.Api.Services.Videos;
 using YouTubeClone.Api.Storage;
 
@@ -12,6 +14,8 @@ var builder =
 builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
+
+builder.Services.AddSignalR();
 
 builder.Services.Configure<FormOptions>(
     options =>
@@ -42,6 +46,10 @@ builder.Services.AddSingleton<
     FavoritesService>();
 
 builder.Services.AddSingleton<
+    ILiveStreamService,
+    LiveStreamService>();
+
+builder.Services.AddSingleton<
     IFileStorageService,
     LocalFileStorageService>();
 
@@ -56,5 +64,8 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<LiveChatHub>(
+    "/hubs/live-chat");
 
 app.Run();
