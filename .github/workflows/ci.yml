@@ -99,7 +99,7 @@ jobs:
           exit 1
 
   frontend:
-    name: Frontend / lint, build, smoke
+    name: Frontend / test, lint, build, smoke
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -120,6 +120,9 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Run frontend tests
+        run: npm test
 
       - name: Lint frontend
         run: npm run lint
