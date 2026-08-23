@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useState,
 } from 'react'
@@ -14,6 +14,9 @@ import {
   type HistoryStatus,
   type WatchHistoryItem,
 } from '../api/library'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './DiscoveryPage.css'
 import './LibraryPages.css'
 
@@ -22,6 +25,17 @@ interface HistoryState {
   items: WatchHistoryItem[]
   status: HistoryStatus
   error: boolean
+}
+
+const categoryKeys:
+Record<string, string> = {
+  Music: 'common.category.music',
+  Games: 'common.category.games',
+  Cybersport: 'common.category.cybersport',
+  Education: 'common.category.education',
+  Films: 'common.category.films',
+  Podcasts: 'common.category.podcasts',
+  Mixes: 'common.category.mixes',
 }
 
 function formatDuration(
@@ -67,11 +81,24 @@ function formatDuration(
   ].join(':')
 }
 
+function getLocale(
+  language:
+    | string
+    | undefined,
+) {
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
+
 function formatWatchedDate(
   value: string,
+  locale: string,
 ) {
   return new Intl.DateTimeFormat(
-    'en-US',
+    locale,
     {
       month: 'short',
       day: 'numeric',
@@ -87,6 +114,17 @@ function formatWatchedDate(
 function HistoryPage() {
   const navigate =
     useNavigate()
+
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
 
   const [
     reloadToken,
@@ -112,8 +150,8 @@ function HistoryPage() {
   ] = useState(false)
 
   const [
-    actionError,
-    setActionError,
+    actionErrorKey,
+    setActionErrorKey,
   ] =
     useState<string | null>(
       null,
@@ -126,6 +164,27 @@ function HistoryPage() {
 
   const requestKey =
     `history:${reloadToken}`
+
+  const getCategoryLabel = (
+    category:
+      | string
+      | null,
+  ) => {
+    if (!category) {
+      return t(
+        'common.category.uncategorized',
+      )
+    }
+
+    const key =
+      categoryKeys[
+        category
+      ]
+
+    return key
+      ? t(key)
+      : category
+  }
 
   useEffect(() => {
     const controller =
@@ -194,7 +253,8 @@ function HistoryPage() {
       event: KeyboardEvent,
     ) => {
       if (
-        event.key === 'Escape' &&
+        event.key ===
+          'Escape' &&
         !actionPending
       ) {
         setClearConfirmOpen(
@@ -247,30 +307,46 @@ function HistoryPage() {
         }
 
   const normalizedQuery =
-    query.trim().toLowerCase()
+    query
+      .trim()
+      .toLowerCase()
 
   const filteredItems =
     normalizedQuery
       ? items.filter(
-          (item) =>
-            item.video.title
-              .toLowerCase()
-              .includes(
-                normalizedQuery,
-              ) ||
-            item.video.channelName
-              .toLowerCase()
-              .includes(
-                normalizedQuery,
-              ) ||
-            (
+          (item) => {
+            const category =
               item.video.category ??
               ''
+
+            const translatedCategory =
+              getCategoryLabel(
+                item.video.category,
+              )
+
+            return (
+              item.video.title
+                .toLowerCase()
+                .includes(
+                  normalizedQuery,
+                ) ||
+              item.video.channelName
+                .toLowerCase()
+                .includes(
+                  normalizedQuery,
+                ) ||
+              category
+                .toLowerCase()
+                .includes(
+                  normalizedQuery,
+                ) ||
+              translatedCategory
+                .toLowerCase()
+                .includes(
+                  normalizedQuery,
+                )
             )
-              .toLowerCase()
-              .includes(
-                normalizedQuery,
-              ),
+          },
         )
       : items
 
@@ -281,8 +357,12 @@ function HistoryPage() {
       }
 
       try {
-        setActionError(null)
-        setActionPending(true)
+        setActionErrorKey(
+          null,
+        )
+        setActionPending(
+          true,
+        )
 
         const status =
           await setHistoryPaused(
@@ -302,11 +382,13 @@ function HistoryPage() {
           },
         )
       } catch {
-        setActionError(
-          'History status could not be changed.',
+        setActionErrorKey(
+          'library.history.statusChangeFailed',
         )
       } finally {
-        setActionPending(false)
+        setActionPending(
+          false,
+        )
       }
     }
 
@@ -319,8 +401,12 @@ function HistoryPage() {
       }
 
       try {
-        setActionError(null)
-        setActionPending(true)
+        setActionErrorKey(
+          null,
+        )
+        setActionPending(
+          true,
+        )
 
         await removeHistoryItem(
           videoId,
@@ -344,11 +430,13 @@ function HistoryPage() {
           },
         )
       } catch {
-        setActionError(
-          'History item could not be removed.',
+        setActionErrorKey(
+          'library.history.removeFailed',
         )
       } finally {
-        setActionPending(false)
+        setActionPending(
+          false,
+        )
       }
     }
 
@@ -361,8 +449,12 @@ function HistoryPage() {
         return
       }
 
-      setActionError(null)
-      setClearConfirmOpen(true)
+      setActionErrorKey(
+        null,
+      )
+      setClearConfirmOpen(
+        true,
+      )
     }
 
   const handleCloseClearConfirm =
@@ -371,7 +463,9 @@ function HistoryPage() {
         return
       }
 
-      setClearConfirmOpen(false)
+      setClearConfirmOpen(
+        false,
+      )
     }
 
   const handleConfirmClear =
@@ -384,8 +478,12 @@ function HistoryPage() {
       }
 
       try {
-        setActionError(null)
-        setActionPending(true)
+        setActionErrorKey(
+          null,
+        )
+        setActionPending(
+          true,
+        )
 
         await clearWatchHistory()
 
@@ -402,13 +500,17 @@ function HistoryPage() {
           },
         )
 
-        setClearConfirmOpen(false)
+        setClearConfirmOpen(
+          false,
+        )
       } catch {
-        setActionError(
-          'Watch history could not be cleared.',
+        setActionErrorKey(
+          'library.history.clearFailed',
         )
       } finally {
-        setActionPending(false)
+        setActionPending(
+          false,
+        )
       }
     }
 
@@ -417,17 +519,21 @@ function HistoryPage() {
       <header className="discovery-header library-header">
         <div>
           <span className="discovery-eyebrow">
-            LIBRARY
+            {t(
+              'library.eyebrow',
+            )}
           </span>
 
           <h1>
-            Watch history
+            {t(
+              'library.history.title',
+            )}
           </h1>
 
           <p>
-            Videos you recently
-            watched and your current
-            playback progress.
+            {t(
+              'library.history.description',
+            )}
           </p>
         </div>
 
@@ -451,8 +557,12 @@ function HistoryPage() {
               >
                 {historyStatus
                   .isPaused
-                  ? 'Resume history'
-                  : 'Pause history'}
+                  ? t(
+                      'library.history.resume',
+                    )
+                  : t(
+                      'library.history.pause',
+                    )}
               </button>
 
               <button
@@ -466,7 +576,9 @@ function HistoryPage() {
                   handleOpenClearConfirm
                 }
               >
-                Clear history
+                {t(
+                  'library.history.clear',
+                )}
               </button>
             </div>
           )}
@@ -483,7 +595,9 @@ function HistoryPage() {
               <input
                 type="search"
                 value={query}
-                placeholder="Search watch history"
+                placeholder={t(
+                  'library.history.searchPlaceholder',
+                )}
                 onChange={(
                   event,
                 ) =>
@@ -496,17 +610,22 @@ function HistoryPage() {
             </div>
 
             <span className="library-count">
-              {items.length}{' '}
-              {items.length === 1
-                ? 'video'
-                : 'videos'}
+              {t(
+                'library.video',
+                {
+                  count:
+                    items.length,
+                },
+              )}
             </span>
           </div>
         )}
 
-      {actionError && (
+      {actionErrorKey && (
         <div className="library-inline-error">
-          {actionError}
+          {t(
+            actionErrorKey,
+          )}
         </div>
       )}
 
@@ -515,18 +634,23 @@ function HistoryPage() {
           <div className="discovery-spinner" />
 
           <span>
-            Loading history...
+            {t(
+              'library.history.loading',
+            )}
           </span>
         </div>
       ) : isError ? (
         <div className="discovery-state discovery-state-error">
           <strong>
-            History failed to load
+            {t(
+              'library.history.loadFailed',
+            )}
           </strong>
 
           <span>
-            Make sure the backend is
-            running and try again.
+            {t(
+              'library.history.backendHint',
+            )}
           </span>
 
           <button
@@ -538,30 +662,42 @@ function HistoryPage() {
               )
             }
           >
-            Try again
+            {t(
+              'common.retry',
+            )}
           </button>
         </div>
-      ) : items.length === 0 ? (
+      ) : items.length ===
+        0 ? (
         <div className="discovery-state">
           <strong>
-            Your history is empty
+            {t(
+              'library.history.empty',
+            )}
           </strong>
 
           <span>
-            Start watching videos and
-            they will appear here.
+            {t(
+              'library.history.emptyHint',
+            )}
           </span>
         </div>
       ) : filteredItems.length ===
         0 ? (
         <div className="discovery-state">
           <strong>
-            Nothing found
+            {t(
+              'library.history.nothingFound',
+            )}
           </strong>
 
           <span>
-            No history items match
-            “{query}”.
+            {t(
+              'library.history.noMatch',
+              {
+                query,
+              },
+            )}
           </span>
         </div>
       ) : (
@@ -646,7 +782,10 @@ function HistoryPage() {
                         )
                       }
                     >
-                      {item.video.title}
+                      {
+                        item.video
+                          .title
+                      }
                     </button>
 
                     <span className="library-video-channel">
@@ -659,23 +798,31 @@ function HistoryPage() {
                     <div className="library-video-meta">
                       <span>
                         {item.completed
-                          ? 'Completed'
-                          : `${formatDuration(
-                              item.progressSeconds,
-                            )} watched`}
+                          ? t(
+                              'library.completed',
+                            )
+                          : t(
+                              'library.watched',
+                              {
+                                duration:
+                                  formatDuration(
+                                    item.progressSeconds,
+                                  ),
+                              },
+                            )}
                       </span>
 
                       <span>
-                        {
+                        {getCategoryLabel(
                           item.video
-                            .category ??
-                          'Uncategorized'
-                        }
+                            .category,
+                        )}
                       </span>
 
                       <span>
                         {formatWatchedDate(
                           item.lastWatchedAt,
+                          locale,
                         )}
                       </span>
                     </div>
@@ -693,7 +840,9 @@ function HistoryPage() {
                       )
                     }
                   >
-                    Remove
+                    {t(
+                      'library.remove',
+                    )}
                   </button>
                 </article>
               )
@@ -736,19 +885,21 @@ function HistoryPage() {
             </div>
 
             <span className="history-confirm-eyebrow">
-              WATCH HISTORY
+              {t(
+                'library.history.modalEyebrow',
+              )}
             </span>
 
             <h2 id="history-clear-title">
-              Clear watch history?
+              {t(
+                'library.history.modalTitle',
+              )}
             </h2>
 
             <p id="history-clear-description">
-              All watched videos and
-              saved playback progress
-              will be removed from your
-              history. This action
-              cannot be undone.
+              {t(
+                'library.history.modalDescription',
+              )}
             </p>
 
             <div className="history-confirm-actions">
@@ -762,7 +913,9 @@ function HistoryPage() {
                   handleCloseClearConfirm
                 }
               >
-                Cancel
+                {t(
+                  'library.history.cancel',
+                )}
               </button>
 
               <button
@@ -776,8 +929,12 @@ function HistoryPage() {
                 }
               >
                 {actionPending
-                  ? 'Clearing...'
-                  : 'Clear history'}
+                  ? t(
+                      'library.history.clearing',
+                    )
+                  : t(
+                      'library.history.clear',
+                    )}
               </button>
             </div>
           </div>

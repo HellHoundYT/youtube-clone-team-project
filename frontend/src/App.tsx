@@ -23,95 +23,123 @@ import './theme/theme-runtime.css'
 function App() {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
+      <Route
+        element={
+          <AppLayout />
+        }
+      >
         <Route
           index
-          element={<HomePage />}
+          element={
+            <HomePage />
+          }
         />
 
         <Route
           path="playme"
-          element={<PlaymePage />}
+          element={
+            <PlaymePage />
+          }
         />
 
         <Route
           path="subscriptions"
           element={
             <PlaceholderPage
-              title="Subscriptions"
-              description="Subscription content will be connected here."
+              titleKey="system.placeholders.subscriptions.title"
+              descriptionKey="system.placeholders.subscriptions.description"
             />
           }
         />
 
         <Route
           path="library"
-          element={<LibraryPage />}
+          element={
+            <LibraryPage />
+          }
         />
 
         <Route
           path="history"
-          element={<HistoryPage />}
+          element={
+            <HistoryPage />
+          }
         />
 
         <Route
           path="favorites"
-          element={<FavoritesPage />}
+          element={
+            <FavoritesPage />
+          }
         />
 
         <Route
           path="playlists"
           element={
             <PlaceholderPage
-              title="Playlists"
-              description="User playlists will be connected here."
+              titleKey="system.placeholders.playlists.title"
+              descriptionKey="system.placeholders.playlists.description"
             />
           }
         />
 
         <Route
           path="streamers"
-          element={<StreamsPage />}
+          element={
+            <StreamsPage />
+          }
         />
 
         <Route
           path="streamers/:streamId"
-          element={<LiveStreamPage />}
+          element={
+            <LiveStreamPage />
+          }
         />
 
         <Route
           path="themes"
-          element={<ThemesPage />}
+          element={
+            <ThemesPage />
+          }
         />
 
         <Route
           path="search"
-          element={<SearchPage />}
+          element={
+            <SearchPage />
+          }
         />
 
         <Route
           path="categories/:slug"
-          element={<CategoryPage />}
+          element={
+            <CategoryPage />
+          }
         />
 
         <Route
           path="upload"
-          element={<UploadPage />}
+          element={
+            <UploadPage />
+          }
         />
 
         <Route
           path="profile"
           element={
             <PlaceholderPage
-              title="Profile"
-              description="User profile will be connected here."
+              titleKey="system.placeholders.profile.title"
+              descriptionKey="system.placeholders.profile.description"
             />
           }
         />
 
         <Route
           path="watch/:videoId"
-          element={<WatchPage />}
+          element={
+            <WatchPage />
+          }
         />
       </Route>
 

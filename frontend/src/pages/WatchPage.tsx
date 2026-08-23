@@ -19,6 +19,9 @@ import {
   type VideoListItem,
 } from '../api/videos'
 import VideoPlayer from '../components/video/VideoPlayer'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './WatchPage.css'
 
 interface WatchLoadState {
@@ -26,38 +29,25 @@ interface WatchLoadState {
   video: VideoDetails | null
   recommendations: VideoListItem[]
   initialProgressSeconds: number
-  error: string | null
+  error: boolean
 }
 
-function formatViews(
-  viewCount: number,
-) {
-  return new Intl.NumberFormat(
-    'en-US',
-    {
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    },
-  ).format(viewCount)
-}
-
-function formatPublishedDate(
-  value: string | null,
-) {
-  if (!value) {
-    return 'Not published'
-  }
-
-  const date = new Date(value)
-
-  return new Intl.DateTimeFormat(
-    'en-US',
-    {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    },
-  ).format(date)
+const categoryKeys:
+Record<string, string> = {
+  Music:
+    'common.category.music',
+  Games:
+    'common.category.games',
+  Cybersport:
+    'common.category.cybersport',
+  Education:
+    'common.category.education',
+  Films:
+    'common.category.films',
+  Podcasts:
+    'common.category.podcasts',
+  Mixes:
+    'common.category.mixes',
 }
 
 function formatDuration(
@@ -76,8 +66,10 @@ function formatDuration(
 
   const minutes =
     Math.floor(
-      (safeSeconds % 3600) /
-        60,
+      (
+        safeSeconds %
+        3600
+      ) / 60,
     )
 
   const remainingSeconds =
@@ -88,10 +80,16 @@ function formatDuration(
       hours,
       minutes
         .toString()
-        .padStart(2, '0'),
+        .padStart(
+          2,
+          '0',
+        ),
       remainingSeconds
         .toString()
-        .padStart(2, '0'),
+        .padStart(
+          2,
+          '0',
+        ),
     ].join(':')
   }
 
@@ -99,16 +97,92 @@ function formatDuration(
     minutes,
     remainingSeconds
       .toString()
-      .padStart(2, '0'),
+      .padStart(
+        2,
+        '0',
+      ),
   ].join(':')
 }
 
+function getLocale(
+  language:
+    | string
+    | undefined,
+) {
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
+
+function formatViews(
+  viewCount: number,
+  locale: string,
+) {
+  return new Intl.NumberFormat(
+    locale,
+    {
+      notation:
+        'compact',
+
+      maximumFractionDigits:
+        1,
+    },
+  ).format(
+    viewCount,
+  )
+}
+
+function formatPublishedDate(
+  value:
+    | string
+    | null,
+  locale: string,
+  fallback: string,
+) {
+  if (!value) {
+    return fallback
+  }
+
+  return new Intl.DateTimeFormat(
+    locale,
+    {
+      year:
+        'numeric',
+
+      month:
+        'short',
+
+      day:
+        'numeric',
+    },
+  ).format(
+    new Date(
+      value,
+    ),
+  )
+}
+
 function WatchPage() {
-  const { videoId } =
+  const {
+    videoId,
+  } =
     useParams()
 
   const navigate =
     useNavigate()
+
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
 
   const [
     loadState,
@@ -184,13 +258,11 @@ function WatchPage() {
             ) {
               return
             }
-
-            // History must never
-            // prevent video playback.
           }
 
           if (
-            controller.signal.aborted
+            controller.signal
+              .aborted
           ) {
             return
           }
@@ -200,11 +272,12 @@ function WatchPage() {
             video,
             recommendations,
             initialProgressSeconds,
-            error: null,
+            error: false,
           })
         } catch {
           if (
-            controller.signal.aborted
+            controller.signal
+              .aborted
           ) {
             return
           }
@@ -215,8 +288,7 @@ function WatchPage() {
             recommendations: [],
             initialProgressSeconds:
               0,
-            error:
-              'The video could not be loaded.',
+            error: true,
           })
         }
       }
@@ -226,7 +298,9 @@ function WatchPage() {
     return () => {
       controller.abort()
     }
-  }, [videoId])
+  }, [
+    videoId,
+  ])
 
   if (!videoId) {
     return (
@@ -237,18 +311,24 @@ function WatchPage() {
           </span>
 
           <h1>
-            Video unavailable
+            {t(
+              'watch.unavailable',
+            )}
           </h1>
 
           <p>
-            Video identifier is missing.
+            {t(
+              'watch.missingId',
+            )}
           </p>
 
           <Link
             className="watch-back-link"
             to="/"
           >
-            Back to Home
+            {t(
+              'watch.backHome',
+            )}
           </Link>
         </div>
       </section>
@@ -266,7 +346,9 @@ function WatchPage() {
           <div className="watch-loading-spinner" />
 
           <p>
-            Loading video...
+            {t(
+              'watch.loading',
+            )}
           </p>
         </div>
       </section>
@@ -285,19 +367,28 @@ function WatchPage() {
           </span>
 
           <h1>
-            Video unavailable
+            {t(
+              'watch.unavailable',
+            )}
           </h1>
 
           <p>
-            {loadState.error ??
-              'The requested video does not exist.'}
+            {loadState.error
+              ? t(
+                  'watch.loadError',
+                )
+              : t(
+                  'watch.notFound',
+                )}
           </p>
 
           <Link
             className="watch-back-link"
             to="/"
           >
-            Back to Home
+            {t(
+              'watch.backHome',
+            )}
           </Link>
         </div>
       </section>
@@ -310,6 +401,33 @@ function WatchPage() {
   const formattedViews =
     formatViews(
       video.viewCount,
+      locale,
+    )
+
+  const categoryLabel =
+    video.category
+      ? t(
+          categoryKeys[
+            video.category
+          ] ??
+            video.category,
+          {
+            defaultValue:
+              video.category,
+          },
+        )
+      : null
+
+  const visibilityKey =
+    `common.visibility.${video.visibility.toLowerCase()}`
+
+  const visibilityLabel =
+    t(
+      visibilityKey,
+      {
+        defaultValue:
+          video.visibility,
+      },
     )
 
   const handleFirstPlay =
@@ -332,18 +450,22 @@ function WatchPage() {
 
             return {
               ...current,
+
               video: {
                 ...current.video,
+
                 viewCount:
                   current.video
-                    .viewCount + 1,
+                    .viewCount +
+                  1,
               },
             }
           },
         )
       } catch {
-        // A failed view counter must
-        // never interrupt playback.
+        // Playback must not be
+        // interrupted by a view
+        // counter failure.
       }
     }
 
@@ -361,11 +483,12 @@ function WatchPage() {
               completed
                 ? duration
                 : currentTime,
+
             completed,
           },
         )
       } catch {
-        // History errors must never
+        // History errors must not
         // interrupt playback.
       }
     }
@@ -374,8 +497,12 @@ function WatchPage() {
     <section className="watch-page">
       <div className="watch-main-column">
         <VideoPlayer
-          src={video.videoPath}
-          title={video.title}
+          src={
+            video.videoPath
+          }
+          title={
+            video.title
+          }
           poster={
             video.thumbnailPath
           }
@@ -402,9 +529,11 @@ function WatchPage() {
         <div className="watch-video-info">
           <div className="watch-video-heading">
             <div>
-              {video.category && (
+              {categoryLabel && (
                 <span className="watch-category">
-                  {video.category}
+                  {
+                    categoryLabel
+                  }
                 </span>
               )}
 
@@ -414,13 +543,24 @@ function WatchPage() {
             </div>
 
             <span className="watch-visibility">
-              {video.visibility}
+              {
+                visibilityLabel
+              }
             </span>
           </div>
 
           <div className="watch-video-meta">
             <span>
-              {formattedViews} views
+              {t(
+                'watch.views',
+                {
+                  count:
+                    video.viewCount,
+
+                  formatted:
+                    formattedViews,
+                },
+              )}
             </span>
 
             <span className="watch-meta-dot" />
@@ -428,6 +568,10 @@ function WatchPage() {
             <span>
               {formatPublishedDate(
                 video.publishedAt,
+                locale,
+                t(
+                  'watch.notPublished',
+                ),
               )}
             </span>
           </div>
@@ -453,11 +597,15 @@ function WatchPage() {
 
               <div className="watch-channel-copy">
                 <strong>
-                  {video.channelName}
+                  {
+                    video.channelName
+                  }
                 </strong>
 
                 <span>
-                  Channel
+                  {t(
+                    'watch.channel',
+                  )}
                 </span>
               </div>
             </div>
@@ -466,7 +614,9 @@ function WatchPage() {
           {video.description && (
             <div className="watch-description">
               <p>
-                {video.description}
+                {
+                  video.description
+                }
               </p>
             </div>
           )}
@@ -476,19 +626,24 @@ function WatchPage() {
       <aside className="watch-side-panel">
         <div className="watch-side-card">
           <span className="watch-side-label">
-            Up next
+            {t(
+              'watch.upNext',
+            )}
           </span>
 
           <h2>
-            Recommendations
+            {t(
+              'watch.recommendations',
+            )}
           </h2>
 
           {loadState
             .recommendations
             .length === 0 ? (
             <p>
-              No recommendations
-              are available yet.
+              {t(
+                'watch.noRecommendations',
+              )}
             </p>
           ) : (
             <div className="watch-recommendations">
@@ -497,62 +652,76 @@ function WatchPage() {
                 .map(
                   (
                     recommendation,
-                  ) => (
-                    <button
-                      key={
-                        recommendation.id
-                      }
-                      type="button"
-                      className="watch-recommendation"
-                      onClick={() =>
-                        navigate(
-                          `/watch/${recommendation.id}`,
-                        )
-                      }
-                    >
-                      <div className="watch-recommendation-thumbnail">
-                        {recommendation.thumbnailPath ? (
-                          <img
-                            src={
-                              recommendation.thumbnailPath
-                            }
-                            alt=""
-                          />
-                        ) : (
-                          <span>
-                            A
-                          </span>
-                        )}
+                  ) => {
+                    const recommendationViews =
+                      formatViews(
+                        recommendation.viewCount,
+                        locale,
+                      )
 
-                        <small>
-                          {formatDuration(
-                            recommendation.durationSeconds,
+                    return (
+                      <button
+                        key={
+                          recommendation.id
+                        }
+                        type="button"
+                        className="watch-recommendation"
+                        onClick={() =>
+                          navigate(
+                            `/watch/${recommendation.id}`,
+                          )
+                        }
+                      >
+                        <div className="watch-recommendation-thumbnail">
+                          {recommendation.thumbnailPath ? (
+                            <img
+                              src={
+                                recommendation.thumbnailPath
+                              }
+                              alt=""
+                            />
+                          ) : (
+                            <span>
+                              A
+                            </span>
                           )}
-                        </small>
-                      </div>
 
-                      <div className="watch-recommendation-copy">
-                        <strong>
-                          {
-                            recommendation.title
-                          }
-                        </strong>
+                          <small>
+                            {formatDuration(
+                              recommendation.durationSeconds,
+                            )}
+                          </small>
+                        </div>
 
-                        <span>
-                          {
-                            recommendation.channelName
-                          }
-                        </span>
+                        <div className="watch-recommendation-copy">
+                          <strong>
+                            {
+                              recommendation.title
+                            }
+                          </strong>
 
-                        <span>
-                          {formatViews(
-                            recommendation.viewCount,
-                          )}{' '}
-                          views
-                        </span>
-                      </div>
-                    </button>
-                  ),
+                          <span>
+                            {
+                              recommendation.channelName
+                            }
+                          </span>
+
+                          <span>
+                            {t(
+                              'watch.views',
+                              {
+                                count:
+                                  recommendation.viewCount,
+
+                                formatted:
+                                  recommendationViews,
+                              },
+                            )}
+                          </span>
+                        </div>
+                      </button>
+                    )
+                  },
                 )}
             </div>
           )}

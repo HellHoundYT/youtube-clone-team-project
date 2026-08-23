@@ -1,42 +1,94 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import {
+  useState,
+} from 'react'
+import {
+  Outlet,
+} from 'react-router-dom'
+import {
+  useAppTranslation,
+} from '../../i18n'
 import Header from './Header'
 import Sidebar from './Sidebar'
 
 function AppLayout() {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const {
+    t,
+  } =
+    useAppTranslation()
 
-  const handleMenuClick = () => {
-    setIsSidebarCollapsed((current) => !current)
-    setIsMobileSidebarOpen((current) => !current)
-  }
+  const [
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+  ] =
+    useState(false)
 
-  const handleMobileNavigation = () => {
-    setIsMobileSidebarOpen(false)
-  }
+  const [
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
+  ] =
+    useState(false)
+
+  const handleMenuClick =
+    () => {
+      setIsSidebarCollapsed(
+        (current) =>
+          !current,
+      )
+
+      setIsMobileSidebarOpen(
+        (current) =>
+          !current,
+      )
+    }
+
+  const handleMobileNavigation =
+    () => {
+      setIsMobileSidebarOpen(
+        false,
+      )
+    }
 
   return (
     <div
       className={`app-shell ${
-        isSidebarCollapsed ? 'sidebar-collapsed' : ''
+        isSidebarCollapsed
+          ? 'sidebar-collapsed'
+          : ''
       }`}
     >
-      <Header onMenuClick={handleMenuClick} />
+      <Header
+        onMenuClick={
+          handleMenuClick
+        }
+      />
 
       <Sidebar
-        collapsed={isSidebarCollapsed}
-        mobileOpen={isMobileSidebarOpen}
-        onNavigate={handleMobileNavigation}
+        collapsed={
+          isSidebarCollapsed
+        }
+        mobileOpen={
+          isMobileSidebarOpen
+        }
+        onNavigate={
+          handleMobileNavigation
+        }
       />
 
       <button
         type="button"
         className={`sidebar-backdrop ${
-          isMobileSidebarOpen ? 'is-visible' : ''
+          isMobileSidebarOpen
+            ? 'is-visible'
+            : ''
         }`}
-        aria-label="Close navigation"
-        onClick={() => setIsMobileSidebarOpen(false)}
+        aria-label={t(
+          'system.closeNavigation',
+        )}
+        onClick={() =>
+          setIsMobileSidebarOpen(
+            false,
+          )
+        }
       />
 
       <main className="app-content">

@@ -15,6 +15,9 @@ import type {
   VideoListItem,
 } from '../api/videos'
 import VideoGrid from '../components/video/VideoGrid'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './DiscoveryPage.css'
 
 interface CategoryState {
@@ -26,15 +29,45 @@ interface CategoryState {
   error: boolean
 }
 
+const categoryTranslationKeys:
+Record<string, string> = {
+  music:
+    'common.category.music',
+
+  games:
+    'common.category.games',
+
+  cybersport:
+    'common.category.cybersport',
+
+  education:
+    'common.category.education',
+
+  films:
+    'common.category.films',
+
+  podcasts:
+    'common.category.podcasts',
+
+  mixes:
+    'common.category.mixes',
+}
+
 function CategoryPage() {
   const navigate =
     useNavigate()
 
   const {
+    t,
+  } =
+    useAppTranslation()
+
+  const {
     slug = '',
-  } = useParams<{
-    slug: string
-  }>()
+  } =
+    useParams<{
+      slug: string
+    }>()
 
   const normalizedSlug =
     slug
@@ -44,17 +77,33 @@ function CategoryPage() {
   const [
     reloadToken,
     setReloadToken,
-  ] = useState(0)
+  ] =
+    useState(0)
 
   const [
     state,
     setState,
-  ] = useState<CategoryState | null>(
-    null,
-  )
+  ] =
+    useState<CategoryState | null>(
+      null,
+    )
 
   const requestKey =
     `${normalizedSlug}:${reloadToken}`
+
+  const getCategoryLabel = (
+    category: Category,
+  ) => {
+    const key =
+      categoryTranslationKeys[
+        category.slug
+          .toLowerCase()
+      ]
+
+    return key
+      ? t(key)
+      : category.name
+  }
 
   useEffect(() => {
     const controller =
@@ -64,6 +113,7 @@ function CategoryPage() {
       getCategories(
         controller.signal,
       ),
+
       getCategoryVideos(
         normalizedSlug,
         {
@@ -97,6 +147,7 @@ function CategoryPage() {
             categories,
             currentCategory,
             videos,
+
             error:
               currentCategory ===
               null,
@@ -105,7 +156,8 @@ function CategoryPage() {
       )
       .catch(() => {
         if (
-          controller.signal.aborted
+          controller.signal
+            .aborted
         ) {
           return
         }
@@ -141,7 +193,8 @@ function CategoryPage() {
 
   const categories =
     isCurrentRequest
-      ? state?.categories ?? []
+      ? state?.categories ??
+        []
       : []
 
   const currentCategory =
@@ -157,6 +210,13 @@ function CategoryPage() {
       ? state?.videos ?? []
       : []
 
+  const currentCategoryLabel =
+    currentCategory
+      ? getCategoryLabel(
+          currentCategory,
+        )
+      : ''
+
   return (
     <div className="discovery-page">
       <div className="category-strip discovery-category-strip">
@@ -167,13 +227,17 @@ function CategoryPage() {
             navigate('/')
           }
         >
-          All
+          {t(
+            'categoryPage.all',
+          )}
         </button>
 
         {categories.map(
           (category) => (
             <button
-              key={category.slug}
+              key={
+                category.slug
+              }
               type="button"
               className={`category-chip ${
                 category.slug ===
@@ -187,7 +251,9 @@ function CategoryPage() {
                 )
               }
             >
-              {category.name}
+              {getCategoryLabel(
+                category,
+              )}
             </button>
           ),
         )}
@@ -198,20 +264,24 @@ function CategoryPage() {
           <div className="discovery-spinner" />
 
           <span>
-            Loading category...
+            {t(
+              'categoryPage.loading',
+            )}
           </span>
         </div>
       ) : isError ||
         !currentCategory ? (
         <div className="discovery-state discovery-state-error">
           <strong>
-            Category unavailable
+            {t(
+              'categoryPage.unavailable',
+            )}
           </strong>
 
           <span>
-            This category does
-            not exist or could
-            not be loaded.
+            {t(
+              'categoryPage.unavailableHint',
+            )}
           </span>
 
           <button
@@ -223,7 +293,9 @@ function CategoryPage() {
               )
             }
           >
-            Try again
+            {t(
+              'common.retry',
+            )}
           </button>
         </div>
       ) : (
@@ -235,22 +307,25 @@ function CategoryPage() {
             }
           >
             <span className="discovery-eyebrow">
-              CATEGORY
+              {t(
+                'categoryPage.eyebrow',
+              )}
             </span>
 
             <h1>
               {
-                currentCategory
-                  .name
+                currentCategoryLabel
               }
             </h1>
 
             <p>
-              Explore videos in{' '}
-              {
-                currentCategory
-                  .name
-              }.
+              {t(
+                'categoryPage.explore',
+                {
+                  category:
+                    currentCategoryLabel,
+                },
+              )}
             </p>
           </header>
 
@@ -258,27 +333,33 @@ function CategoryPage() {
           0 ? (
             <div className="discovery-state">
               <strong>
-                No videos yet
+                {t(
+                  'categoryPage.noVideos',
+                )}
               </strong>
 
               <span>
-                There are no
-                published videos
-                in this category.
+                {t(
+                  'categoryPage.noVideosHint',
+                )}
               </span>
             </div>
           ) : (
             <>
               <div className="discovery-result-summary">
-                {videos.length}{' '}
-                {videos.length ===
-                1
-                  ? 'video'
-                  : 'videos'}
+                {t(
+                  'categoryPage.video',
+                  {
+                    count:
+                      videos.length,
+                  },
+                )}
               </div>
 
               <VideoGrid
-                videos={videos}
+                videos={
+                  videos
+                }
               />
             </>
           )}

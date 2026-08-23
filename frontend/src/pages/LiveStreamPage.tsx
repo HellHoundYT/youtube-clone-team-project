@@ -23,84 +23,143 @@ import {
   getLiveStreamById,
   type LiveStreamDetails,
 } from '../api/streams'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './StreamsPages.css'
 import './LiveChat.css'
 
 const developmentUserName =
   'Guest Viewer'
 
+const categoryKeys:
+Record<string, string> = {
+  programming:
+    'streamCategory.programming',
+
+  gaming:
+    'streamCategory.gaming',
+
+  games:
+    'streamCategory.games',
+
+  music:
+    'streamCategory.music',
+
+  education:
+    'streamCategory.education',
+
+  esports:
+    'streamCategory.esports',
+
+  cybersport:
+    'streamCategory.cybersport',
+
+  creative:
+    'streamCategory.creative',
+
+  technology:
+    'streamCategory.technology',
+
+  art:
+    'streamCategory.art',
+
+  chatting:
+    'streamCategory.chatting',
+
+  'just-chatting':
+    'streamCategory.justChatting',
+}
+
+function getLocale(
+  language:
+    | string
+    | undefined,
+) {
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
+
 function formatViewerCount(
   viewerCount: number,
+  locale: string,
 ) {
   return new Intl.NumberFormat(
-    'en-US',
-  ).format(viewerCount)
+    locale,
+  ).format(
+    viewerCount,
+  )
 }
 
 function formatChatTime(
   sentAt: string,
+  locale: string,
 ) {
   return new Intl.DateTimeFormat(
-    'en-US',
+    locale,
     {
-      hour: '2-digit',
-      minute: '2-digit',
+      hour:
+        '2-digit',
+
+      minute:
+        '2-digit',
     },
   ).format(
-    new Date(sentAt),
+    new Date(
+      sentAt,
+    ),
   )
 }
 
-function getStatusText(
-  status:
-    LiveChatConnectionStatus,
-) {
-  switch (status) {
-    case 'connected':
-      return 'Connected'
-
-    case 'reconnecting':
-      return 'Reconnecting...'
-
-    case 'disconnected':
-      return 'Disconnected'
-
-    default:
-      return 'Connecting...'
-  }
-}
-
 function LiveStreamPage() {
-  const { streamId } =
+  const {
+    streamId,
+  } =
     useParams<{
       streamId: string
     }>()
 
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
+
   const [
     stream,
     setStream,
-  ] = useState<
-    LiveStreamDetails | null
-  >(null)
+  ] =
+    useState<
+      LiveStreamDetails | null
+    >(null)
 
   const [
     isLoading,
     setIsLoading,
-  ] = useState(true)
+  ] =
+    useState(true)
 
   const [
-    error,
-    setError,
-  ] = useState<
-    string | null
-  >(null)
+    hasError,
+    setHasError,
+  ] =
+    useState(false)
 
   const [
     chatMessages,
     setChatMessages,
-  ] = useState<
-    LiveChatMessage[]
-  >([])
+  ] =
+    useState<
+      LiveChatMessage[]
+    >([])
 
   const [
     chatStatus,
@@ -111,21 +170,24 @@ function LiveStreamPage() {
     )
 
   const [
-    chatError,
-    setChatError,
-  ] = useState<
-    string | null
-  >(null)
+    chatErrorKey,
+    setChatErrorKey,
+  ] =
+    useState<
+      string | null
+    >(null)
 
   const [
     chatDraft,
     setChatDraft,
-  ] = useState('')
+  ] =
+    useState('')
 
   const [
     isSending,
     setIsSending,
-  ] = useState(false)
+  ] =
+    useState(false)
 
   const connectionRef =
     useRef<
@@ -136,6 +198,55 @@ function LiveStreamPage() {
     useRef<
       HTMLDivElement | null
     >(null)
+
+  const getCategoryLabel = (
+    category: string,
+  ) => {
+    const normalized =
+      category
+        .trim()
+        .toLowerCase()
+        .replace(
+          /\s+/g,
+          '-',
+        )
+
+    const key =
+      categoryKeys[
+        normalized
+      ]
+
+    return key
+      ? t(key)
+      : category
+  }
+
+  const getStatusText = (
+    status:
+      LiveChatConnectionStatus,
+  ) => {
+    switch (status) {
+      case 'connected':
+        return t(
+          'liveStream.chat.connected',
+        )
+
+      case 'reconnecting':
+        return t(
+          'liveStream.chat.reconnecting',
+        )
+
+      case 'disconnected':
+        return t(
+          'liveStream.chat.disconnected',
+        )
+
+      default:
+        return t(
+          'liveStream.chat.connecting',
+        )
+    }
+  }
 
   useEffect(() => {
     if (!streamId) {
@@ -148,8 +259,13 @@ function LiveStreamPage() {
     const loadStream =
       async () => {
         try {
-          setIsLoading(true)
-          setError(null)
+          setIsLoading(
+            true,
+          )
+
+          setHasError(
+            false,
+          )
 
           const data =
             await getLiveStreamById(
@@ -157,12 +273,15 @@ function LiveStreamPage() {
               controller.signal,
             )
 
-          setStream(data)
+          setStream(
+            data,
+          )
         } catch (
           requestError
         ) {
           if (
-            controller.signal.aborted
+            controller.signal
+              .aborted
           ) {
             return
           }
@@ -171,14 +290,17 @@ function LiveStreamPage() {
             requestError,
           )
 
-          setError(
-            'Live stream could not be loaded.',
+          setHasError(
+            true,
           )
         } finally {
           if (
-            !controller.signal.aborted
+            !controller.signal
+              .aborted
           ) {
-            setIsLoading(false)
+            setIsLoading(
+              false,
+            )
           }
         }
       }
@@ -188,7 +310,9 @@ function LiveStreamPage() {
     return () => {
       controller.abort()
     }
-  }, [streamId])
+  }, [
+    streamId,
+  ])
 
   useEffect(() => {
     if (!streamId) {
@@ -202,58 +326,53 @@ function LiveStreamPage() {
       createLiveChatConnection(
         streamId,
         {
-          onMessage:
-            (
-              message,
-            ) => {
-              if (
-                isDisposed
-              ) {
-                return
-              }
+          onMessage: (
+            message,
+          ) => {
+            if (
+              isDisposed
+            ) {
+              return
+            }
 
-              setChatMessages(
-                (
-                  current,
-                ) =>
-                  [
-                    ...current,
-                    message,
-                  ].slice(
-                    -100,
-                  ),
-              )
-            },
+            setChatMessages(
+              (
+                current,
+              ) =>
+                [
+                  ...current,
+                  message,
+                ].slice(
+                  -100,
+                ),
+            )
+          },
 
-          onStatusChange:
-            (
+          onStatusChange: (
+            status,
+          ) => {
+            if (
+              isDisposed
+            ) {
+              return
+            }
+
+            setChatStatus(
               status,
-            ) => {
-              if (
-                isDisposed
-              ) {
-                return
-              }
+            )
+          },
 
-              setChatStatus(
-                status,
-              )
-            },
+          onError: () => {
+            if (
+              isDisposed
+            ) {
+              return
+            }
 
-          onError:
-            (
-              message,
-            ) => {
-              if (
-                isDisposed
-              ) {
-                return
-              }
-
-              setChatError(
-                message,
-              )
-            },
+            setChatErrorKey(
+              'liveStream.chat.genericError',
+            )
+          },
         },
       )
 
@@ -278,7 +397,7 @@ function LiveStreamPage() {
             'connected',
           )
 
-          setChatError(
+          setChatErrorKey(
             null,
           )
         } catch (
@@ -298,8 +417,8 @@ function LiveStreamPage() {
             'disconnected',
           )
 
-          setChatError(
-            'Live chat connection failed.',
+          setChatErrorKey(
+            'liveStream.chat.connectionFailed',
           )
         }
       }
@@ -323,7 +442,9 @@ function LiveStreamPage() {
         streamId,
       )
     }
-  }, [streamId])
+  }, [
+    streamId,
+  ])
 
   useEffect(() => {
     const container =
@@ -335,7 +456,9 @@ function LiveStreamPage() {
 
     container.scrollTop =
       container.scrollHeight
-  }, [chatMessages])
+  }, [
+    chatMessages,
+  ])
 
   const handleSendMessage =
     async (
@@ -366,7 +489,7 @@ function LiveStreamPage() {
           true,
         )
 
-        setChatError(
+        setChatErrorKey(
           null,
         )
 
@@ -377,7 +500,9 @@ function LiveStreamPage() {
           message,
         )
 
-        setChatDraft('')
+        setChatDraft(
+          '',
+        )
       } catch (
         sendError
       ) {
@@ -385,8 +510,8 @@ function LiveStreamPage() {
           sendError,
         )
 
-        setChatError(
-          'Message could not be sent.',
+        setChatErrorKey(
+          'liveStream.chat.sendFailed',
         )
       } finally {
         setIsSending(
@@ -400,18 +525,24 @@ function LiveStreamPage() {
       <section className="streams-page">
         <div className="streams-state streams-state-error">
           <strong>
-            Stream unavailable
+            {t(
+              'liveStream.unavailable',
+            )}
           </strong>
 
           <span>
-            Stream id is missing.
+            {t(
+              'liveStream.missingId',
+            )}
           </span>
 
           <Link
             className="stream-back-link"
             to="/streamers"
           >
-            Back to streams
+            {t(
+              'liveStream.back',
+            )}
           </Link>
         </div>
       </section>
@@ -423,11 +554,15 @@ function LiveStreamPage() {
       <section className="streams-page">
         <div className="streams-state">
           <strong>
-            Loading stream...
+            {t(
+              'liveStream.loading',
+            )}
           </strong>
 
           <span>
-            Connecting to the broadcast.
+            {t(
+              'liveStream.loadingHint',
+            )}
           </span>
         </div>
       </section>
@@ -435,26 +570,35 @@ function LiveStreamPage() {
   }
 
   if (
-    error ||
+    hasError ||
     !stream
   ) {
     return (
       <section className="streams-page">
         <div className="streams-state streams-state-error">
           <strong>
-            Stream unavailable
+            {t(
+              'liveStream.unavailable',
+            )}
           </strong>
 
           <span>
-            {error ??
-              'This broadcast is not available.'}
+            {hasError
+              ? t(
+                  'liveStream.loadFailed',
+                )
+              : t(
+                  'liveStream.notAvailable',
+                )}
           </span>
 
           <Link
             className="stream-back-link"
             to="/streamers"
           >
-            Back to streams
+            {t(
+              'liveStream.back',
+            )}
           </Link>
         </div>
       </section>
@@ -478,33 +622,45 @@ function LiveStreamPage() {
 
             <div className="live-player-overlay">
               <span className="stream-live-badge">
-                LIVE
+                {t(
+                  'liveStream.live',
+                )}
               </span>
 
               <span className="live-viewer-count">
-                {formatViewerCount(
-                  stream.viewerCount,
-                )}{' '}
-                watching
+                {t(
+                  'liveStream.watching',
+                  {
+                    formatted:
+                      formatViewerCount(
+                        stream.viewerCount,
+                        locale,
+                      ),
+                  },
+                )}
               </span>
             </div>
           </div>
 
           <div className="live-stream-info">
             <div className="live-stream-category">
-              {
-                stream.category
-              }
+              {getCategoryLabel(
+                stream.category,
+              )}
             </div>
 
             <h1>
-              {stream.title}
+              {
+                stream.title
+              }
             </h1>
 
             <div className="live-channel-row">
               <div className="live-channel-avatar">
                 {stream.channelName
-                  .charAt(0)
+                  .charAt(
+                    0,
+                  )
                   .toUpperCase()}
               </div>
 
@@ -516,7 +672,9 @@ function LiveStreamPage() {
                 </strong>
 
                 <span>
-                  Live broadcaster
+                  {t(
+                    'liveStream.broadcaster',
+                  )}
                 </span>
               </div>
 
@@ -524,15 +682,21 @@ function LiveStreamPage() {
                 type="button"
                 className="live-follow-button"
                 disabled
-                title="Subscriptions will be connected with the Channels module."
+                title={t(
+                  'liveStream.followHint',
+                )}
               >
-                Follow
+                {t(
+                  'liveStream.follow',
+                )}
               </button>
             </div>
 
             <div className="live-description">
               <h2>
-                About this stream
+                {t(
+                  'liveStream.about',
+                )}
               </h2>
 
               <p>
@@ -547,7 +711,9 @@ function LiveStreamPage() {
                   {stream.tags.map(
                     (tag) => (
                       <span
-                        key={tag}
+                        key={
+                          tag
+                        }
                       >
                         #{tag}
                       </span>
@@ -565,7 +731,9 @@ function LiveStreamPage() {
               <span className="live-chat-dot" />
 
               <strong>
-                Live chat
+                {t(
+                  'liveStream.chat.title',
+                )}
               </strong>
             </div>
 
@@ -592,12 +760,15 @@ function LiveStreamPage() {
             0 ? (
               <div className="live-chat-empty">
                 <strong>
-                  Welcome to live chat
+                  {t(
+                    'liveStream.chat.welcome',
+                  )}
                 </strong>
 
                 <span>
-                  Messages from viewers
-                  will appear here.
+                  {t(
+                    'liveStream.chat.welcomeHint',
+                  )}
                 </span>
               </div>
             ) : (
@@ -619,6 +790,7 @@ function LiveStreamPage() {
                       <time>
                         {formatChatTime(
                           message.sentAt,
+                          locale,
                         )}
                       </time>
                     </div>
@@ -635,7 +807,10 @@ function LiveStreamPage() {
           </div>
 
           <div className="live-chat-identity">
-            Chatting as{' '}
+            {t(
+              'liveStream.chat.chattingAs',
+            )}{' '}
+
             <strong>
               {
                 developmentUserName
@@ -643,9 +818,11 @@ function LiveStreamPage() {
             </strong>
           </div>
 
-          {chatError && (
+          {chatErrorKey && (
             <div className="live-chat-error">
-              {chatError}
+              {t(
+                chatErrorKey,
+              )}
             </div>
           )}
 
@@ -660,7 +837,9 @@ function LiveStreamPage() {
               value={
                 chatDraft
               }
-              maxLength={500}
+              maxLength={
+                500
+              }
               disabled={
                 chatStatus !==
                   'connected' ||
@@ -669,8 +848,12 @@ function LiveStreamPage() {
               placeholder={
                 chatStatus ===
                 'connected'
-                  ? 'Send a message...'
-                  : 'Connecting to chat...'
+                  ? t(
+                      'liveStream.chat.sendPlaceholder',
+                    )
+                  : t(
+                      'liveStream.chat.connectingPlaceholder',
+                    )
               }
               onChange={(
                 event,
@@ -693,7 +876,9 @@ function LiveStreamPage() {
             >
               {isSending
                 ? '...'
-                : 'Send'}
+                : t(
+                    'liveStream.chat.send',
+                  )}
             </button>
           </form>
         </aside>

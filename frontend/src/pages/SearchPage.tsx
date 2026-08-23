@@ -12,6 +12,9 @@ import type {
   VideoListItem,
 } from '../api/videos'
 import VideoGrid from '../components/video/VideoGrid'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './DiscoveryPage.css'
 
 interface SearchState {
@@ -21,8 +24,15 @@ interface SearchState {
 }
 
 function SearchPage() {
-  const [searchParams] =
+  const [
+    searchParams,
+  ] =
     useSearchParams()
+
+  const {
+    t,
+  } =
+    useAppTranslation()
 
   const query =
     (
@@ -34,14 +44,16 @@ function SearchPage() {
   const [
     reloadToken,
     setReloadToken,
-  ] = useState(0)
+  ] =
+    useState(0)
 
   const [
     state,
     setState,
-  ] = useState<SearchState | null>(
-    null,
-  )
+  ] =
+    useState<SearchState | null>(
+      null,
+    )
 
   const requestKey =
     `${query}:${reloadToken}`
@@ -58,23 +70,30 @@ function SearchPage() {
       query,
       controller.signal,
     )
-      .then((response) => {
-        if (
-          controller.signal.aborted
-        ) {
-          return
-        }
+      .then(
+        (response) => {
+          if (
+            controller.signal
+              .aborted
+          ) {
+            return
+          }
 
-        setState({
-          requestKey,
-          videos:
-            response.videos,
-          error: false,
-        })
-      })
+          setState({
+            requestKey,
+
+            videos:
+              response.videos,
+
+            error:
+              false,
+          })
+        },
+      )
       .catch(() => {
         if (
-          controller.signal.aborted
+          controller.signal
+            .aborted
         ) {
           return
         }
@@ -117,24 +136,31 @@ function SearchPage() {
     <div className="discovery-page">
       <header className="discovery-header">
         <span className="discovery-eyebrow">
-          SEARCH
+          {t(
+            'searchPage.eyebrow',
+          )}
         </span>
 
         <h1>
-          Search results
+          {t(
+            'searchPage.title',
+          )}
         </h1>
 
         {query ? (
           <p>
-            Results for{' '}
-            <strong>
-              “{query}”
-            </strong>
+            {t(
+              'searchPage.resultsFor',
+              {
+                query,
+              },
+            )}
           </p>
         ) : (
           <p>
-            Enter a search query
-            using the field above.
+            {t(
+              'searchPage.enterQuery',
+            )}
           </p>
         )}
       </header>
@@ -142,13 +168,15 @@ function SearchPage() {
       {!query ? (
         <div className="discovery-state">
           <strong>
-            Start searching
+            {t(
+              'searchPage.startSearching',
+            )}
           </strong>
 
           <span>
-            Search for videos,
-            categories or channels
-            from the header.
+            {t(
+              'searchPage.startSearchingHint',
+            )}
           </span>
         </div>
       ) : isLoading ? (
@@ -156,19 +184,23 @@ function SearchPage() {
           <div className="discovery-spinner" />
 
           <span>
-            Searching...
+            {t(
+              'searchPage.searching',
+            )}
           </span>
         </div>
       ) : isError ? (
         <div className="discovery-state discovery-state-error">
           <strong>
-            Search failed
+            {t(
+              'searchPage.failed',
+            )}
           </strong>
 
           <span>
-            Make sure the backend
-            is running and try
-            again.
+            {t(
+              'searchPage.backendHint',
+            )}
           </span>
 
           <button
@@ -180,33 +212,45 @@ function SearchPage() {
               )
             }
           >
-            Try again
+            {t(
+              'common.retry',
+            )}
           </button>
         </div>
       ) : videos.length ===
         0 ? (
         <div className="discovery-state">
           <strong>
-            Nothing found
+            {t(
+              'searchPage.nothingFound',
+            )}
           </strong>
 
           <span>
-            No videos matched
-            “{query}”.
+            {t(
+              'searchPage.noMatch',
+              {
+                query,
+              },
+            )}
           </span>
         </div>
       ) : (
         <>
           <div className="discovery-result-summary">
-            {videos.length}{' '}
-            {videos.length === 1
-              ? 'video'
-              : 'videos'}{' '}
-            found
+            {t(
+              'searchPage.found',
+              {
+                count:
+                  videos.length,
+              },
+            )}
           </div>
 
           <VideoGrid
-            videos={videos}
+            videos={
+              videos
+            }
           />
         </>
       )}

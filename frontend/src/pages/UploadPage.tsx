@@ -3,8 +3,15 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { uploadVideo } from '../api/videos'
+import {
+  useNavigate,
+} from 'react-router-dom'
+import {
+  uploadVideo,
+} from '../api/videos'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './UploadPage.css'
 
 const categories = [
@@ -16,26 +23,32 @@ const categories = [
   'Films',
   'Podcasts',
   'Mixes',
-]
+] as const
 
 function readVideoDuration(
   file: File,
 ): Promise<number> {
   return new Promise(
-    (resolve, reject) => {
+    (
+      resolve,
+      reject,
+    ) => {
       const objectUrl =
-        URL.createObjectURL(file)
+        URL.createObjectURL(
+          file,
+        )
 
       const video =
         document.createElement(
           'video',
         )
 
-      const cleanUp = () => {
-        URL.revokeObjectURL(
-          objectUrl,
-        )
-      }
+      const cleanUp =
+        () => {
+          URL.revokeObjectURL(
+            objectUrl,
+          )
+        }
 
       video.preload =
         'metadata'
@@ -64,7 +77,9 @@ function readVideoDuration(
             return
           }
 
-          resolve(duration)
+          resolve(
+            duration,
+          )
         }
 
       video.onerror =
@@ -97,29 +112,78 @@ function formatDuration(
 
   return `${minutes}:${remainingSeconds
     .toString()
-    .padStart(2, '0')}`
+    .padStart(
+      2,
+      '0',
+    )}`
+}
+
+function getLocale(
+  language:
+    | string
+    | undefined,
+) {
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
+
+function formatMegabytes(
+  bytes: number,
+  locale: string,
+) {
+  return new Intl.NumberFormat(
+    locale,
+    {
+      minimumFractionDigits:
+        1,
+
+      maximumFractionDigits:
+        1,
+    },
+  ).format(
+    bytes /
+      1024 /
+      1024,
+  )
 }
 
 function UploadPage() {
   const navigate =
     useNavigate()
 
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
+
   const [
     title,
     setTitle,
-  ] = useState('')
+  ] =
+    useState('')
 
   const [
     description,
     setDescription,
-  ] = useState('')
+  ] =
+    useState('')
 
   const [
     category,
     setCategory,
-  ] = useState(
-    'Games',
-  )
+  ] =
+    useState(
+      'Games',
+    )
 
   const [
     file,
@@ -132,21 +196,24 @@ function UploadPage() {
   const [
     durationSeconds,
     setDurationSeconds,
-  ] = useState(0)
+  ] =
+    useState(0)
 
   const [
     progress,
     setProgress,
-  ] = useState(0)
+  ] =
+    useState(0)
 
   const [
     isUploading,
     setIsUploading,
-  ] = useState(false)
+  ] =
+    useState(false)
 
   const [
-    error,
-    setError,
+    errorKey,
+    setErrorKey,
   ] =
     useState<string | null>(
       null,
@@ -158,13 +225,25 @@ function UploadPage() {
         ChangeEvent<HTMLInputElement>,
     ) => {
       const selectedFile =
-        event.target.files?.[0] ??
+        event.target
+          .files?.[0] ??
         null
 
-      setError(null)
-      setProgress(0)
-      setDurationSeconds(0)
-      setFile(null)
+      setErrorKey(
+        null,
+      )
+
+      setProgress(
+        0,
+      )
+
+      setDurationSeconds(
+        0,
+      )
+
+      setFile(
+        null,
+      )
 
       if (!selectedFile) {
         return
@@ -173,10 +252,12 @@ function UploadPage() {
       if (
         !selectedFile.name
           .toLowerCase()
-          .endsWith('.mp4')
+          .endsWith(
+            '.mp4',
+          )
       ) {
-        setError(
-          'Choose an MP4 video file.',
+        setErrorKey(
+          'upload.errors.chooseMp4',
         )
 
         event.target.value =
@@ -210,8 +291,8 @@ function UploadPage() {
           )
         }
       } catch {
-        setError(
-          'The selected MP4 could not be read.',
+        setErrorKey(
+          'upload.errors.unreadableMp4',
         )
 
         event.target.value =
@@ -233,8 +314,8 @@ function UploadPage() {
       }
 
       if (!file) {
-        setError(
-          'Choose a video file first.',
+        setErrorKey(
+          'upload.errors.chooseFile',
         )
 
         return
@@ -243,35 +324,46 @@ function UploadPage() {
       if (
         !title.trim()
       ) {
-        setError(
-          'Enter a video title.',
+        setErrorKey(
+          'upload.errors.enterTitle',
         )
 
         return
       }
 
       if (
-        durationSeconds < 1
+        durationSeconds <
+        1
       ) {
-        setError(
-          'Video duration could not be determined.',
+        setErrorKey(
+          'upload.errors.durationUnknown',
         )
 
         return
       }
 
       try {
-        setError(null)
-        setProgress(0)
-        setIsUploading(true)
+        setErrorKey(
+          null,
+        )
+
+        setProgress(
+          0,
+        )
+
+        setIsUploading(
+          true,
+        )
 
         const video =
           await uploadVideo(
             {
               title:
                 title.trim(),
+
               description:
                 description.trim(),
+
               category,
               durationSeconds,
               file,
@@ -283,8 +375,8 @@ function UploadPage() {
           `/watch/${video.id}`,
         )
       } catch {
-        setError(
-          'Video upload failed. Check that the API is running and try again.',
+        setErrorKey(
+          'upload.errors.uploadFailed',
         )
       } finally {
         setIsUploading(
@@ -297,17 +389,21 @@ function UploadPage() {
     <section className="upload-page">
       <div className="upload-page-heading">
         <span>
-          CREATOR STUDIO
+          {t(
+            'upload.eyebrow',
+          )}
         </span>
 
         <h1>
-          Upload video
+          {t(
+            'upload.title',
+          )}
         </h1>
 
         <p>
-          Upload an MP4 and publish it
-          directly to the AMTLIS video
-          catalogue.
+          {t(
+            'upload.description',
+          )}
         </p>
       </div>
 
@@ -323,15 +419,21 @@ function UploadPage() {
           </div>
 
           <strong>
-            Select your video
+            {t(
+              'upload.selectVideo',
+            )}
           </strong>
 
           <span>
-            MP4, maximum 500 MB
+            {t(
+              'upload.fileHint',
+            )}
           </span>
 
           <label className="upload-file-button">
-            Choose file
+            {t(
+              'upload.chooseFile',
+            )}
 
             <input
               type="file"
@@ -352,14 +454,20 @@ function UploadPage() {
               </strong>
 
               <span>
-                {(
-                  file.size /
-                  1024 /
-                  1024
-                ).toFixed(1)}{' '}
-                MB ·{' '}
-                {formatDuration(
-                  durationSeconds,
+                {t(
+                  'upload.fileMeta',
+                  {
+                    size:
+                      formatMegabytes(
+                        file.size,
+                        locale,
+                      ),
+
+                    duration:
+                      formatDuration(
+                        durationSeconds,
+                      ),
+                  },
                 )}
               </span>
             </div>
@@ -369,18 +477,28 @@ function UploadPage() {
         <div className="upload-fields">
           <label className="upload-field">
             <span>
-              Title
+              {t(
+                'upload.titleLabel',
+              )}
             </span>
 
             <input
               type="text"
-              maxLength={200}
-              value={title}
+              maxLength={
+                200
+              }
+              value={
+                title
+              }
               disabled={
                 isUploading
               }
-              placeholder="Video title"
-              onChange={(event) =>
+              placeholder={t(
+                'upload.titlePlaceholder',
+              )}
+              onChange={(
+                event,
+              ) =>
                 setTitle(
                   event.target
                     .value,
@@ -391,7 +509,9 @@ function UploadPage() {
 
           <label className="upload-field">
             <span>
-              Category
+              {t(
+                'upload.categoryLabel',
+              )}
             </span>
 
             <select
@@ -401,7 +521,9 @@ function UploadPage() {
               disabled={
                 isUploading
               }
-              onChange={(event) =>
+              onChange={(
+                event,
+              ) =>
                 setCategory(
                   event.target
                     .value,
@@ -409,12 +531,20 @@ function UploadPage() {
               }
             >
               {categories.map(
-                (item) => (
+                (
+                  item,
+                ) => (
                   <option
-                    key={item}
-                    value={item}
+                    key={
+                      item
+                    }
+                    value={
+                      item
+                    }
                   >
-                    {item}
+                    {t(
+                      `upload.categories.${item.toLowerCase()}`,
+                    )}
                   </option>
                 ),
               )}
@@ -423,20 +553,30 @@ function UploadPage() {
 
           <label className="upload-field">
             <span>
-              Description
+              {t(
+                'upload.descriptionLabel',
+              )}
             </span>
 
             <textarea
-              maxLength={5000}
-              rows={7}
+              maxLength={
+                5000
+              }
+              rows={
+                7
+              }
               value={
                 description
               }
               disabled={
                 isUploading
               }
-              placeholder="Tell viewers about this video"
-              onChange={(event) =>
+              placeholder={t(
+                'upload.descriptionPlaceholder',
+              )}
+              onChange={(
+                event,
+              ) =>
                 setDescription(
                   event.target
                     .value,
@@ -445,9 +585,11 @@ function UploadPage() {
             />
           </label>
 
-          {error && (
+          {errorKey && (
             <div className="upload-error">
-              {error}
+              {t(
+                errorKey,
+              )}
             </div>
           )}
 
@@ -455,7 +597,9 @@ function UploadPage() {
             <div className="upload-progress">
               <div className="upload-progress-copy">
                 <span>
-                  Uploading...
+                  {t(
+                    'upload.uploading',
+                  )}
                 </span>
 
                 <strong>
@@ -483,8 +627,12 @@ function UploadPage() {
             }
           >
             {isUploading
-              ? 'Uploading...'
-              : 'Publish video'}
+              ? t(
+                  'upload.uploading',
+                )
+              : t(
+                  'upload.publish',
+                )}
           </button>
         </div>
       </form>

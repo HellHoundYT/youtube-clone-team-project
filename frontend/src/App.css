@@ -2682,3 +2682,47 @@
     height: 8px !important;
   }
 }
+/* i18n language switcher */
+
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+}
+
+.language-select {
+  height: 36px;
+  min-width: 58px;
+
+  padding: 0 9px;
+
+  color: #c9cad2;
+  background: #17181e;
+
+  border: 1px solid #292b34;
+  border-radius: 8px;
+
+  outline: none;
+
+  font: inherit;
+  font-size: 10px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.language-select:hover,
+.language-select:focus-visible {
+  color: #ffffff;
+  background: #202129;
+  border-color: #3a3d49;
+}
+
+.language-select option {
+  color: #eeeeF3;
+  background: #17181e;
+}

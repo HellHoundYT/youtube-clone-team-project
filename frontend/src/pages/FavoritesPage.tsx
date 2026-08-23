@@ -10,6 +10,9 @@ import {
   removeFavorite,
   type FavoriteItem,
 } from '../api/library'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './DiscoveryPage.css'
 import './LibraryPages.css'
 
@@ -17,6 +20,17 @@ interface FavoritesState {
   requestKey: string
   items: FavoriteItem[]
   error: boolean
+}
+
+const categoryKeys:
+Record<string, string> = {
+  Music: 'common.category.music',
+  Games: 'common.category.games',
+  Cybersport: 'common.category.cybersport',
+  Education: 'common.category.education',
+  Films: 'common.category.films',
+  Podcasts: 'common.category.podcasts',
+  Mixes: 'common.category.mixes',
 }
 
 function formatDuration(
@@ -62,11 +76,24 @@ function formatDuration(
   ].join(':')
 }
 
+function getLocale(
+  language:
+    | string
+    | undefined,
+) {
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
+
 function formatDate(
   value: string,
+  locale: string,
 ) {
   return new Intl.DateTimeFormat(
-    'en-US',
+    locale,
     {
       month: 'short',
       day: 'numeric',
@@ -80,6 +107,17 @@ function formatDate(
 function FavoritesPage() {
   const navigate =
     useNavigate()
+
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
 
   const [
     reloadToken,
@@ -103,8 +141,8 @@ function FavoritesPage() {
     )
 
   const [
-    actionError,
-    setActionError,
+    actionErrorKey,
+    setActionErrorKey,
   ] =
     useState<string | null>(
       null,
@@ -112,6 +150,27 @@ function FavoritesPage() {
 
   const requestKey =
     `favorites:${reloadToken}`
+
+  const getCategoryLabel = (
+    category:
+      | string
+      | null,
+  ) => {
+    if (!category) {
+      return t(
+        'common.category.uncategorized',
+      )
+    }
+
+    const key =
+      categoryKeys[
+        category
+      ]
+
+    return key
+      ? t(key)
+      : category
+  }
 
   useEffect(() => {
     const controller =
@@ -183,7 +242,9 @@ function FavoritesPage() {
       }
 
       try {
-        setActionError(null)
+        setActionErrorKey(
+          null,
+        )
         setActionPendingId(
           videoId,
         )
@@ -210,8 +271,8 @@ function FavoritesPage() {
           },
         )
       } catch {
-        setActionError(
-          'Favorite could not be removed.',
+        setActionErrorKey(
+          'library.favorites.removeFailed',
         )
       } finally {
         setActionPendingId(
@@ -225,33 +286,43 @@ function FavoritesPage() {
       <header className="discovery-header library-header">
         <div>
           <span className="discovery-eyebrow">
-            LIBRARY
+            {t(
+              'library.eyebrow',
+            )}
           </span>
 
           <h1>
-            Favorites
+            {t(
+              'library.favorites.title',
+            )}
           </h1>
 
           <p>
-            Videos you saved to your
-            personal favorites.
+            {t(
+              'library.favorites.description',
+            )}
           </p>
         </div>
 
         {!isLoading &&
           !isError && (
             <span className="library-count">
-              {items.length}{' '}
-              {items.length === 1
-                ? 'video'
-                : 'videos'}
+              {t(
+                'library.video',
+                {
+                  count:
+                    items.length,
+                },
+              )}
             </span>
           )}
       </header>
 
-      {actionError && (
+      {actionErrorKey && (
         <div className="library-inline-error">
-          {actionError}
+          {t(
+            actionErrorKey,
+          )}
         </div>
       )}
 
@@ -260,18 +331,23 @@ function FavoritesPage() {
           <div className="discovery-spinner" />
 
           <span>
-            Loading favorites...
+            {t(
+              'library.favorites.loading',
+            )}
           </span>
         </div>
       ) : isError ? (
         <div className="discovery-state discovery-state-error">
           <strong>
-            Favorites failed to load
+            {t(
+              'library.favorites.loadFailed',
+            )}
           </strong>
 
           <span>
-            Make sure the backend is
-            running and try again.
+            {t(
+              'library.favorites.backendHint',
+            )}
           </span>
 
           <button
@@ -283,19 +359,24 @@ function FavoritesPage() {
               )
             }
           >
-            Try again
+            {t(
+              'common.retry',
+            )}
           </button>
         </div>
-      ) : items.length === 0 ? (
+      ) : items.length ===
+        0 ? (
         <div className="discovery-state">
           <strong>
-            No favorite videos yet
+            {t(
+              'library.favorites.empty',
+            )}
           </strong>
 
           <span>
-            Videos you add to
-            Favorites will appear
-            here.
+            {t(
+              'library.favorites.emptyHint',
+            )}
           </span>
         </div>
       ) : (
@@ -350,7 +431,10 @@ function FavoritesPage() {
                       )
                     }
                   >
-                    {item.video.title}
+                    {
+                      item.video
+                        .title
+                    }
                   </button>
 
                   <span className="library-video-channel">
@@ -362,17 +446,22 @@ function FavoritesPage() {
 
                   <div className="library-video-meta">
                     <span>
-                      {
+                      {getCategoryLabel(
                         item.video
-                          .category ??
-                        'Uncategorized'
-                      }
+                          .category,
+                      )}
                     </span>
 
                     <span>
-                      Saved{' '}
-                      {formatDate(
-                        item.createdAt,
+                      {t(
+                        'library.favorites.saved',
+                        {
+                          date:
+                            formatDate(
+                              item.createdAt,
+                              locale,
+                            ),
+                        },
                       )}
                     </span>
                   </div>
@@ -393,8 +482,12 @@ function FavoritesPage() {
                 >
                   {actionPendingId ===
                   item.videoId
-                    ? 'Removing...'
-                    : 'Remove'}
+                    ? t(
+                        'library.removing',
+                      )
+                    : t(
+                        'library.remove',
+                      )}
                 </button>
               </article>
             ),

@@ -5,7 +5,9 @@ import {
   useState,
   type RefObject,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+import {
+  useNavigate,
+} from 'react-router-dom'
 import {
   getWatchHistory,
   type WatchHistoryItem,
@@ -14,6 +16,14 @@ import {
   getVideos,
   type VideoListItem,
 } from '../api/videos'
+import {
+  useAppTranslation,
+} from '../i18n'
+
+interface CategoryDefinition {
+  value: string
+  translationKey: string
+}
 
 interface HeroSlide {
   id: number
@@ -36,49 +46,47 @@ interface HistoryLoadState {
   error: boolean
 }
 
-const categories = [
-  'All',
-  'Music',
-  'Games',
-  'Cybersport',
-  'Education',
-  'Films',
-  'Podcasts',
-  'Mixes',
-]
-
-const heroSlides: HeroSlide[] = [
+const categoryDefinitions:
+CategoryDefinition[] = [
   {
-    id: 1,
-    label: 'AMTLIS ORIGINAL',
-    title: 'Discover a new world of video',
-    description:
-      'Watch stories, streams, music and creators you love. Discover something new every day.',
-    accent: 'purple',
-    image:
-      '/demo/hero/hero-original.webp',
+    value: 'All',
+    translationKey:
+      'home.categories.all',
   },
   {
-    id: 2,
-    label: 'LIVE NOW',
-    title:
-      'The biggest moments are happening now',
-    description:
-      'Watch creators, tournaments and live events together with the AMTLIS community.',
-    accent: 'blue',
-    image:
-      '/demo/hero/hero-live.webp',
+    value: 'Music',
+    translationKey:
+      'home.categories.music',
   },
   {
-    id: 3,
-    label: 'TRENDING',
-    title:
-      'Find what everyone is watching',
-    description:
-      'Explore popular videos, new releases and creators that are growing right now.',
-    accent: 'pink',
-    image:
-      '/demo/hero/hero-trending.webp',
+    value: 'Games',
+    translationKey:
+      'home.categories.games',
+  },
+  {
+    value: 'Cybersport',
+    translationKey:
+      'home.categories.cybersport',
+  },
+  {
+    value: 'Education',
+    translationKey:
+      'home.categories.education',
+  },
+  {
+    value: 'Films',
+    translationKey:
+      'home.categories.films',
+  },
+  {
+    value: 'Podcasts',
+    translationKey:
+      'home.categories.podcasts',
+  },
+  {
+    value: 'Mixes',
+    translationKey:
+      'home.categories.mixes',
   },
 ]
 
@@ -116,7 +124,9 @@ function AddIcon() {
 function ArrowIcon({
   direction,
 }: {
-  direction: 'left' | 'right'
+  direction:
+    | 'left'
+    | 'right'
 }) {
   return (
     <svg
@@ -149,8 +159,10 @@ function formatDuration(
 
   const minutes =
     Math.floor(
-      (safeSeconds % 3600) /
-        60,
+      (
+        safeSeconds %
+        3600
+      ) / 60,
     )
 
   const remainingSeconds =
@@ -161,10 +173,16 @@ function formatDuration(
       hours,
       minutes
         .toString()
-        .padStart(2, '0'),
+        .padStart(
+          2,
+          '0',
+        ),
       remainingSeconds
         .toString()
-        .padStart(2, '0'),
+        .padStart(
+          2,
+          '0',
+        ),
     ].join(':')
   }
 
@@ -172,43 +190,61 @@ function formatDuration(
     minutes,
     remainingSeconds
       .toString()
-      .padStart(2, '0'),
+      .padStart(
+        2,
+        '0',
+      ),
   ].join(':')
 }
 
-function formatViews(
-  value: number,
+function getLocale(
+  language:
+    | string
+    | undefined,
 ) {
-  const formatted =
-    new Intl.NumberFormat(
-      'en-US',
-      {
-        notation: 'compact',
-        maximumFractionDigits: 1,
-      },
-    ).format(value)
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
 
-  return `${formatted} views`
+function formatCompactNumber(
+  value: number,
+  locale: string,
+) {
+  return new Intl.NumberFormat(
+    locale,
+    {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    },
+  ).format(value)
 }
 
 function formatDate(
-  publishedAt: string | null,
+  publishedAt:
+    | string
+    | null,
+  locale: string,
+  notPublished: string,
 ) {
   if (!publishedAt) {
-    return 'Not published'
+    return notPublished
   }
 
-  const date =
-    new Date(publishedAt)
-
   return new Intl.DateTimeFormat(
-    'en-US',
+    locale,
     {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     },
-  ).format(date)
+  ).format(
+    new Date(
+      publishedAt,
+    ),
+  )
 }
 
 function getVideoTone(
@@ -216,19 +252,31 @@ function getVideoTone(
   index: number,
 ) {
   const categoryIndex =
-    categories.indexOf(
-      video.category ?? '',
-    )
+    categoryDefinitions
+      .map(
+        (category) =>
+          category.value,
+      )
+      .indexOf(
+        video.category ??
+          '',
+      )
 
-  if (categoryIndex > 0) {
+  if (
+    categoryIndex > 0
+  ) {
     return tones[
-      (categoryIndex - 1) %
+      (
+        categoryIndex -
+        1
+      ) %
         tones.length
     ]
   }
 
   return tones[
-    index % tones.length
+    index %
+      tones.length
   ]
 }
 
@@ -243,10 +291,27 @@ function VideoCardItem({
     videoId: string,
   ) => void
 }) {
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
+
   const tone =
     getVideoTone(
       video,
       index,
+    )
+
+  const formattedViews =
+    formatCompactNumber(
+      video.viewCount,
+      locale,
     )
 
   return (
@@ -311,12 +376,23 @@ function VideoCardItem({
           </p>
 
           <span>
-            {formatViews(
-              video.viewCount,
-            )}{' '}
-            ·{' '}
+            {t(
+              'home.views',
+              {
+                count:
+                  video.viewCount,
+
+                formatted:
+                  formattedViews,
+              },
+            )}
+            {' · '}
             {formatDate(
               video.publishedAt,
+              locale,
+              t(
+                'home.notPublished',
+              ),
             )}
           </span>
         </div>
@@ -440,6 +516,11 @@ function SectionHeader({
   onPrevious: () => void
   onNext: () => void
 }) {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <div className="content-section-header">
       <h2>
@@ -450,7 +531,12 @@ function SectionHeader({
         <button
           type="button"
           className="section-arrow"
-          aria-label={`Previous ${title}`}
+          aria-label={t(
+            'home.previousSection',
+            {
+              title,
+            },
+          )}
           onClick={
             onPrevious
           }
@@ -463,7 +549,12 @@ function SectionHeader({
         <button
           type="button"
           className="section-arrow"
-          aria-label={`Next ${title}`}
+          aria-label={t(
+            'home.nextSection',
+            {
+              title,
+            },
+          )}
           onClick={
             onNext
           }
@@ -478,12 +569,19 @@ function SectionHeader({
 }
 
 function HomeLoadingState() {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <div className="home-api-state">
       <div className="watch-loading-spinner" />
 
       <span>
-        Loading videos...
+        {t(
+          'home.loadingVideos',
+        )}
       </span>
     </div>
   )
@@ -494,37 +592,57 @@ function HomeErrorState({
 }: {
   onRetry: () => void
 }) {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <div className="home-api-state home-api-error">
       <strong>
-        Videos could not be loaded.
+        {t(
+          'home.videosLoadFailed',
+        )}
       </strong>
 
       <span>
-        Check that the API is running
-        and try again.
+        {t(
+          'home.apiHint',
+        )}
       </span>
 
       <button
         type="button"
-        onClick={onRetry}
+        onClick={
+          onRetry
+        }
       >
-        Try again
+        {t(
+          'common.retry',
+        )}
       </button>
     </div>
   )
 }
 
 function HomeEmptyState() {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <div className="home-api-state">
       <strong>
-        No videos found.
+        {t(
+          'home.noVideos',
+        )}
       </strong>
 
       <span>
-        There are no videos in this
-        category yet.
+        {t(
+          'home.noVideosCategory',
+        )}
       </span>
     </div>
   )
@@ -534,29 +652,41 @@ function HomePage() {
   const navigate =
     useNavigate()
 
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   const [
     activeCategory,
     setActiveCategory,
-  ] = useState('All')
+  ] =
+    useState('All')
 
   const [
     activeHero,
     setActiveHero,
-  ] = useState(0)
+  ] =
+    useState(0)
 
   const [
     reloadToken,
     setReloadToken,
-  ] = useState(0)
+  ] =
+    useState(0)
 
   const [
     allVideosState,
     setAllVideosState,
-  ] = useState<{
-    token: number
-    videos: VideoListItem[]
-    error: boolean
-  } | null>(null)
+  ] =
+    useState<{
+      token: number
+      videos:
+        VideoListItem[]
+      error: boolean
+    } | null>(
+      null,
+    )
 
   const [
     categoryState,
@@ -575,19 +705,126 @@ function HomePage() {
     )
 
   const topRef =
-    useRef<HTMLDivElement>(null)
+    useRef<HTMLDivElement>(
+      null,
+    )
 
   const continueRef =
-    useRef<HTMLDivElement>(null)
+    useRef<HTMLDivElement>(
+      null,
+    )
 
   const popularRef =
-    useRef<HTMLDivElement>(null)
+    useRef<HTMLDivElement>(
+      null,
+    )
 
   const allVideoRef =
-    useRef<HTMLDivElement>(null)
+    useRef<HTMLDivElement>(
+      null,
+    )
+
+  const heroSlides:
+  HeroSlide[] = [
+    {
+      id: 1,
+
+      label:
+        t(
+          'home.hero.original.label',
+        ),
+
+      title:
+        t(
+          'home.hero.original.title',
+        ),
+
+      description:
+        t(
+          'home.hero.original.description',
+        ),
+
+      accent:
+        'purple',
+
+      image:
+        '/demo/hero/hero-original.webp',
+    },
+
+    {
+      id: 2,
+
+      label:
+        t(
+          'home.hero.live.label',
+        ),
+
+      title:
+        t(
+          'home.hero.live.title',
+        ),
+
+      description:
+        t(
+          'home.hero.live.description',
+        ),
+
+      accent:
+        'blue',
+
+      image:
+        '/demo/hero/hero-live.webp',
+    },
+
+    {
+      id: 3,
+
+      label:
+        t(
+          'home.hero.trending.label',
+        ),
+
+      title:
+        t(
+          'home.hero.trending.title',
+        ),
+
+      description:
+        t(
+          'home.hero.trending.description',
+        ),
+
+      accent:
+        'pink',
+
+      image:
+        '/demo/hero/hero-trending.webp',
+    },
+  ]
 
   const selectedHero =
-    heroSlides[activeHero]
+    heroSlides[
+      activeHero
+    ]
+
+  const getCategoryLabel = (
+    value: string,
+  ) => {
+    const definition =
+      categoryDefinitions.find(
+        (category) =>
+          category.value ===
+          value,
+      )
+
+    if (!definition) {
+      return value
+    }
+
+    return t(
+      definition.translationKey,
+    )
+  }
 
   useEffect(() => {
     const controller =
@@ -600,21 +837,26 @@ function HomePage() {
       },
       controller.signal,
     )
-      .then((videos) => {
-        if (
-          controller.signal
-            .aborted
-        ) {
-          return
-        }
+      .then(
+        (videos) => {
+          if (
+            controller.signal
+              .aborted
+          ) {
+            return
+          }
 
-        setAllVideosState({
-          token:
-            reloadToken,
-          videos,
-          error: false,
-        })
-      })
+          setAllVideosState({
+            token:
+              reloadToken,
+
+            videos,
+
+            error:
+              false,
+          })
+        },
+      )
       .catch(() => {
         if (
           controller.signal
@@ -626,15 +868,20 @@ function HomePage() {
         setAllVideosState({
           token:
             reloadToken,
+
           videos: [],
-          error: true,
+
+          error:
+            true,
         })
       })
 
     return () => {
       controller.abort()
     }
-  }, [reloadToken])
+  }, [
+    reloadToken,
+  ])
 
   useEffect(() => {
     const controller =
@@ -643,21 +890,26 @@ function HomePage() {
     void getWatchHistory(
       controller.signal,
     )
-      .then((items) => {
-        if (
-          controller.signal
-            .aborted
-        ) {
-          return
-        }
+      .then(
+        (items) => {
+          if (
+            controller.signal
+              .aborted
+          ) {
+            return
+          }
 
-        setHistoryState({
-          token:
-            reloadToken,
-          items,
-          error: false,
-        })
-      })
+          setHistoryState({
+            token:
+              reloadToken,
+
+            items,
+
+            error:
+              false,
+          })
+        },
+      )
       .catch(() => {
         if (
           controller.signal
@@ -669,15 +921,20 @@ function HomePage() {
         setHistoryState({
           token:
             reloadToken,
+
           items: [],
-          error: true,
+
+          error:
+            true,
         })
       })
 
     return () => {
       controller.abort()
     }
-  }, [reloadToken])
+  }, [
+    reloadToken,
+  ])
 
   useEffect(() => {
     if (
@@ -693,27 +950,34 @@ function HomePage() {
     void getVideos(
       {
         page: 1,
+
         pageSize: 50,
+
         category:
           activeCategory,
       },
       controller.signal,
     )
-      .then((videos) => {
-        if (
-          controller.signal
-            .aborted
-        ) {
-          return
-        }
+      .then(
+        (videos) => {
+          if (
+            controller.signal
+              .aborted
+          ) {
+            return
+          }
 
-        setCategoryState({
-          category:
-            activeCategory,
-          videos,
-          error: false,
-        })
-      })
+          setCategoryState({
+            category:
+              activeCategory,
+
+            videos,
+
+            error:
+              false,
+          })
+        },
+      )
       .catch(() => {
         if (
           controller.signal
@@ -725,8 +989,11 @@ function HomePage() {
         setCategoryState({
           category:
             activeCategory,
+
           videos: [],
-          error: true,
+
+          error:
+            true,
         })
       })
 
@@ -741,7 +1008,8 @@ function HomePage() {
   const allVideos =
     useMemo(() => {
       if (
-        allVideosState?.token !==
+        allVideosState
+          ?.token !==
           reloadToken ||
         allVideosState.error
       ) {
@@ -757,7 +1025,8 @@ function HomePage() {
   const continueWatching =
     useMemo(() => {
       if (
-        historyState?.token !==
+        historyState
+          ?.token !==
           reloadToken ||
         historyState.error
       ) {
@@ -775,7 +1044,10 @@ function HomePage() {
               0,
         )
         .sort(
-          (left, right) =>
+          (
+            left,
+            right,
+          ) =>
             new Date(
               right.lastWatchedAt,
             ).getTime() -
@@ -789,33 +1061,39 @@ function HomePage() {
     ])
 
   const isAllLoading =
-    allVideosState?.token !==
+    allVideosState
+      ?.token !==
     reloadToken
 
   const isAllError =
-    allVideosState?.token ===
+    allVideosState
+      ?.token ===
       reloadToken &&
     allVideosState.error
 
   const isHistoryLoading =
-    historyState?.token !==
+    historyState
+      ?.token !==
     reloadToken
 
   const isHistoryError =
-    historyState?.token ===
+    historyState
+      ?.token ===
       reloadToken &&
     historyState.error
 
   const isCategoryLoading =
     activeCategory !==
       'All' &&
-    categoryState?.category !==
+    categoryState
+      ?.category !==
       activeCategory
 
   const isCategoryError =
     activeCategory !==
       'All' &&
-    categoryState?.category ===
+    categoryState
+      ?.category ===
       activeCategory &&
     categoryState.error
 
@@ -829,7 +1107,8 @@ function HomePage() {
       }
 
       if (
-        categoryState?.category !==
+        categoryState
+          ?.category !==
           activeCategory ||
         categoryState.error
       ) {
@@ -844,36 +1123,55 @@ function HomePage() {
     ])
 
   const popularVideos =
-    useMemo(() => {
-      return [
-        ...filteredVideos,
-      ].sort(
-        (left, right) =>
-          right.viewCount -
-          left.viewCount,
-      )
-    }, [filteredVideos])
-
-  const topVideos =
-    useMemo(() => {
-      return [
-        ...allVideos,
-      ]
-        .sort(
-          (left, right) =>
+    useMemo(
+      () =>
+        [
+          ...filteredVideos,
+        ].sort(
+          (
+            left,
+            right,
+          ) =>
             right.viewCount -
             left.viewCount,
-        )
-        .slice(0, 10)
-    }, [allVideos])
+        ),
+      [
+        filteredVideos,
+      ],
+    )
+
+  const topVideos =
+    useMemo(
+      () =>
+        [
+          ...allVideos,
+        ]
+          .sort(
+            (
+              left,
+              right,
+            ) =>
+              right.viewCount -
+              left.viewCount,
+          )
+          .slice(
+            0,
+            10,
+          ),
+      [
+        allVideos,
+      ],
+    )
 
   const scrollRow = (
     ref:
       RefObject<
         HTMLDivElement | null
       >,
+
     direction:
-      'left' | 'right',
+      | 'left'
+      | 'right',
   ) => {
     const element =
       ref.current
@@ -892,7 +1190,9 @@ function HomePage() {
           : element
               .clientWidth *
             -0.72,
-      behavior: 'smooth',
+
+      behavior:
+        'smooth',
     })
   }
 
@@ -919,7 +1219,9 @@ function HomePage() {
             allVideos.length
         ]
 
-      openVideo(video.id)
+      openVideo(
+        video.id,
+      )
     }
 
   const retry = () => {
@@ -929,27 +1231,47 @@ function HomePage() {
     )
   }
 
+  const popularTitle =
+    activeCategory ===
+    'All'
+      ? t(
+          'home.sections.popular',
+        )
+      : t(
+          'home.sections.popularIn',
+          {
+            category:
+              getCategoryLabel(
+                activeCategory,
+              ),
+          },
+        )
+
   return (
     <div className="amtlis-home">
       <div className="category-strip">
-        {categories.map(
+        {categoryDefinitions.map(
           (category) => (
             <button
-              key={category}
+              key={
+                category.value
+              }
               type="button"
               className={`category-chip ${
                 activeCategory ===
-                category
+                category.value
                   ? 'is-active'
                   : ''
               }`}
               onClick={() =>
                 setActiveCategory(
-                  category,
+                  category.value,
                 )
               }
             >
-              {category}
+              {t(
+                category.translationKey,
+              )}
             </button>
           ),
         )}
@@ -960,9 +1282,7 @@ function HomePage() {
       >
         <div className="hero-background">
           <div className="hero-light hero-light-one" />
-
           <div className="hero-light hero-light-two" />
-
           <div className="hero-grid-decoration" />
         </div>
 
@@ -975,14 +1295,23 @@ function HomePage() {
           style={{
             position:
               'absolute',
+
             inset: 0,
+
             zIndex: 2,
-            width: '100%',
-            height: '100%',
+
+            width:
+              '100%',
+
+            height:
+              '100%',
+
             objectFit:
               'cover',
+
             objectPosition:
               'center',
+
             pointerEvents:
               'none',
           }}
@@ -993,10 +1322,14 @@ function HomePage() {
           style={{
             position:
               'absolute',
+
             inset: 0,
+
             zIndex: 3,
+
             background:
               'linear-gradient(90deg, rgba(7, 8, 13, 0.50) 0%, rgba(7, 8, 13, 0.34) 32%, rgba(7, 8, 13, 0.14) 58%, rgba(7, 8, 13, 0.03) 100%)',
+
             pointerEvents:
               'none',
           }}
@@ -1007,15 +1340,20 @@ function HomePage() {
           style={{
             position:
               'relative',
+
             zIndex: 4,
           }}
         >
           <span className="hero-label">
-            {selectedHero.label}
+            {
+              selectedHero.label
+            }
           </span>
 
           <h1>
-            {selectedHero.title}
+            {
+              selectedHero.title
+            }
           </h1>
 
           <p>
@@ -1039,7 +1377,9 @@ function HomePage() {
               <PlayIcon />
 
               <span>
-                Watch now
+                {t(
+                  'home.hero.watchNow',
+                )}
               </span>
             </button>
 
@@ -1055,7 +1395,9 @@ function HomePage() {
               <AddIcon />
 
               <span>
-                My list
+                {t(
+                  'home.hero.myList',
+                )}
               </span>
             </button>
           </div>
@@ -1073,7 +1415,9 @@ function HomePage() {
               index,
             ) => (
               <button
-                key={slide.id}
+                key={
+                  slide.id
+                }
                 type="button"
                 className={
                   activeHero ===
@@ -1081,9 +1425,14 @@ function HomePage() {
                     ? 'is-active'
                     : ''
                 }
-                aria-label={`Open hero slide ${
-                  index + 1
-                }`}
+                aria-label={t(
+                  'home.hero.openSlide',
+                  {
+                    number:
+                      index +
+                      1,
+                  },
+                )}
                 onClick={() =>
                   setActiveHero(
                     index,
@@ -1097,7 +1446,9 @@ function HomePage() {
 
       <section className="home-section">
         <SectionHeader
-          title="Top 10"
+          title={t(
+            'home.sections.top10',
+          )}
           onPrevious={() =>
             scrollRow(
               topRef,
@@ -1116,7 +1467,9 @@ function HomePage() {
           <HomeLoadingState />
         ) : isAllError ? (
           <HomeErrorState
-            onRetry={retry}
+            onRetry={
+              retry
+            }
           />
         ) : topVideos.length ===
           0 ? (
@@ -1124,7 +1477,9 @@ function HomePage() {
         ) : (
           <div
             className="top-ten-row horizontal-row"
-            ref={topRef}
+            ref={
+              topRef
+            }
           >
             {topVideos.map(
               (
@@ -1182,7 +1537,9 @@ function HomePage() {
 
       <section className="home-section">
         <SectionHeader
-          title="Continue Watching"
+          title={t(
+            'home.sections.continueWatching',
+          )}
           onPrevious={() =>
             scrollRow(
               continueRef,
@@ -1202,43 +1559,49 @@ function HomePage() {
             <div className="watch-loading-spinner" />
 
             <span>
-              Loading watch
-              history...
+              {t(
+                'home.loadingHistory',
+              )}
             </span>
           </div>
         ) : isHistoryError ? (
           <div className="home-api-state home-api-error">
             <strong>
-              Watch history could
-              not be loaded.
+              {t(
+                'home.historyLoadFailed',
+              )}
             </strong>
 
             <span>
-              Check that the API
-              is running and try
-              again.
+              {t(
+                'home.apiHint',
+              )}
             </span>
 
             <button
               type="button"
-              onClick={retry}
+              onClick={
+                retry
+              }
             >
-              Try again
+              {t(
+                'common.retry',
+              )}
             </button>
           </div>
         ) : continueWatching.length ===
           0 ? (
           <div className="home-api-state home-history-state">
             <strong>
-              Nothing to continue
-              yet.
+              {t(
+                'home.nothingToContinue',
+              )}
             </strong>
 
             <span>
-              Start watching a
-              video and your
-              playback progress
-              will appear here.
+              {t(
+                'home.continueHint',
+              )}
             </span>
           </div>
         ) : (
@@ -1257,8 +1620,12 @@ function HomePage() {
                   key={
                     item.videoId
                   }
-                  item={item}
-                  index={index}
+                  item={
+                    item
+                  }
+                  index={
+                    index
+                  }
                   onOpen={
                     openVideo
                   }
@@ -1272,10 +1639,7 @@ function HomePage() {
       <section className="home-section">
         <SectionHeader
           title={
-            activeCategory ===
-            'All'
-              ? 'Popular'
-              : `Popular in ${activeCategory}`
+            popularTitle
           }
           onPrevious={() =>
             scrollRow(
@@ -1292,16 +1656,22 @@ function HomePage() {
         />
 
         {isCategoryLoading ||
-        (activeCategory ===
-          'All' &&
-          isAllLoading) ? (
+        (
+          activeCategory ===
+            'All' &&
+          isAllLoading
+        ) ? (
           <HomeLoadingState />
         ) : isCategoryError ||
-          (activeCategory ===
-            'All' &&
-            isAllError) ? (
+          (
+            activeCategory ===
+              'All' &&
+            isAllError
+          ) ? (
           <HomeErrorState
-            onRetry={retry}
+            onRetry={
+              retry
+            }
           />
         ) : popularVideos.length ===
           0 ? (
@@ -1322,8 +1692,12 @@ function HomePage() {
                   key={
                     video.id
                   }
-                  video={video}
-                  index={index}
+                  video={
+                    video
+                  }
+                  index={
+                    index
+                  }
                   onOpen={
                     openVideo
                   }
@@ -1336,7 +1710,9 @@ function HomePage() {
 
       <section className="home-section">
         <SectionHeader
-          title="All Video"
+          title={t(
+            'home.sections.allVideos',
+          )}
           onPrevious={() =>
             scrollRow(
               allVideoRef,
@@ -1355,7 +1731,9 @@ function HomePage() {
           <HomeLoadingState />
         ) : isAllError ? (
           <HomeErrorState
-            onRetry={retry}
+            onRetry={
+              retry
+            }
           />
         ) : allVideos.length ===
           0 ? (
@@ -1376,8 +1754,12 @@ function HomePage() {
                   key={
                     video.id
                   }
-                  video={video}
-                  index={index}
+                  video={
+                    video
+                  }
+                  index={
+                    index
+                  }
                   onOpen={
                     openVideo
                   }

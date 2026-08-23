@@ -3,6 +3,9 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  useAppTranslation,
+} from '../i18n'
+import {
   defaultThemeId,
   getThemeById,
   themeAchievementContracts,
@@ -24,19 +27,6 @@ const familyOrder:
     'wave',
     'space',
   ]
-
-const familyNames:
-  Record<
-    ThemeFamily,
-    string
-  > = {
-    default: 'Base',
-    city: 'City',
-    hud: 'HUD / Game',
-    cyber: 'Cyber / Tech',
-    wave: 'Wave / Neon',
-    space: 'Space',
-  }
 
 function getPreviewStyle(
   theme: ThemeConfig,
@@ -157,6 +147,11 @@ function CityPreview() {
 }
 
 function HudPreview() {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <>
       <div className="preview-hud-grid" />
@@ -168,7 +163,9 @@ function HudPreview() {
 
       <div className="preview-hud-header">
         <span>
-          USER PROFILE
+          {t(
+            'themesPage.preview.userProfile',
+          )}
         </span>
 
         <strong>
@@ -196,7 +193,9 @@ function HudPreview() {
           </strong>
 
           <span>
-            LVL
+            {t(
+              'themesPage.preview.level',
+            )}
           </span>
         </div>
 
@@ -206,7 +205,9 @@ function HudPreview() {
           </strong>
 
           <span>
-            BADGES
+            {t(
+              'themesPage.preview.badges',
+            )}
           </span>
         </div>
 
@@ -216,7 +217,9 @@ function HudPreview() {
           </strong>
 
           <span>
-            SYNC
+            {t(
+              'themesPage.preview.sync',
+            )}
           </span>
         </div>
       </div>
@@ -227,6 +230,11 @@ function HudPreview() {
 }
 
 function CyberPreview() {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <>
       <div className="preview-cyber-cut cut-one" />
@@ -262,7 +270,9 @@ function CyberPreview() {
       </div>
 
       <div className="preview-cyber-label">
-        CYBER LINK
+        {t(
+          'themesPage.preview.cyberLink',
+        )}
       </div>
     </>
   )
@@ -379,6 +389,11 @@ function ThemePreview({
   theme: ThemeConfig
   selected: boolean
 }) {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <div
       className={`theme-card-preview theme-preview-${theme.family}`}
@@ -392,7 +407,9 @@ function ThemePreview({
 
       {selected && (
         <span className="theme-selected-badge">
-          Active
+          {t(
+            'themesPage.active',
+          )}
         </span>
       )}
     </div>
@@ -408,6 +425,21 @@ function ThemeCard({
   selected: boolean
   onSelect: () => void
 }) {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
+  const themeKey =
+    `themesPage.themes.${theme.id}`
+
+  const unlockKey =
+    theme.unlock.type ===
+    'default'
+      ? 'default'
+      : theme.unlock.id ??
+        'default'
+
   return (
     <button
       type="button"
@@ -438,15 +470,19 @@ function ThemeCard({
       <div className="theme-card-info">
         <div>
           <strong>
-            {theme.name}
+            {t(
+              `${themeKey}.name`,
+              {
+                defaultValue:
+                  theme.name,
+              },
+            )}
           </strong>
 
           <span>
-            {
-              familyNames[
-                theme.family
-              ]
-            }
+            {t(
+              `themesPage.families.${theme.family}`,
+            )}
           </span>
         </div>
 
@@ -457,9 +493,13 @@ function ThemeCard({
       </div>
 
       <p>
-        {
-          theme.description
-        }
+        {t(
+          `${themeKey}.description`,
+          {
+            defaultValue:
+              theme.description,
+          },
+        )}
       </p>
 
       <div className="theme-unlock">
@@ -467,15 +507,23 @@ function ThemeCard({
           {theme.unlock
             .type ===
           'default'
-            ? 'Default'
-            : 'Achievement'}
+            ? t(
+                'themesPage.defaultUnlock',
+              )
+            : t(
+                'themesPage.achievementUnlock',
+              )}
         </span>
 
         <strong>
-          {
-            theme.unlock
-              .title
-          }
+          {t(
+            `themesPage.unlockTitles.${unlockKey}`,
+            {
+              defaultValue:
+                theme.unlock
+                  .title,
+            },
+          )}
         </strong>
       </div>
     </button>
@@ -483,6 +531,11 @@ function ThemeCard({
 }
 
 function ThemesPage() {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   const selectedThemeId =
     useThemeStore(
       (state) =>
@@ -514,43 +567,45 @@ function ThemesPage() {
       <div className="themes-header">
         <div>
           <span className="themes-kicker">
-            PERSONALIZATION
-            LAB
+            {t(
+              'themesPage.kicker',
+            )}
           </span>
 
           <h1>
-            Theme system
+            {t(
+              'themesPage.title',
+            )}
           </h1>
 
           <p>
-            Preview and test
-            visually distinct
-            profile themes.
-            Account persistence
-            will be connected
-            after Profile and
-            Auth integration.
+            {t(
+              'themesPage.description',
+            )}
           </p>
         </div>
 
         <div className="themes-current">
           <span>
-            Current theme
+            {t(
+              'themesPage.currentTheme',
+            )}
           </span>
 
           <strong>
-            {
-              selectedTheme.name
-            }
+            {t(
+              `themesPage.themes.${selectedTheme.id}.name`,
+              {
+                defaultValue:
+                  selectedTheme.name,
+              },
+            )}
           </strong>
 
           <small>
-            {
-              familyNames[
-                selectedTheme
-                  .family
-              ]
-            }
+            {t(
+              `themesPage.families.${selectedTheme.family}`,
+            )}
           </small>
 
           <button
@@ -563,7 +618,9 @@ function ThemesPage() {
               resetTheme
             }
           >
-            Reset
+            {t(
+              'themesPage.reset',
+            )}
           </button>
         </div>
       </div>
@@ -577,7 +634,9 @@ function ThemesPage() {
           </strong>
 
           <span>
-            theme variants
+            {t(
+              'themesPage.themeVariants',
+            )}
           </span>
         </div>
 
@@ -589,27 +648,37 @@ function ThemesPage() {
           </strong>
 
           <span>
-            visual families
+            {t(
+              'themesPage.visualFamilies',
+            )}
           </span>
         </div>
 
         <div>
           <strong>
-            Local
+            {t(
+              'themesPage.local',
+            )}
           </strong>
 
           <span>
-            v1 persistence
+            {t(
+              'themesPage.persistence',
+            )}
           </span>
         </div>
 
         <div>
           <strong>
-            Ready
+            {t(
+              'themesPage.ready',
+            )}
           </strong>
 
           <span>
-            profile contract
+            {t(
+              'themesPage.profileContract',
+            )}
           </span>
         </div>
       </div>
@@ -633,27 +702,26 @@ function ThemesPage() {
               <div className="theme-family-header">
                 <div>
                   <span>
-                    THEME FAMILY
+                    {t(
+                      'themesPage.familyLabel',
+                    )}
                   </span>
 
                   <h2>
-                    {
-                      familyNames[
-                        family
-                      ]
-                    }
+                    {t(
+                      `themesPage.families.${family}`,
+                    )}
                   </h2>
                 </div>
 
                 <span>
-                  {
-                    themes.length
-                  }{' '}
-                  variant
-                  {themes.length ===
-                  1
-                    ? ''
-                    : 's'}
+                  {t(
+                    'themesPage.variant',
+                    {
+                      count:
+                        themes.length,
+                    },
+                  )}
                 </span>
               </div>
 
@@ -691,18 +759,22 @@ function ThemesPage() {
         <div className="theme-family-header">
           <div>
             <span>
-              FUTURE
-              INTEGRATION
+              {t(
+                'themesPage.futureIntegration',
+              )}
             </span>
 
             <h2>
-              Achievement
-              contracts
+              {t(
+                'themesPage.achievementContracts',
+              )}
             </h2>
           </div>
 
           <span>
-            No User API yet
+            {t(
+              'themesPage.noUserApi',
+            )}
           </span>
         </div>
 
@@ -710,42 +782,57 @@ function ThemesPage() {
           {themeAchievementContracts.map(
             (
               achievement,
-            ) => (
-              <article
-                key={
-                  achievement.id
-                }
-                className={`theme-contract-card contract-${achievement.family}`}
-              >
-                <div className="theme-contract-icon">
-                  ★
-                </div>
+            ) => {
+              const achievementKey =
+                `themesPage.achievements.${achievement.id}`
 
-                <div>
-                  <strong>
-                    {
-                      achievement.title
-                    }
-                  </strong>
+              return (
+                <article
+                  key={
+                    achievement.id
+                  }
+                  className={`theme-contract-card contract-${achievement.family}`}
+                >
+                  <div className="theme-contract-icon">
+                    ★
+                  </div>
 
-                  <p>
-                    {
-                      achievement.description
-                    }
-                  </p>
+                  <div>
+                    <strong>
+                      {t(
+                        `${achievementKey}.title`,
+                        {
+                          defaultValue:
+                            achievement.title,
+                        },
+                      )}
+                    </strong>
 
-                  <span>
-                    Unlocks{' '}
-                    {
-                      achievement
-                        .unlockThemeIds
-                        .length
-                    }{' '}
-                    themes
-                  </span>
-                </div>
-              </article>
-            ),
+                    <p>
+                      {t(
+                        `${achievementKey}.description`,
+                        {
+                          defaultValue:
+                            achievement.description,
+                        },
+                      )}
+                    </p>
+
+                    <span>
+                      {t(
+                        'themesPage.themesUnlocked',
+                        {
+                          count:
+                            achievement
+                              .unlockThemeIds
+                              .length,
+                        },
+                      )}
+                    </span>
+                  </div>
+                </article>
+              )
+            },
           )}
         </div>
       </section>

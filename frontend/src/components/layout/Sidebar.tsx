@@ -1,6 +1,9 @@
 import {
   NavLink,
 } from 'react-router-dom'
+import {
+  useAppTranslation,
+} from '../../i18n'
 
 type IconName =
   | 'home'
@@ -20,75 +23,83 @@ interface SidebarProps {
 }
 
 interface NavigationItem {
-  label: string
+  labelKey: string
   path: string
   icon: IconName
   end?: boolean
 }
 
 const primaryNavigation:
-  NavigationItem[] = [
-    {
-      label: 'Home',
-      path: '/',
-      icon: 'home',
-      end: true,
-    },
+NavigationItem[] = [
+  {
+    labelKey:
+      'layout.navigation.home',
+    path: '/',
+    icon: 'home',
+    end: true,
+  },
 
-    {
-      label: 'Playme',
-      path: '/playme',
-      icon: 'play',
-    },
+  {
+    labelKey:
+      'layout.navigation.playme',
+    path: '/playme',
+    icon: 'play',
+  },
 
-    {
-      label:
-        'Subscriptions',
-      path:
-        '/subscriptions',
-      icon:
-        'subscriptions',
-    },
-  ]
+  {
+    labelKey:
+      'layout.navigation.subscriptions',
+    path:
+      '/subscriptions',
+    icon:
+      'subscriptions',
+  },
+]
 
 const libraryNavigation:
-  NavigationItem[] = [
-    {
-      label: 'Library',
-      path: '/library',
-      icon: 'library',
-    },
+NavigationItem[] = [
+  {
+    labelKey:
+      'layout.navigation.library',
+    path: '/library',
+    icon: 'library',
+  },
 
-    {
-      label: 'History',
-      path: '/history',
-      icon: 'history',
-    },
+  {
+    labelKey:
+      'layout.navigation.history',
+    path: '/history',
+    icon: 'history',
+  },
 
-    {
-      label: 'Favorites',
-      path: '/favorites',
-      icon: 'favorites',
-    },
+  {
+    labelKey:
+      'layout.navigation.favorites',
+    path: '/favorites',
+    icon: 'favorites',
+  },
 
-    {
-      label: 'Playlists',
-      path: '/playlists',
-      icon: 'playlists',
-    },
+  {
+    labelKey:
+      'layout.navigation.playlists',
+    path: '/playlists',
+    icon: 'playlists',
+  },
 
-    {
-      label: 'Streamers',
-      path: '/streamers',
-      icon: 'streamers',
-    },
+  {
+    labelKey:
+      'layout.navigation.streamers',
+    path: '/streamers',
+    icon: 'streamers',
+  },
 
-    {
-      label: 'Themes',
-      path: '/themes',
-      icon: 'themes',
-    },
-  ]
+  {
+    labelKey:
+      'layout.navigation.themes',
+    path: '/themes',
+    icon: 'themes',
+  },
+]
 
 function NavigationIcon({
   name,
@@ -271,6 +282,11 @@ function NavigationGroup({
     NavigationItem[]
   onNavigate: () => void
 }) {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <nav className="sidebar-navigation">
       {items.map(
@@ -307,9 +323,9 @@ function NavigationGroup({
             </span>
 
             <span className="sidebar-label">
-              {
-                item.label
-              }
+              {t(
+                item.labelKey,
+              )}
             </span>
           </NavLink>
         ),
@@ -323,6 +339,11 @@ function Sidebar({
   mobileOpen,
   onNavigate,
 }: SidebarProps) {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <aside
       className={`app-sidebar ${
@@ -348,7 +369,9 @@ function Sidebar({
         <div className="sidebar-divider" />
 
         <div className="sidebar-section-title">
-          Your content
+          {t(
+            'layout.yourContent',
+          )}
         </div>
 
         <NavigationGroup
