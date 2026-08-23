@@ -1,4 +1,4 @@
-﻿const liveUk = {
+const liveUk = {
   streamCategory: {
     programming: 'Програмування',
     gaming: 'Ігри',

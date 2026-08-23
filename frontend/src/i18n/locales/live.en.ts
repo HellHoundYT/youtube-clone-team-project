@@ -1,4 +1,4 @@
-﻿const liveEn = {
+const liveEn = {
   streamCategory: {
     programming: 'Programming',
     gaming: 'Gaming',

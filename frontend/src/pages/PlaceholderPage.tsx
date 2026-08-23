@@ -1,4 +1,4 @@
-﻿import {
+import {
   useAppTranslation,
 } from '../i18n'
 

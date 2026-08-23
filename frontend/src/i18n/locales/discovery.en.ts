@@ -1,4 +1,4 @@
-﻿const discoveryEn = {
+const discoveryEn = {
   searchPage: {
     eyebrow: 'SEARCH',
     title: 'Search results',

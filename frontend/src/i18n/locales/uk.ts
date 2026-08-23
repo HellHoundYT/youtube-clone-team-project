@@ -1,4 +1,4 @@
-﻿const uk = {
+const uk = {
   common: {
     language: 'Мова',
     english: 'Англійська',

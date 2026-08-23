@@ -1,4 +1,4 @@
-﻿import {
+import {
   type FormEvent,
   useState,
 } from 'react'

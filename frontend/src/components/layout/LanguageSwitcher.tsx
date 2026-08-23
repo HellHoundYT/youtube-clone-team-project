@@ -1,4 +1,4 @@
-﻿import {
+import {
   changeAppLanguage,
   getCurrentLanguage,
   supportedLanguages,

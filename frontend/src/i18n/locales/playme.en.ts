@@ -1,4 +1,4 @@
-﻿const playmeEn = {
+const playmeEn = {
   playme: {
     label: 'PLAYME',
 

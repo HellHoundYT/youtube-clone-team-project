@@ -1,4 +1,4 @@
-﻿const systemUk = {
+const systemUk = {
   system: {
     closeNavigation:
       'Закрити навігацію',

@@ -1,4 +1,4 @@
-﻿import {
+import {
   StrictMode,
 } from 'react'
 import {

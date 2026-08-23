@@ -1,4 +1,4 @@
-﻿const systemEn = {
+const systemEn = {
   system: {
     closeNavigation:
       'Close navigation',
