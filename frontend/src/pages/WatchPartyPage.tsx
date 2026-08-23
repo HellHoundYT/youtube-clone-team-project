@@ -12,6 +12,7 @@ import {
   Link,
   useNavigate,
   useParams,
+  useSearchParams,
 } from 'react-router-dom'
 import {
   closeWatchPartyRoom,
@@ -66,6 +67,19 @@ function WatchPartyPage() {
 
   const navigate =
     useNavigate()
+
+  const [
+    searchParams,
+  ] =
+    useSearchParams()
+
+  const initialVideoId =
+    searchParams
+      .get(
+        'videoId',
+      )
+      ?.trim() ||
+    null
 
   const {
     t,
@@ -564,7 +578,7 @@ function WatchPartyPage() {
             connection,
             sessionId,
             normalizedName,
-            null,
+            initialVideoId,
           )
 
         markWatchPartyHostRoom(

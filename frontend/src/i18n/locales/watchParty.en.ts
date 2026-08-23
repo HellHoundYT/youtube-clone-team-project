@@ -178,6 +178,9 @@ const watchPartyEn = {
 
     resumePlayback:
       'Continue playback',
+    startFromVideo:
+      'Start Watch Party',
+
     errors: {
       invalidCode:
         'Enter a valid six character room code.',

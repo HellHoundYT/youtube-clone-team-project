@@ -178,6 +178,9 @@ const watchPartyUk = {
 
     resumePlayback:
       'Продовжити відтворення',
+    startFromVideo:
+      'Почати спільний перегляд',
+
     errors: {
       invalidCode:
         'Введіть коректний шестисимвольний код кімнати.',

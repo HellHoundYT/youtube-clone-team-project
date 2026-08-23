@@ -301,3 +301,48 @@
   font-weight: 900;
   cursor: pointer;
 }
+
+/* watch-party-video-info-polish-v1 */
+
+.watch-party-current-video-info {
+  gap: 24px;
+  padding: 18px 20px;
+}
+
+.watch-party-current-video-info span,
+.watch-party-video-library header span {
+  font-size: 10px;
+}
+
+.watch-party-current-video-info h2 {
+  margin:
+    6px
+    0
+    4px;
+
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.watch-party-current-video-info p {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.watch-party-control-note {
+  max-width: 300px;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.watch-party-video-library {
+  padding: 20px;
+}
+
+.watch-party-video-library > header {
+  margin-bottom: 16px;
+}
+
+.watch-party-video-library h2 {
+  font-size: 18px;
+}
