@@ -74,6 +74,9 @@ interface WatchPartyConnectionOptions {
   onError?: (
     message: string,
   ) => void
+
+  onReconnected?: (
+  ) => void | Promise<void>
 }
 
 export function createWatchPartyConnection(
@@ -163,10 +166,24 @@ export function createWatchPartyConnection(
   )
 
   connection.onreconnected(
-    () => {
-      options.onStatusChange?.(
-        'connected',
-      )
+    async () => {
+      try {
+        await options.onReconnected?.()
+
+        options.onStatusChange?.(
+          'connected',
+        )
+      } catch (
+        error
+      ) {
+        console.error(
+          error,
+        )
+
+        options.onError?.(
+          'Could not rejoin the Watch Party room.',
+        )
+      }
     },
   )
 

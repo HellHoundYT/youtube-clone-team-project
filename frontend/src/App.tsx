@@ -17,6 +17,7 @@ import StreamsPage from './pages/StreamsPage'
 import ThemesPage from './pages/ThemesPage'
 import UploadPage from './pages/UploadPage'
 import WatchPage from './pages/WatchPage'
+import WatchPartyPage from './pages/WatchPartyPage'
 import './App.css'
 import './theme/theme-runtime.css'
 
@@ -132,6 +133,19 @@ function App() {
               titleKey="system.placeholders.profile.title"
               descriptionKey="system.placeholders.profile.description"
             />
+          }
+        />
+        <Route
+          path="watch-party"
+          element={
+            <WatchPartyPage />
+          }
+        />
+
+        <Route
+          path="watch-party/:roomCode"
+          element={
+            <WatchPartyPage />
           }
         />
 
