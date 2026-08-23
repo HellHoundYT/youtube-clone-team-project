@@ -12,6 +12,13 @@ import {
 } from '../api/videos'
 import './PlaymePage.css'
 
+const playmePosters = [
+  '/demo/playme/epic-clip.webp',
+  '/demo/playme/night-vibe.webp',
+  '/demo/playme/code-quick.webp',
+  '/demo/playme/keep-moving.webp',
+] as const
+
 function formatViews(value: number) {
   return new Intl.NumberFormat(
     'en-US',
@@ -817,6 +824,12 @@ function PlaymePage() {
                       }}
                       className="playme-video"
                       src={`/api/v1/videos/${video.id}/stream`}
+                      poster={
+                        playmePosters[
+                          index %
+                            playmePosters.length
+                        ]
+                      }
                       muted={
                         isMuted
                       }

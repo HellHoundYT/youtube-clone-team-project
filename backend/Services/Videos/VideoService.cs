@@ -267,8 +267,103 @@ public sealed class VideoService : IVideoService
                 1_100_000,
                 new DateTimeOffset(
                     2026, 8, 15, 15, 0, 0,
+                    TimeSpan.Zero)),
+
+            CreateSeedVideo(
+                "77777777-7777-7777-7777-777777777777",
+                "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                "Play Zone",
+                "Games",
+                "games",
+                "Pro Game Moments",
+                "A collection of intense competitive gaming moments.",
+                12,
+                1_350_000,
+                new DateTimeOffset(
+                    2026, 8, 20, 19, 15, 0,
+                    TimeSpan.Zero)),
+
+            CreateSeedVideo(
+                "88888888-8888-8888-8888-888888888888",
+                "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                "AMTLIS Music",
+                "Music",
+                "music",
+                "Wave Session",
+                "A neon electronic music session for the night.",
+                12,
+                1_280_000,
+                new DateTimeOffset(
+                    2026, 8, 21, 20, 0, 0,
+                    TimeSpan.Zero)),
+
+            CreateSeedVideo(
+                "99999999-9999-9999-9999-999999999999",
+                "12121212-1212-1212-1212-121212121212",
+                "AMTLIS Talks",
+                "Podcasts",
+                "podcasts",
+                "Talk Session",
+                "A relaxed conversation about ideas, technology and culture.",
+                12,
+                720_000,
+                new DateTimeOffset(
+                    2026, 8, 17, 16, 30, 0,
+                    TimeSpan.Zero)),
+
+            CreateSeedVideo(
+                "10101010-1010-1010-1010-101010101010",
+                "ffffffff-ffff-ffff-ffff-ffffffffffff",
+                "Next Level",
+                "Education",
+                "education",
+                "Learn Fast",
+                "A short visual guide focused on faster and smarter learning.",
+                12,
+                1_520_000,
+                new DateTimeOffset(
+                    2026, 8, 22, 14, 0, 0,
                     TimeSpan.Zero))
         ];
+    }
+
+    private static string? GetSeedThumbnailPath(
+        Guid videoId)
+    {
+        return videoId.ToString() switch
+        {
+            "11111111-1111-1111-1111-111111111111" =>
+                "/demo/thumbnails/midnight-city.webp",
+
+            "22222222-2222-2222-2222-222222222222" =>
+                "/demo/thumbnails/cyber-arena-finals.webp",
+
+            "33333333-3333-3333-3333-333333333333" =>
+                "/demo/thumbnails/beyond-the-horizon.webp",
+
+            "44444444-4444-4444-4444-444444444444" =>
+                "/demo/thumbnails/night-drive-mix.webp",
+
+            "55555555-5555-5555-5555-555555555555" =>
+                "/demo/thumbnails/inside-the-game.webp",
+
+            "66666666-6666-6666-6666-666666666666" =>
+                "/demo/thumbnails/future-technology.webp",
+
+            "77777777-7777-7777-7777-777777777777" =>
+                "/demo/thumbnails/pro-game-moments.webp",
+
+            "88888888-8888-8888-8888-888888888888" =>
+                "/demo/thumbnails/wave-session.webp",
+
+            "99999999-9999-9999-9999-999999999999" =>
+                "/demo/thumbnails/talk-session.webp",
+
+            "10101010-1010-1010-1010-101010101010" =>
+                "/demo/thumbnails/learn-fast.webp",
+
+            _ => null
+        };
     }
 
     private static VideoDetailsDto CreateSeedVideo(
@@ -305,7 +400,8 @@ public sealed class VideoService : IVideoService
             VideoPath =
                 $"/api/v1/videos/{videoId}/stream",
             ThumbnailPath =
-                null,
+                GetSeedThumbnailPath(
+                    videoId),
             DurationSeconds =
                 durationSeconds,
             ViewCount =
