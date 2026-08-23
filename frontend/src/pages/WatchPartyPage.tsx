@@ -34,6 +34,7 @@ import {
   removeWatchPartyHostRoom,
   saveWatchPartyUserName,
 } from '../watchPartySession'
+import WatchPartyVideoStage from '../components/watchParty/WatchPartyVideoStage'
 import {
   useAppTranslation,
 } from '../i18n'
@@ -1183,43 +1184,47 @@ function WatchPartyPage() {
       )}
 
       <div className="watch-party-room-layout">
-        <main className="watch-party-stage">
-          <div className="watch-party-stage-empty">
-            <div className="watch-party-stage-symbol">
-              ▶
-            </div>
+        <WatchPartyVideoStage
+          room={
+            room
+          }
+          isHost={
+            isHost
+          }
+          connectionRef={
+            connectionRef
+          }
+          hostSessionId={
+            sessionId
+          }
+          connectionStatus={
+            status
+          }
+          onPlaybackStateChange={(
+            playback,
+          ) => {
+            setRoom(
+              (current) =>
+                current
+                  ? {
+                      ...current,
 
-            <span>
-              {room.currentVideoId
-                ? t(
-                    'watchParty.selectedVideo',
-                  )
-                : t(
-                    'watchParty.noVideo',
-                  )}
-            </span>
+                      currentVideoId:
+                        playback.currentVideoId,
 
-            <h2>
-              {t(
-                'watchParty.stageTitle',
-              )}
-            </h2>
+                      currentTime:
+                        playback.currentTime,
 
-            <p>
-              {t(
-                'watchParty.stageDescription',
-              )}
-            </p>
+                      isPlaying:
+                        playback.isPlaying,
 
-            {room.currentVideoId && (
-              <code>
-                {
-                  room.currentVideoId
-                }
-              </code>
-            )}
-          </div>
-        </main>
+                      updatedAt:
+                        playback.updatedAt,
+                    }
+                  : current,
+            )
+          }}
+        />
 
         <aside className="watch-party-side-panel">
           <section className="watch-party-participants">

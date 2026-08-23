@@ -125,6 +125,59 @@ const watchPartyEn = {
         'Disconnected',
     },
 
+    videoLibrary:
+      'VIDEO LIBRARY',
+
+    availableVideos:
+      'Available videos',
+
+    chooseVideo:
+      'Choose a video',
+
+    chooseVideoHint:
+      'Select any available video. You can change it without closing the room.',
+
+    waitingForVideo:
+      'Waiting for the host',
+
+    waitingForVideoHint:
+      'The host has not selected a video yet.',
+
+    loadingVideos:
+      'Loading videos...',
+
+    videosLoadFailed:
+      'The video library could not be loaded.',
+
+    noVideos:
+      'There are no available videos yet.',
+
+    loadingVideo:
+      'Loading video...',
+
+    videoLoadFailed:
+      'The selected video could not be loaded.',
+
+    currentVideo:
+      'NOW WATCHING',
+
+    hostControls:
+      'You control playback for everyone in the room.',
+
+    guestControls:
+      'Playback is controlled by the host.',
+
+    selectingVideo:
+      'Selecting...',
+
+    playbackBlocked:
+      'Playback needs your permission',
+
+    playbackBlockedHint:
+      'Your browser blocked automatic playback after reloading the page.',
+
+    resumePlayback:
+      'Continue playback',
     errors: {
       invalidCode:
         'Enter a valid six character room code.',
@@ -146,6 +199,12 @@ const watchPartyEn = {
 
       actionFailed:
         'The action could not be completed.',
+
+      videoChangeFailed:
+        'The video could not be changed.',
+
+      playbackUpdateFailed:
+        'Playback synchronization failed.',
     },
 
     closedTitle:

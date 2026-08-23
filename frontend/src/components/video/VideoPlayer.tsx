@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useState,
   type SyntheticEvent,
 } from 'react'
 
@@ -45,6 +46,12 @@ interface VideoPlayerProps {
   ) => void
 
   onPlaybackBlocked?: () => void
+
+  blockedPlaybackTitle?: string
+  blockedPlaybackHint?: string
+  blockedPlaybackAction?: string
+
+  onPlaybackResumedByUser?: () => void
 }
 
 function VideoPlayer({
@@ -58,7 +65,17 @@ function VideoPlayer({
   onProgress,
   onPlaybackAction,
   onPlaybackBlocked,
+  blockedPlaybackTitle,
+  blockedPlaybackHint,
+  blockedPlaybackAction,
+  onPlaybackResumedByUser,
 }: VideoPlayerProps) {
+  const [
+    playbackBlocked,
+    setPlaybackBlocked,
+  ] =
+    useState(false)
+
   const videoRef =
     useRef<HTMLVideoElement | null>(
       null,
@@ -198,11 +215,23 @@ function VideoPlayer({
           if (
             playResult
           ) {
-            void playResult.catch(
-              () => {
-                onPlaybackBlocked?.()
-              },
-            )
+            void playResult
+              .then(
+                () => {
+                  setPlaybackBlocked(
+                    false,
+                  )
+                },
+              )
+              .catch(
+                () => {
+                  setPlaybackBlocked(
+                    true,
+                  )
+
+                  onPlaybackBlocked?.()
+                },
+              )
           }
         } else if (
           !element.paused
@@ -511,6 +540,37 @@ function VideoPlayer({
     )
   }
 
+  const handleBlockedPlaybackResume =
+    () => {
+      const element =
+        videoRef.current
+
+      if (!element) {
+        return
+      }
+
+      const playResult =
+        element.play()
+
+      void playResult
+        .then(
+          () => {
+            setPlaybackBlocked(
+              false,
+            )
+
+            onPlaybackResumedByUser?.()
+          },
+        )
+        .catch(
+          () => {
+            setPlaybackBlocked(
+              true,
+            )
+          },
+        )
+    }
+
   return (
     <div className="video-player-shell">
       <video
@@ -559,6 +619,38 @@ function VideoPlayer({
         Your browser does not support
         HTML5 video.
       </video>
+
+      {playbackBlocked &&
+        blockedPlaybackAction && (
+        <div className="video-player-playback-blocked">
+          {blockedPlaybackTitle && (
+            <strong>
+              {
+                blockedPlaybackTitle
+              }
+            </strong>
+          )}
+
+          {blockedPlaybackHint && (
+            <p>
+              {
+                blockedPlaybackHint
+              }
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={
+              handleBlockedPlaybackResume
+            }
+          >
+            {
+              blockedPlaybackAction
+            }
+          </button>
+        </div>
+      )}
     </div>
   )
 }

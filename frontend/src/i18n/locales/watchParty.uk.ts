@@ -125,6 +125,59 @@ const watchPartyUk = {
         'Відключено',
     },
 
+    videoLibrary:
+      'БІБЛІОТЕКА ВІДЕО',
+
+    availableVideos:
+      'Доступні відео',
+
+    chooseVideo:
+      'Оберіть відео',
+
+    chooseVideoHint:
+      'Оберіть будь-яке доступне відео. Його можна змінювати без закриття кімнати.',
+
+    waitingForVideo:
+      'Очікування хоста',
+
+    waitingForVideoHint:
+      'Хост ще не вибрав відео.',
+
+    loadingVideos:
+      'Завантаження відео...',
+
+    videosLoadFailed:
+      'Не вдалося завантажити бібліотеку відео.',
+
+    noVideos:
+      'Доступних відео поки немає.',
+
+    loadingVideo:
+      'Завантаження відео...',
+
+    videoLoadFailed:
+      'Не вдалося завантажити вибране відео.',
+
+    currentVideo:
+      'ЗАРАЗ ДИВЛЯТЬСЯ',
+
+    hostControls:
+      'Ви керуєте відтворенням для всіх учасників кімнати.',
+
+    guestControls:
+      'Відтворенням керує хост.',
+
+    selectingVideo:
+      'Вибір...',
+
+    playbackBlocked:
+      'Потрібен дозвіл на відтворення',
+
+    playbackBlockedHint:
+      'Браузер заблокував автоматичне відтворення після оновлення сторінки.',
+
+    resumePlayback:
+      'Продовжити відтворення',
     errors: {
       invalidCode:
         'Введіть коректний шестисимвольний код кімнати.',
@@ -146,6 +199,12 @@ const watchPartyUk = {
 
       actionFailed:
         'Не вдалося виконати дію.',
+
+      videoChangeFailed:
+        'Не вдалося змінити відео.',
+
+      playbackUpdateFailed:
+        'Не вдалося синхронізувати відтворення.',
     },
 
     closedTitle:
