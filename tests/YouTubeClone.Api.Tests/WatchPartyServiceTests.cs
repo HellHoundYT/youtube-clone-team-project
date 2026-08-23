@@ -438,6 +438,198 @@ public sealed class WatchPartyServiceTests
             state.CurrentVideoId);
     }
 
+    [Fact]
+    public async Task JoinRoom_ReconnectsSameSessionWithoutDuplicateParticipant()
+    {
+        var service =
+            CreateService();
+
+        var room =
+            await service.CreateRoomAsync(
+                "host-session",
+                "Host",
+                null);
+
+        var firstJoin =
+            service.JoinRoom(
+                room.RoomCode,
+                "guest-session",
+                "Guest");
+
+        var originalGuest =
+            firstJoin.Participants.Single(
+                participant =>
+                    !participant.IsHost);
+
+        var rejoined =
+            service.JoinRoom(
+                room.RoomCode,
+                "guest-session",
+                "Guest");
+
+        Assert.Equal(
+            2,
+            rejoined.Participants.Count);
+
+        Assert.Single(
+            rejoined.Participants,
+            participant =>
+                participant.IsHost);
+
+        var guest =
+            Assert.Single(
+                rejoined.Participants,
+                participant =>
+                    !participant.IsHost);
+
+        Assert.Equal(
+            originalGuest.JoinedAt,
+            guest.JoinedAt);
+    }
+
+    [Fact]
+    public async Task GuestLeaving_RemovesGuestWithoutClosingRoom()
+    {
+        var service =
+            CreateService();
+
+        var room =
+            await service.CreateRoomAsync(
+                "host-session",
+                "Host",
+                null);
+
+        service.JoinRoom(
+            room.RoomCode,
+            "guest-session",
+            "Guest");
+
+        var result =
+            service.LeaveRoom(
+                room.RoomCode,
+                "guest-session");
+
+        Assert.False(
+            result.RoomClosed);
+
+        Assert.NotNull(
+            result.Room);
+
+        var participant =
+            Assert.Single(
+                result.Room!.Participants);
+
+        Assert.True(
+            participant.IsHost);
+
+        var state =
+            service.GetRoomState(
+                room.RoomCode);
+
+        Assert.Single(
+            state.Participants);
+    }
+
+    [Fact]
+    public async Task Messages_PersistWhenHostChangesVideo()
+    {
+        var service =
+            CreateService();
+
+        var room =
+            await service.CreateRoomAsync(
+                "host-session",
+                "Host",
+                Video1Id);
+
+        service.JoinRoom(
+            room.RoomCode,
+            "guest-session",
+            "Guest");
+
+        var message =
+            service.AddMessage(
+                room.RoomCode,
+                "guest-session",
+                "Keep this message.");
+
+        await service.SetVideoAsync(
+            room.RoomCode,
+            "host-session",
+            Video2Id);
+
+        var state =
+            service.GetRoomState(
+                room.RoomCode);
+
+        Assert.Equal(
+            Video2Id,
+            state.CurrentVideoId);
+
+        var stored =
+            Assert.Single(
+                state.Messages);
+
+        Assert.Equal(
+            message.Id,
+            stored.Id);
+
+        Assert.Equal(
+            "Keep this message.",
+            stored.Message);
+    }
+
+    [Fact]
+    public async Task CreateRoomAsync_RejectsUnknownInitialVideo()
+    {
+        var service =
+            CreateService();
+
+        await Assert.ThrowsAsync<
+            InvalidOperationException>(
+                () =>
+                    service.CreateRoomAsync(
+                        "host-session",
+                        "Host",
+                        Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task CloseRoom_RejectsGuest()
+    {
+        var service =
+            CreateService();
+
+        var room =
+            await service.CreateRoomAsync(
+                "host-session",
+                "Host",
+                Video1Id);
+
+        service.JoinRoom(
+            room.RoomCode,
+            "guest-session",
+            "Guest");
+
+        Assert.Throws<
+            InvalidOperationException>(
+                () =>
+                    service.CloseRoom(
+                        room.RoomCode,
+                        "guest-session"));
+
+        var state =
+            service.GetRoomState(
+                room.RoomCode);
+
+        Assert.Equal(
+            2,
+            state.Participants.Count);
+
+        Assert.Equal(
+            Video1Id,
+            state.CurrentVideoId);
+    }
     private static WatchPartyService
         CreateService()
     {
