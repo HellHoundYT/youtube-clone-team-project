@@ -45,6 +45,11 @@ interface VideoPlayerProps {
     action: VideoPlaybackAction,
   ) => void
 
+  onPlaybackHeartbeat?: (
+    currentTime: number,
+    isPlaying: boolean,
+  ) => void
+
   onPlaybackBlocked?: () => void
 
   blockedPlaybackTitle?: string
@@ -64,6 +69,7 @@ function VideoPlayer({
   onFirstPlay,
   onProgress,
   onPlaybackAction,
+  onPlaybackHeartbeat,
   onPlaybackBlocked,
   blockedPlaybackTitle,
   blockedPlaybackHint,
@@ -465,6 +471,19 @@ function VideoPlayer({
       5
     ) {
       return
+    }
+
+    if (
+      !element.paused &&
+      !element.ended
+    ) {
+      onPlaybackHeartbeat?.(
+        Math.max(
+          0,
+          element.currentTime,
+        ),
+        true,
+      )
     }
 
     reportProgress(

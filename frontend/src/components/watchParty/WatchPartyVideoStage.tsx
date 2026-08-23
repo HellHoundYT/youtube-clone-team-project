@@ -439,6 +439,38 @@ function WatchPartyVideoStage({
       }
     }
 
+  const handlePlaybackHeartbeat =
+    async (
+      currentTime: number,
+      isPlaying: boolean,
+    ) => {
+      const connection =
+        connectionRef.current
+
+      if (
+        !isHost ||
+        !connection ||
+        connectionStatus !==
+          'connected'
+      ) {
+        return
+      }
+
+      try {
+        await setWatchPartyPlayback(
+          connection,
+          room.roomCode,
+          hostSessionId,
+          currentTime,
+          isPlaying,
+        )
+      } catch (error) {
+        console.error(
+          error,
+        )
+      }
+    }
+
   const handlePlaybackAction =
     async (
       action:
@@ -623,6 +655,15 @@ function WatchPartyVideoStage({
               playbackCommand={
                 playbackCommand
               }
+              onPlaybackHeartbeat={(
+                currentTime,
+                isPlaying,
+              ) => {
+                void handlePlaybackHeartbeat(
+                  currentTime,
+                  isPlaying,
+                )
+              }}
               onPlaybackAction={(
                 action,
               ) => {
