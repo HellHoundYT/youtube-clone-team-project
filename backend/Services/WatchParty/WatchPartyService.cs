@@ -663,6 +663,24 @@ public sealed class WatchPartyService :
             characters);
     }
 
+    private static double
+        GetEffectiveCurrentTime(
+            WatchPartyRoom room)
+    {
+        if (!room.IsPlaying)
+        {
+            return room.CurrentTime;
+        }
+
+        var elapsed =
+            DateTimeOffset.UtcNow -
+            room.UpdatedAt;
+
+        return Math.Max(
+            0,
+            room.CurrentTime +
+            elapsed.TotalSeconds);
+    }
     private static WatchPartyRoomStateDto
         MapRoom(
             WatchPartyRoom room)
@@ -682,7 +700,8 @@ public sealed class WatchPartyService :
                 room.CurrentVideoId,
 
             CurrentTime =
-                room.CurrentTime,
+                GetEffectiveCurrentTime(
+                    room),
 
             IsPlaying =
                 room.IsPlaying,

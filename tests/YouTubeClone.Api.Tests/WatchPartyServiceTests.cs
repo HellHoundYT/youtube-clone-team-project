@@ -182,9 +182,9 @@ public sealed class WatchPartyServiceTests
             service.GetRoomState(
                 room.RoomCode);
 
-        Assert.Equal(
-            37.5,
-            state.CurrentTime);
+        Assert.True(
+            state.CurrentTime >=
+            37.5);
 
         Assert.True(
             state.IsPlaying);
@@ -194,6 +194,38 @@ public sealed class WatchPartyServiceTests
             state.CurrentVideoId);
     }
 
+    [Fact]
+    public async Task GetRoomState_AdvancesTimeWhileVideoIsPlaying()
+    {
+        var service =
+            CreateService();
+
+        var room =
+            await service.CreateRoomAsync(
+                "host-session",
+                "Host",
+                Video1Id);
+
+        service.SetPlaybackState(
+            room.RoomCode,
+            "host-session",
+            10,
+            true);
+
+        await Task.Delay(
+            120);
+
+        var state =
+            service.GetRoomState(
+                room.RoomCode);
+
+        Assert.True(
+            state.IsPlaying);
+
+        Assert.True(
+            state.CurrentTime >
+            10.05);
+    }
     [Fact]
     public async Task JoinRoom_AddsGuestWithoutChangingHost()
     {
