@@ -1,0 +1,168 @@
+﻿name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+  push:
+    branches:
+      - develop
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend / build, test, smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('backend/**/*.csproj', 'tests/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore backend
+        run: dotnet restore backend/YouTubeClone.Api.slnx
+
+      - name: Build backend
+        run: >
+          dotnet build
+          backend/YouTubeClone.Api.slnx
+          --configuration Release
+          --no-restore
+
+      - name: Run backend tests
+        run: >
+          dotnet test
+          backend/YouTubeClone.Api.slnx
+          --configuration Release
+          --no-build
+          --verbosity normal
+
+      - name: Backend health smoke test
+        shell: bash
+        run: |
+          dotnet run \
+            --project backend/YouTubeClone.Api.csproj \
+            --configuration Release \
+            --no-build \
+            --urls http://127.0.0.1:5276 \
+            > backend-smoke.log 2>&1 &
+
+          API_PID=$!
+
+          cleanup() {
+            kill "$API_PID" 2>/dev/null || true
+          }
+
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl \
+              --fail \
+              --silent \
+              --show-error \
+              http://127.0.0.1:5276/api/health \
+              > health.json
+            then
+              echo "Backend health check passed:"
+              cat health.json
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          echo "Backend did not become healthy."
+          echo "Backend log:"
+          cat backend-smoke.log
+          exit 1
+
+  frontend:
+    name: Frontend / test, lint, build, smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run frontend tests
+        run: npm test
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Frontend production smoke test
+        shell: bash
+        run: |
+          npm run preview \
+            -- \
+            --host 127.0.0.1 \
+            --port 4173 \
+            > frontend-smoke.log 2>&1 &
+
+          PREVIEW_PID=$!
+
+          cleanup() {
+            kill "$PREVIEW_PID" 2>/dev/null || true
+          }
+
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl \
+              --fail \
+              --silent \
+              --show-error \
+              http://127.0.0.1:4173/ \
+              > preview.html
+            then
+              echo "Frontend production preview passed."
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          echo "Frontend preview did not become available."
+          echo "Frontend log:"
+          cat frontend-smoke.log
+          exit 1
