@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useRef,
@@ -10,6 +10,9 @@ import {
   registerVideoView,
   type VideoListItem,
 } from '../api/videos'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './PlaymePage.css'
 
 const playmePosters = [
@@ -19,9 +22,48 @@ const playmePosters = [
   '/demo/playme/keep-moving.webp',
 ] as const
 
-function formatViews(value: number) {
+const categoryKeys:
+Record<string, string> = {
+  music:
+    'common.category.music',
+
+  games:
+    'common.category.games',
+
+  cybersport:
+    'common.category.cybersport',
+
+  education:
+    'common.category.education',
+
+  films:
+    'common.category.films',
+
+  podcasts:
+    'common.category.podcasts',
+
+  mixes:
+    'common.category.mixes',
+}
+
+function getLocale(
+  language:
+    | string
+    | undefined,
+) {
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
+
+function formatViews(
+  value: number,
+  locale: string,
+) {
   return new Intl.NumberFormat(
-    'en-US',
+    locale,
     {
       notation: 'compact',
       maximumFractionDigits: 1,
@@ -153,66 +195,86 @@ function ChevronDownIcon() {
 }
 
 function PlaymePage() {
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
+
   const [
     videos,
     setVideos,
-  ] = useState<
-    VideoListItem[]
-  >([])
+  ] =
+    useState<
+      VideoListItem[]
+    >([])
 
   const [
     activeIndex,
     setActiveIndex,
-  ] = useState(0)
+  ] =
+    useState(0)
 
   const [
     isLoading,
     setIsLoading,
-  ] = useState(true)
+  ] =
+    useState(true)
 
   const [
-    error,
-    setError,
-  ] = useState<
-    string | null
-  >(null)
+    errorKey,
+    setErrorKey,
+  ] =
+    useState<
+      string | null
+    >(null)
 
   const [
     isMuted,
     setIsMuted,
-  ] = useState(true)
+  ] =
+    useState(true)
 
   const [
     isPaused,
     setIsPaused,
-  ] = useState(false)
+  ] =
+    useState(false)
 
   const [
     likedVideoIds,
     setLikedVideoIds,
-  ] = useState<
-    Set<string>
-  >(
-    () =>
-      new Set<string>(),
-  )
+  ] =
+    useState<
+      Set<string>
+    >(
+      () =>
+        new Set<string>(),
+    )
 
   const [
     failedVideoIds,
     setFailedVideoIds,
-  ] = useState<
-    Set<string>
-  >(
-    () =>
-      new Set<string>(),
-  )
+  ] =
+    useState<
+      Set<string>
+    >(
+      () =>
+        new Set<string>(),
+    )
 
   const [
-    actionNotice,
-    setActionNotice,
-  ] = useState<
-    string | null
-  >(null)
+    actionNoticeKey,
+    setActionNoticeKey,
+  ] =
+    useState<
+      string | null
+    >(null)
 
   const feedRef =
     useRef<
@@ -234,6 +296,30 @@ function PlaymePage() {
       new Set<string>(),
     )
 
+  const getCategoryLabel = (
+    category:
+      | string
+      | null
+      | undefined,
+  ) => {
+    if (!category) {
+      return t(
+        'playme.fallbackCategory',
+      )
+    }
+
+    const key =
+      categoryKeys[
+        category
+          .trim()
+          .toLowerCase()
+      ]
+
+    return key
+      ? t(key)
+      : category
+  }
+
   useEffect(() => {
     const controller =
       new AbortController()
@@ -241,8 +327,13 @@ function PlaymePage() {
     const loadVideos =
       async () => {
         try {
-          setIsLoading(true)
-          setError(null)
+          setIsLoading(
+            true,
+          )
+
+          setErrorKey(
+            null,
+          )
 
           const data =
             await getVideos(
@@ -254,17 +345,21 @@ function PlaymePage() {
             )
 
           if (
-            controller.signal.aborted
+            controller.signal
+              .aborted
           ) {
             return
           }
 
-          setVideos(data)
+          setVideos(
+            data,
+          )
         } catch (
           requestError
         ) {
           if (
-            controller.signal.aborted
+            controller.signal
+              .aborted
           ) {
             return
           }
@@ -273,14 +368,17 @@ function PlaymePage() {
             requestError,
           )
 
-          setError(
-            'Playme videos could not be loaded.',
+          setErrorKey(
+            'playme.loadFailedHint',
           )
         } finally {
           if (
-            !controller.signal.aborted
+            !controller.signal
+              .aborted
           ) {
-            setIsLoading(false)
+            setIsLoading(
+              false,
+            )
           }
         }
       }
@@ -319,8 +417,13 @@ function PlaymePage() {
           boundedIndex,
         )
 
-        setIsPaused(false)
-        setActionNotice(null)
+        setIsPaused(
+          false,
+        )
+
+        setActionNoticeKey(
+          null,
+        )
 
         if (!feed) {
           return
@@ -330,10 +433,15 @@ function PlaymePage() {
           top:
             boundedIndex *
             feed.clientHeight,
-          behavior: 'smooth',
+
+          behavior:
+            'smooth',
         })
       },
-      [videos.length],
+      [
+        videos.length,
+        setIsPaused,
+      ],
     )
 
   useEffect(() => {
@@ -393,7 +501,8 @@ function PlaymePage() {
         }
 
         if (
-          event.key.toLowerCase() ===
+          event.key
+            .toLowerCase() ===
           'm'
         ) {
           setIsMuted(
@@ -517,7 +626,8 @@ function PlaymePage() {
         !feed ||
         feed.clientHeight ===
           0 ||
-        videos.length === 0
+        videos.length ===
+          0
       ) {
         return
       }
@@ -545,8 +655,13 @@ function PlaymePage() {
         nextIndex,
       )
 
-      setIsPaused(false)
-      setActionNotice(null)
+      setIsPaused(
+        false,
+      )
+
+      setActionNoticeKey(
+        null,
+      )
     }
 
   const handleWheel =
@@ -594,6 +709,7 @@ function PlaymePage() {
           activeIndex
         ]
 
+
       setLikedVideoIds(
         (
           current,
@@ -621,15 +737,15 @@ function PlaymePage() {
         },
       )
 
-      setActionNotice(
-        'Reaction preview only. Account reactions will connect later.',
+      setActionNoticeKey(
+        'playme.notice.reactionPreview',
       )
     }
 
   const handleComments =
     () => {
-      setActionNotice(
-        'Comments will connect with the Comments module.',
+      setActionNoticeKey(
+        'playme.notice.commentsIntegration',
       )
     }
 
@@ -639,6 +755,7 @@ function PlaymePage() {
         videos[
           activeIndex
         ]
+
 
       const shareUrl =
         `${window.location.origin}/watch/${activeVideo.id}`
@@ -659,18 +776,21 @@ function PlaymePage() {
             {
               title:
                 activeVideo.title,
+
               url:
                 shareUrl,
             },
           )
         } else {
-          await navigator.clipboard.writeText(
-            shareUrl,
-          )
+          await navigator
+            .clipboard
+            .writeText(
+              shareUrl,
+            )
         }
 
-        setActionNotice(
-          'Video link is ready to share.',
+        setActionNoticeKey(
+          'playme.notice.shareReady',
         )
       } catch (
         shareError
@@ -679,8 +799,8 @@ function PlaymePage() {
           shareError,
         )
 
-        setActionNotice(
-          'Could not share this video.',
+        setActionNoticeKey(
+          'playme.notice.shareFailed',
         )
       }
     }
@@ -712,36 +832,47 @@ function PlaymePage() {
       <section className="playme-state">
         <div className="playme-state-card">
           <span className="playme-state-label">
-            PLAYME
+            {t(
+              'playme.label',
+            )}
           </span>
 
           <strong>
-            Loading vertical feed...
+            {t(
+              'playme.loading',
+            )}
           </strong>
 
           <p>
-            Preparing videos for
-            playback.
+            {t(
+              'playme.loadingHint',
+            )}
           </p>
         </div>
       </section>
     )
   }
 
-  if (error) {
+  if (errorKey) {
     return (
       <section className="playme-state">
         <div className="playme-state-card playme-state-error">
           <span className="playme-state-label">
-            PLAYME
+            {t(
+              'playme.label',
+            )}
           </span>
 
           <strong>
-            Could not load Playme
+            {t(
+              'playme.loadFailed',
+            )}
           </strong>
 
           <p>
-            {error}
+            {t(
+              errorKey,
+            )}
           </p>
         </div>
       </section>
@@ -755,17 +886,21 @@ function PlaymePage() {
       <section className="playme-state">
         <div className="playme-state-card">
           <span className="playme-state-label">
-            PLAYME
+            {t(
+              'playme.label',
+            )}
           </span>
 
           <strong>
-            No videos yet
+            {t(
+              'playme.empty',
+            )}
           </strong>
 
           <p>
-            Vertical videos will
-            appear here when they
-            are available.
+            {t(
+              'playme.emptyHint',
+            )}
           </p>
         </div>
       </section>
@@ -786,7 +921,9 @@ function PlaymePage() {
     <section className="playme-page">
       <div className="playme-stage">
         <div
-          ref={feedRef}
+          ref={
+            feedRef
+          }
           className="playme-feed"
           onScroll={
             handleScroll
@@ -803,6 +940,12 @@ function PlaymePage() {
               const failed =
                 failedVideoIds.has(
                   video.id,
+                )
+
+              const formattedViews =
+                formatViews(
+                  video.viewCount,
+                  locale,
                 )
 
               return (
@@ -866,21 +1009,24 @@ function PlaymePage() {
                       <span className="playme-brand-dot" />
 
                       <strong>
-                        PLAYME
+                        {t(
+                          'playme.label',
+                        )}
                       </strong>
                     </div>
 
                     {failed && (
                       <div className="playme-media-error">
                         <strong>
-                          Video file is
-                          unavailable
+                          {t(
+                            'playme.mediaUnavailable',
+                          )}
                         </strong>
 
                         <span>
-                          Check the dev
-                          media file for
-                          this video ID.
+                          {t(
+                            'playme.mediaUnavailableHint',
+                          )}
                         </span>
                       </div>
                     )}
@@ -892,7 +1038,9 @@ function PlaymePage() {
                         <button
                           type="button"
                           className="playme-center-play"
-                          aria-label="Resume video"
+                          aria-label={t(
+                            'playme.aria.resume',
+                          )}
                           onClick={() =>
                             setIsPaused(
                               false,
@@ -921,9 +1069,9 @@ function PlaymePage() {
                           </strong>
 
                           <span>
-                            Creator
-                            profile
-                            integration
+                            {t(
+                              'playme.creatorIntegration',
+                            )}
                           </span>
                         </div>
 
@@ -931,9 +1079,13 @@ function PlaymePage() {
                           type="button"
                           className="playme-follow-button"
                           disabled
-                          title="Channel subscriptions will connect later."
+                          title={t(
+                            'playme.followHint',
+                          )}
                         >
-                          Follow
+                          {t(
+                            'playme.follow',
+                          )}
                         </button>
                       </div>
 
@@ -945,15 +1097,22 @@ function PlaymePage() {
 
                       <div className="playme-meta">
                         <span>
-                          {video.category ??
-                            'Video'}
+                          {getCategoryLabel(
+                            video.category,
+                          )}
                         </span>
 
                         <span>
-                          {formatViews(
-                            video.viewCount,
-                          )}{' '}
-                          views
+                          {t(
+                            'playme.views',
+                            {
+                              count:
+                                video.viewCount,
+
+                              formatted:
+                                formattedViews,
+                            },
+                          )}
                         </span>
                       </div>
                     </div>
@@ -968,14 +1127,16 @@ function PlaymePage() {
           <button
             type="button"
             className="playme-action-button playme-navigation-button"
-            aria-label="Previous video"
+            aria-label={t(
+              'playme.aria.previous',
+            )}
             disabled={
-              activeIndex === 0
+              activeIndex ===
+              0
             }
             onClick={() =>
               goToIndex(
-                activeIndex -
-                  1,
+                activeIndex - 1,
               )
             }
           >
@@ -984,7 +1145,9 @@ function PlaymePage() {
             </span>
 
             <span>
-              Prev
+              {t(
+                'playme.previous',
+              )}
             </span>
           </button>
 
@@ -995,7 +1158,9 @@ function PlaymePage() {
                 ? 'playme-action-button is-active'
                 : 'playme-action-button'
             }
-            aria-label="Like video"
+            aria-label={t(
+              'playme.aria.like',
+            )}
             onClick={
               toggleLike
             }
@@ -1005,14 +1170,18 @@ function PlaymePage() {
             </span>
 
             <span>
-              Like
+              {t(
+                'playme.like',
+              )}
             </span>
           </button>
 
           <button
             type="button"
             className="playme-action-button"
-            aria-label="Open comments"
+            aria-label={t(
+              'playme.aria.comments',
+            )}
             onClick={
               handleComments
             }
@@ -1022,14 +1191,18 @@ function PlaymePage() {
             </span>
 
             <span>
-              Comments
+              {t(
+                'playme.comments',
+              )}
             </span>
           </button>
 
           <button
             type="button"
             className="playme-action-button"
-            aria-label="Share video"
+            aria-label={t(
+              'playme.aria.share',
+            )}
             onClick={() => {
               void handleShare()
             }}
@@ -1039,7 +1212,9 @@ function PlaymePage() {
             </span>
 
             <span>
-              Share
+              {t(
+                'playme.share',
+              )}
             </span>
           </button>
 
@@ -1048,8 +1223,12 @@ function PlaymePage() {
             className="playme-action-button"
             aria-label={
               isMuted
-                ? 'Unmute video'
-                : 'Mute video'
+                ? t(
+                    'playme.aria.unmute',
+                  )
+                : t(
+                    'playme.aria.mute',
+                  )
             }
             onClick={() =>
               setIsMuted(
@@ -1070,8 +1249,12 @@ function PlaymePage() {
 
             <span>
               {isMuted
-                ? 'Sound'
-                : 'Mute'}
+                ? t(
+                    'playme.sound',
+                  )
+                : t(
+                    'playme.mute',
+                  )}
             </span>
           </button>
 
@@ -1080,8 +1263,12 @@ function PlaymePage() {
             className="playme-action-button"
             aria-label={
               isPaused
-                ? 'Play video'
-                : 'Pause video'
+                ? t(
+                    'playme.aria.play',
+                  )
+                : t(
+                    'playme.aria.pause',
+                  )
             }
             onClick={() =>
               setIsPaused(
@@ -1102,23 +1289,28 @@ function PlaymePage() {
 
             <span>
               {isPaused
-                ? 'Play'
-                : 'Pause'}
+                ? t(
+                    'playme.play',
+                  )
+                : t(
+                    'playme.pause',
+                  )}
             </span>
           </button>
 
           <button
             type="button"
             className="playme-action-button playme-navigation-button"
-            aria-label="Next video"
+            aria-label={t(
+              'playme.aria.next',
+            )}
             disabled={
               activeIndex ===
               videos.length - 1
             }
             onClick={() =>
               goToIndex(
-                activeIndex +
-                  1,
+                activeIndex + 1,
               )
             }
           >
@@ -1127,7 +1319,9 @@ function PlaymePage() {
             </span>
 
             <span>
-              Next
+              {t(
+                'playme.next',
+              )}
             </span>
           </button>
         </aside>
@@ -1146,9 +1340,11 @@ function PlaymePage() {
           </span>
         </div>
 
-        {actionNotice && (
+        {actionNoticeKey && (
           <div className="playme-notice">
-            {actionNotice}
+            {t(
+              actionNoticeKey,
+            )}
           </div>
         )}
       </div>
@@ -1157,3 +1353,4 @@ function PlaymePage() {
 }
 
 export default PlaymePage
+

@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useState,
 } from 'react'
@@ -11,6 +11,9 @@ import {
   type FavoriteItem,
   type WatchHistoryItem,
 } from '../api/library'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './DiscoveryPage.css'
 import './LibraryPages.css'
 
@@ -19,6 +22,17 @@ interface LibraryState {
   history: WatchHistoryItem[]
   favorites: FavoriteItem[]
   error: boolean
+}
+
+const categoryKeys:
+Record<string, string> = {
+  Music: 'common.category.music',
+  Games: 'common.category.games',
+  Cybersport: 'common.category.cybersport',
+  Education: 'common.category.education',
+  Films: 'common.category.films',
+  Podcasts: 'common.category.podcasts',
+  Mixes: 'common.category.mixes',
 }
 
 function formatDuration(
@@ -67,6 +81,11 @@ function formatDuration(
 function LibraryPage() {
   const navigate =
     useNavigate()
+
+  const {
+    t,
+  } =
+    useAppTranslation()
 
   const [
     reloadToken,
@@ -140,6 +159,29 @@ function LibraryPage() {
     requestKey,
   ])
 
+  const getCategoryLabel = (
+    category:
+      | string
+      | null,
+  ) => {
+    if (!category) {
+      return t(
+        'common.category.uncategorized',
+      )
+    }
+
+    const key =
+      categoryKeys[
+        category
+      ]
+
+    if (!key) {
+      return category
+    }
+
+    return t(key)
+  }
+
   const isCurrentRequest =
     state?.requestKey ===
     requestKey
@@ -180,17 +222,21 @@ function LibraryPage() {
       <header className="discovery-header library-header">
         <div>
           <span className="discovery-eyebrow">
-            YOUR CONTENT
+            {t(
+              'library.yourContent',
+            )}
           </span>
 
           <h1>
-            Library
+            {t(
+              'library.page.title',
+            )}
           </h1>
 
           <p>
-            Your recently watched,
-            favorite and saved
-            content in one place.
+            {t(
+              'library.page.description',
+            )}
           </p>
         </div>
       </header>
@@ -200,19 +246,23 @@ function LibraryPage() {
           <div className="discovery-spinner" />
 
           <span>
-            Loading library...
+            {t(
+              'library.page.loading',
+            )}
           </span>
         </div>
       ) : isError ? (
         <div className="discovery-state discovery-state-error">
           <strong>
-            Library failed to load
+            {t(
+              'library.page.loadFailed',
+            )}
           </strong>
 
           <span>
-            Make sure the backend
-            is running and try
-            again.
+            {t(
+              'library.page.backendHint',
+            )}
           </span>
 
           <button
@@ -224,7 +274,9 @@ function LibraryPage() {
               )
             }
           >
-            Try again
+            {t(
+              'common.retry',
+            )}
           </button>
         </div>
       ) : (
@@ -233,14 +285,19 @@ function LibraryPage() {
             <div className="content-section-header">
               <div>
                 <h2>
-                  Watch History
+                  {t(
+                    'library.page.watchHistory',
+                  )}
                 </h2>
 
                 <p className="library-count">
-                  {history.length}{' '}
-                  {history.length === 1
-                    ? 'video'
-                    : 'videos'}
+                  {t(
+                    'library.video',
+                    {
+                      count:
+                        history.length,
+                    },
+                  )}
                 </p>
               </div>
 
@@ -253,7 +310,9 @@ function LibraryPage() {
                   )
                 }
               >
-                View all
+                {t(
+                  'library.viewAll',
+                )}
               </button>
             </div>
 
@@ -261,13 +320,15 @@ function LibraryPage() {
             0 ? (
               <div className="discovery-state">
                 <strong>
-                  History is empty
+                  {t(
+                    'library.page.historyEmpty',
+                  )}
                 </strong>
 
                 <span>
-                  Start watching
-                  videos and they
-                  will appear here.
+                  {t(
+                    'library.page.historyEmptyHint',
+                  )}
                 </span>
               </div>
             ) : (
@@ -368,18 +429,25 @@ function LibraryPage() {
                           <div className="library-video-meta">
                             <span>
                               {item.completed
-                                ? 'Completed'
-                                : `${formatDuration(
-                                    item.progressSeconds,
-                                  )} watched`}
+                                ? t(
+                                    'library.completed',
+                                  )
+                                : t(
+                                    'library.watched',
+                                    {
+                                      duration:
+                                        formatDuration(
+                                          item.progressSeconds,
+                                        ),
+                                    },
+                                  )}
                             </span>
 
                             <span>
-                              {
+                              {getCategoryLabel(
                                 item.video
-                                  .category ??
-                                'Uncategorized'
-                              }
+                                  .category,
+                              )}
                             </span>
                           </div>
                         </div>
@@ -393,7 +461,9 @@ function LibraryPage() {
                             )
                           }
                         >
-                          Continue
+                          {t(
+                            'library.continue',
+                          )}
                         </button>
                       </article>
                     )
@@ -407,14 +477,19 @@ function LibraryPage() {
             <div className="content-section-header">
               <div>
                 <h2>
-                  Favorites
+                  {t(
+                    'library.page.favorites',
+                  )}
                 </h2>
 
                 <p className="library-count">
-                  {favorites.length}{' '}
-                  {favorites.length === 1
-                    ? 'video'
-                    : 'videos'}
+                  {t(
+                    'library.video',
+                    {
+                      count:
+                        favorites.length,
+                    },
+                  )}
                 </p>
               </div>
 
@@ -427,7 +502,9 @@ function LibraryPage() {
                   )
                 }
               >
-                View all
+                {t(
+                  'library.viewAll',
+                )}
               </button>
             </div>
 
@@ -435,13 +512,15 @@ function LibraryPage() {
             0 ? (
               <div className="discovery-state">
                 <strong>
-                  No favorites yet
+                  {t(
+                    'library.page.favoritesEmpty',
+                  )}
                 </strong>
 
                 <span>
-                  Videos added to
-                  Favorites will
-                  appear here.
+                  {t(
+                    'library.page.favoritesEmptyHint',
+                  )}
                 </span>
               </div>
             ) : (
@@ -511,15 +590,16 @@ function LibraryPage() {
 
                         <div className="library-video-meta">
                           <span>
-                            {
+                            {getCategoryLabel(
                               item.video
-                                .category ??
-                              'Uncategorized'
-                            }
+                                .category,
+                            )}
                           </span>
 
                           <span>
-                            Favorite
+                            {t(
+                              'layout.navigation.favorites',
+                            )}
                           </span>
                         </div>
                       </div>
@@ -533,7 +613,9 @@ function LibraryPage() {
                           )
                         }
                       >
-                        Watch
+                        {t(
+                          'library.watch',
+                        )}
                       </button>
                     </article>
                   ),
@@ -546,11 +628,15 @@ function LibraryPage() {
             <div className="content-section-header">
               <div>
                 <h2>
-                  Playlists
+                  {t(
+                    'library.page.playlists',
+                  )}
                 </h2>
 
                 <p className="library-count">
-                  Integration point
+                  {t(
+                    'library.page.integrationPoint',
+                  )}
                 </p>
               </div>
 
@@ -563,22 +649,23 @@ function LibraryPage() {
                   )
                 }
               >
-                Open
+                {t(
+                  'library.open',
+                )}
               </button>
             </div>
 
             <div className="discovery-state">
               <strong>
-                Playlists will appear here
+                {t(
+                  'library.page.playlistsComing',
+                )}
               </strong>
 
               <span>
-                Playlist functionality
-                is implemented in a
-                separate module and
-                will be connected to
-                Library through this
-                section.
+                {t(
+                  'library.page.playlistsHint',
+                )}
               </span>
             </div>
           </section>

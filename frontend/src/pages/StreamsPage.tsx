@@ -1,96 +1,252 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useState,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+import {
+  useNavigate,
+} from 'react-router-dom'
 import {
   getLiveStreams,
   getStreamCategories,
   type LiveStreamListItem,
   type StreamCategory,
 } from '../api/streams'
+import {
+  useAppTranslation,
+} from '../i18n'
 import './StreamsPages.css'
+
+const categoryKeys:
+Record<string, string> = {
+  programming:
+    'streamCategory.programming',
+
+  gaming:
+    'streamCategory.gaming',
+
+  games:
+    'streamCategory.games',
+
+  music:
+    'streamCategory.music',
+
+  education:
+    'streamCategory.education',
+
+  esports:
+    'streamCategory.esports',
+
+  cybersport:
+    'streamCategory.cybersport',
+
+  creative:
+    'streamCategory.creative',
+
+  technology:
+    'streamCategory.technology',
+
+  art:
+    'streamCategory.art',
+
+  chatting:
+    'streamCategory.chatting',
+
+  'just-chatting':
+    'streamCategory.justChatting',
+}
+
+function getLocale(
+  language:
+    | string
+    | undefined,
+) {
+  return language
+    ?.toLowerCase()
+    .startsWith('uk')
+    ? 'uk-UA'
+    : 'en-US'
+}
 
 function formatViewerCount(
   viewerCount: number,
+  locale: string,
 ) {
   return new Intl.NumberFormat(
-    'en-US',
+    locale,
     {
       notation: 'compact',
       maximumFractionDigits: 1,
     },
-  ).format(viewerCount)
+  ).format(
+    viewerCount,
+  )
 }
 
-function formatStartedAt(
-  startedAt: string,
-) {
-  const started =
-    new Date(startedAt)
-
-  const elapsed =
-    Math.max(
-      Date.now() -
-        started.getTime(),
-      0,
-    )
-
-  const totalMinutes =
-    Math.floor(
-      elapsed / 60000,
-    )
-
-  const hours =
-    Math.floor(
-      totalMinutes / 60,
-    )
-
-  const minutes =
-    totalMinutes % 60
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m live`
-  }
-
-  return `${minutes}m live`
-}
+const initialStreamsPageTime =
+  Date.now()
 
 function StreamsPage() {
   const navigate =
     useNavigate()
 
+  const {
+    t,
+    i18n,
+  } =
+    useAppTranslation()
+
+  const locale =
+    getLocale(
+      i18n.resolvedLanguage,
+    )
+
+  const [
+    currentTime,
+    setCurrentTime,
+  ] =
+    useState(
+      initialStreamsPageTime,
+    )
+
   const [
     streams,
     setStreams,
-  ] = useState<
-    LiveStreamListItem[]
-  >([])
+  ] =
+    useState<
+      LiveStreamListItem[]
+    >([])
 
   const [
     categories,
     setCategories,
-  ] = useState<
-    StreamCategory[]
-  >([])
+  ] =
+    useState<
+      StreamCategory[]
+    >([])
 
   const [
     selectedCategory,
     setSelectedCategory,
-  ] = useState('all')
+  ] =
+    useState('all')
 
   const [
     isLoading,
     setIsLoading,
-  ] = useState(true)
+  ] =
+    useState(true)
 
   const [
-    error,
-    setError,
-  ] = useState<
-    string | null
-  >(null)
+    hasError,
+    setHasError,
+  ] =
+    useState(false)
+
+  const getCategoryLabel = (
+    slug: string,
+    name: string,
+  ) => {
+    const normalized =
+      slug
+        .trim()
+        .toLowerCase()
+
+    const key =
+      categoryKeys[
+        normalized
+      ]
+
+    return key
+      ? t(key)
+      : name
+  }
+
+  const getStreamCategoryLabel = (
+    category: string,
+  ) => {
+    const normalized =
+      category
+        .trim()
+        .toLowerCase()
+        .replace(
+          /\s+/g,
+          '-',
+        )
+
+    const key =
+      categoryKeys[
+        normalized
+      ]
+
+    return key
+      ? t(key)
+      : category
+  }
+
+  const formatStartedAt = (
+    startedAt: string,
+  ) => {
+    const started =
+      new Date(
+        startedAt,
+      )
+
+    const elapsed =
+      Math.max(
+        currentTime -
+          started.getTime(),
+        0,
+      )
+
+    const totalMinutes =
+      Math.floor(
+        elapsed / 60000,
+      )
+
+    const hours =
+      Math.floor(
+        totalMinutes / 60,
+      )
+
+    const minutes =
+      totalMinutes % 60
+
+    if (hours > 0) {
+      return t(
+        'streams.liveForHours',
+        {
+          hours,
+          minutes,
+        },
+      )
+    }
+
+    return t(
+      'streams.liveForMinutes',
+      {
+        minutes,
+      },
+    )
+  }
+
+  useEffect(() => {
+    const timer =
+      window.setInterval(
+        () => {
+          setCurrentTime(
+            Date.now(),
+          )
+        },
+        60000,
+      )
+
+    return () => {
+      window.clearInterval(
+        timer,
+      )
+    }
+  }, [])
 
   useEffect(() => {
     const controller =
@@ -104,10 +260,15 @@ function StreamsPage() {
               controller.signal,
             )
 
-          setCategories(data)
-        } catch (requestError) {
+          setCategories(
+            data,
+          )
+        } catch (
+          requestError
+        ) {
           if (
-            controller.signal.aborted
+            controller.signal
+              .aborted
           ) {
             return
           }
@@ -132,8 +293,13 @@ function StreamsPage() {
     const loadStreams =
       async () => {
         try {
-          setIsLoading(true)
-          setError(null)
+          setIsLoading(
+            true,
+          )
+
+          setHasError(
+            false,
+          )
 
           const data =
             await getLiveStreams(
@@ -141,10 +307,15 @@ function StreamsPage() {
               controller.signal,
             )
 
-          setStreams(data)
-        } catch (requestError) {
+          setStreams(
+            data,
+          )
+        } catch (
+          requestError
+        ) {
           if (
-            controller.signal.aborted
+            controller.signal
+              .aborted
           ) {
             return
           }
@@ -153,14 +324,17 @@ function StreamsPage() {
             requestError,
           )
 
-          setError(
-            'Live streams could not be loaded.',
+          setHasError(
+            true,
           )
         } finally {
           if (
-            !controller.signal.aborted
+            !controller.signal
+              .aborted
           ) {
-            setIsLoading(false)
+            setIsLoading(
+              false,
+            )
           }
         }
       }
@@ -170,7 +344,9 @@ function StreamsPage() {
     return () => {
       controller.abort()
     }
-  }, [selectedCategory])
+  }, [
+    selectedCategory,
+  ])
 
   const totalViewers =
     useMemo(
@@ -184,7 +360,9 @@ function StreamsPage() {
             stream.viewerCount,
           0,
         ),
-      [streams],
+      [
+        streams,
+      ],
     )
 
   return (
@@ -192,28 +370,40 @@ function StreamsPage() {
       <header className="streams-heading">
         <div>
           <span className="streams-eyebrow">
-            LIVE NOW
+            {t(
+              'streams.eyebrow',
+            )}
           </span>
 
           <h1>
-            Streams
+            {t(
+              'streams.title',
+            )}
           </h1>
 
           <p>
-            Watch active broadcasts,
-            discover live categories and
-            join the conversation.
+            {t(
+              'streams.description',
+            )}
           </p>
         </div>
 
         <div className="streams-summary">
           <div>
             <strong>
-              {streams.length}
+              {
+                streams.length
+              }
             </strong>
 
             <span>
-              live streams
+              {t(
+                'streams.liveStreams',
+                {
+                  count:
+                    streams.length,
+                },
+              )}
             </span>
           </div>
 
@@ -221,11 +411,18 @@ function StreamsPage() {
             <strong>
               {formatViewerCount(
                 totalViewers,
+                locale,
               )}
             </strong>
 
             <span>
-              viewers
+              {t(
+                'streams.viewers',
+                {
+                  count:
+                    totalViewers,
+                },
+              )}
             </span>
           </div>
         </div>
@@ -246,7 +443,9 @@ function StreamsPage() {
             )
           }
         >
-          All
+          {t(
+            'streams.all',
+          )}
         </button>
 
         {categories.map(
@@ -268,7 +467,10 @@ function StreamsPage() {
                 )
               }
             >
-              {category.name}
+              {getCategoryLabel(
+                category.slug,
+                category.name,
+              )}
 
               <span>
                 {
@@ -283,47 +485,59 @@ function StreamsPage() {
       {isLoading && (
         <div className="streams-state">
           <strong>
-            Loading live streams...
+            {t(
+              'streams.loading',
+            )}
           </strong>
 
           <span>
-            Getting active broadcasts.
+            {t(
+              'streams.loadingHint',
+            )}
           </span>
         </div>
       )}
 
       {!isLoading &&
-        error && (
+        hasError && (
           <div className="streams-state streams-state-error">
             <strong>
-              Could not load streams
+              {t(
+                'streams.loadFailed',
+              )}
             </strong>
 
             <span>
-              {error}
+              {t(
+                'streams.loadFailedHint',
+              )}
             </span>
           </div>
         )}
 
       {!isLoading &&
-        !error &&
-        streams.length === 0 && (
+        !hasError &&
+        streams.length ===
+          0 && (
           <div className="streams-state">
             <strong>
-              No live streams
+              {t(
+                'streams.empty',
+              )}
             </strong>
 
             <span>
-              There are no active
-              broadcasts in this
-              category right now.
+              {t(
+                'streams.emptyHint',
+              )}
             </span>
           </div>
         )}
 
       {!isLoading &&
-        !error &&
-        streams.length > 0 && (
+        !hasError &&
+        streams.length >
+          0 && (
           <div className="streams-grid">
             {streams.map(
               (stream) => (
@@ -353,33 +567,47 @@ function StreamsPage() {
                         </span>
 
                         <strong>
-                          LIVE
+                          {t(
+                            'streams.live',
+                          )}
                         </strong>
                       </div>
                     )}
 
                     <span className="stream-live-badge">
-                      LIVE
+                      {t(
+                        'streams.live',
+                      )}
                     </span>
 
                     <span className="stream-viewer-badge">
-                      {formatViewerCount(
-                        stream.viewerCount,
-                      )}{' '}
-                      watching
+                      {t(
+                        'streams.watching',
+                        {
+                          formatted:
+                            formatViewerCount(
+                              stream.viewerCount,
+                              locale,
+                            ),
+                        },
+                      )}
                     </span>
                   </div>
 
                   <div className="stream-card-body">
                     <div className="stream-channel-avatar">
                       {stream.channelName
-                        .charAt(0)
+                        .charAt(
+                          0,
+                        )
                         .toUpperCase()}
                     </div>
 
                     <div className="stream-card-copy">
                       <h2>
-                        {stream.title}
+                        {
+                          stream.title
+                        }
                       </h2>
 
                       <span>
@@ -390,9 +618,9 @@ function StreamsPage() {
 
                       <div className="stream-card-meta">
                         <span>
-                          {
-                            stream.category
-                          }
+                          {getStreamCategoryLabel(
+                            stream.category,
+                          )}
                         </span>
 
                         <span>
@@ -413,3 +641,4 @@ function StreamsPage() {
 }
 
 export default StreamsPage
+

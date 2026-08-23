@@ -1,12 +1,21 @@
+﻿import {
+  useAppTranslation,
+} from '../i18n'
+
 interface PlaceholderPageProps {
-  title: string
-  description: string
+  titleKey: string
+  descriptionKey: string
 }
 
 function PlaceholderPage({
-  title,
-  description,
+  titleKey,
+  descriptionKey,
 }: PlaceholderPageProps) {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
   return (
     <div className="placeholder-page">
       <div className="placeholder-content">
@@ -14,8 +23,17 @@ function PlaceholderPage({
           <span />
         </div>
 
-        <h1>{title}</h1>
-        <p>{description}</p>
+        <h1>
+          {t(
+            titleKey,
+          )}
+        </h1>
+
+        <p>
+          {t(
+            descriptionKey,
+          )}
+        </p>
       </div>
     </div>
   )

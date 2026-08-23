@@ -1,5 +1,15 @@
-import { type FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+﻿import {
+  type FormEvent,
+  useState,
+} from 'react'
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom'
+import {
+  useAppTranslation,
+} from '../../i18n'
+import LanguageSwitcher from './LanguageSwitcher'
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -7,7 +17,10 @@ interface HeaderProps {
 
 function MenuIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M4 7h16M4 12h16M4 17h16" />
     </svg>
   )
@@ -15,8 +28,16 @@ function MenuIcon() {
 
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" />
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        cx="11"
+        cy="11"
+        r="6.5"
+      />
+
       <path d="m16 16 4 4" />
     </svg>
   )
@@ -24,28 +45,53 @@ function SearchIcon() {
 
 function UploadIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 16V5" />
+
       <path d="m8 9 4-4 4 4" />
+
       <path d="M5 14v5h14v-5" />
     </svg>
   )
 }
 
-function Header({ onMenuClick }: HeaderProps) {
-  const navigate = useNavigate()
-  const [searchValue, setSearchValue] = useState('')
+function Header({
+  onMenuClick,
+}: HeaderProps) {
+  const navigate =
+    useNavigate()
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+  const {
+    t,
+  } =
+    useAppTranslation()
+
+  const [
+    searchValue,
+    setSearchValue,
+  ] = useState('')
+
+  const handleSearch = (
+    event:
+      FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault()
 
-    const query = searchValue.trim()
+    const query =
+      searchValue.trim()
 
     if (!query) {
       return
     }
 
-    navigate(`/search?query=${encodeURIComponent(query)}`)
+    navigate(
+      `/search?query=${encodeURIComponent(
+        query,
+      )}`,
+    )
   }
 
   return (
@@ -54,54 +100,106 @@ function Header({ onMenuClick }: HeaderProps) {
         <button
           type="button"
           className="icon-button menu-button"
-          aria-label="Toggle navigation"
-          onClick={onMenuClick}
+          aria-label={t(
+            'layout.toggleNavigation',
+          )}
+          onClick={
+            onMenuClick
+          }
         >
           <MenuIcon />
         </button>
 
-        <Link className="brand" to="/" aria-label="AMTLIS home">
+        <Link
+          className="brand"
+          to="/"
+          aria-label={t(
+            'layout.homeAria',
+          )}
+        >
           <span className="brand-mark">
             <span className="brand-play" />
           </span>
 
-          <span className="brand-name">AMTLIS</span>
+          <span className="brand-name">
+            AMTLIS
+          </span>
         </Link>
       </div>
 
-      <form className="header-search" onSubmit={handleSearch}>
+      <form
+        className="header-search"
+        onSubmit={
+          handleSearch
+        }
+      >
         <div className="search-field">
           <SearchIcon />
 
           <input
             type="search"
-            value={searchValue}
-            placeholder="Search videos, channels and playlists"
-            aria-label="Search"
-            onChange={(event) => setSearchValue(event.target.value)}
+            value={
+              searchValue
+            }
+            placeholder={t(
+              'layout.searchPlaceholder',
+            )}
+            aria-label={t(
+              'layout.searchAria',
+            )}
+            onChange={(
+              event,
+            ) =>
+              setSearchValue(
+                event.target
+                  .value,
+              )
+            }
           />
         </div>
 
-        <button className="search-button" type="submit">
-          Search
+        <button
+          className="search-button"
+          type="submit"
+        >
+          {t(
+            'common.search',
+          )}
         </button>
       </form>
 
       <div className="header-actions">
+        <LanguageSwitcher />
+
         <button
           type="button"
           className="header-create-button"
-          onClick={() => navigate('/upload')}
+          onClick={() =>
+            navigate(
+              '/upload',
+            )
+          }
         >
           <UploadIcon />
-          <span>Upload</span>
+
+          <span>
+            {t(
+              'common.upload',
+            )}
+          </span>
         </button>
 
         <button
           type="button"
           className="profile-button"
-          aria-label="Open profile"
-          onClick={() => navigate('/profile')}
+          aria-label={t(
+            'layout.openProfile',
+          )}
+          onClick={() =>
+            navigate(
+              '/profile',
+            )
+          }
         >
           HH
         </button>
