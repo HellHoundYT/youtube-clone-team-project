@@ -41,7 +41,7 @@ public sealed class LiveStreamService :
                 CategorySlug =
                     "games",
                 ThumbnailPath =
-                    null,
+                    "/demo/thumbnails/ranked-night.webp",
                 PlaybackUrl =
                     $"/api/v1/videos/{DevelopmentVideoId}/stream",
                 Tags =
@@ -79,7 +79,7 @@ public sealed class LiveStreamService :
                 CategorySlug =
                     "cybersport",
                 ThumbnailPath =
-                    null,
+                    "/demo/thumbnails/watch-party-live.webp",
                 PlaybackUrl =
                     $"/api/v1/videos/{DevelopmentVideoId}/stream",
                 Tags =
@@ -118,7 +118,7 @@ public sealed class LiveStreamService :
                 CategorySlug =
                     "programming",
                 ThumbnailPath =
-                    null,
+                    "/demo/thumbnails/late-night-coding.webp",
                 PlaybackUrl =
                     $"/api/v1/videos/{DevelopmentVideoId}/stream",
                 Tags =
@@ -156,7 +156,7 @@ public sealed class LiveStreamService :
                 CategorySlug =
                     "music",
                 ThumbnailPath =
-                    null,
+                    "/demo/thumbnails/live-now.webp",
                 PlaybackUrl =
                     $"/api/v1/videos/{DevelopmentVideoId}/stream",
                 Tags =

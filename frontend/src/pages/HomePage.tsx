@@ -21,6 +21,7 @@ interface HeroSlide {
   title: string
   description: string
   accent: string
+  image: string
 }
 
 interface CategoryLoadState {
@@ -54,22 +55,30 @@ const heroSlides: HeroSlide[] = [
     description:
       'Watch stories, streams, music and creators you love. Discover something new every day.',
     accent: 'purple',
+    image:
+      '/demo/hero/hero-original.webp',
   },
   {
     id: 2,
     label: 'LIVE NOW',
-    title: 'The biggest moments are happening now',
+    title:
+      'The biggest moments are happening now',
     description:
       'Watch creators, tournaments and live events together with the AMTLIS community.',
     accent: 'blue',
+    image:
+      '/demo/hero/hero-live.webp',
   },
   {
     id: 3,
     label: 'TRENDING',
-    title: 'Find what everyone is watching',
+    title:
+      'Find what everyone is watching',
     description:
       'Explore popular videos, new releases and creators that are growing right now.',
     accent: 'pink',
+    image:
+      '/demo/hero/hero-trending.webp',
   },
 ]
 
@@ -957,7 +966,50 @@ function HomePage() {
           <div className="hero-grid-decoration" />
         </div>
 
-        <div className="hero-content">
+        <img
+          src={
+            selectedHero.image
+          }
+          alt=""
+          aria-hidden="true"
+          style={{
+            position:
+              'absolute',
+            inset: 0,
+            zIndex: 2,
+            width: '100%',
+            height: '100%',
+            objectFit:
+              'cover',
+            objectPosition:
+              'center',
+            pointerEvents:
+              'none',
+          }}
+        />
+
+        <div
+          aria-hidden="true"
+          style={{
+            position:
+              'absolute',
+            inset: 0,
+            zIndex: 3,
+            background:
+              'linear-gradient(90deg, rgba(7, 8, 13, 0.50) 0%, rgba(7, 8, 13, 0.34) 32%, rgba(7, 8, 13, 0.14) 58%, rgba(7, 8, 13, 0.03) 100%)',
+            pointerEvents:
+              'none',
+          }}
+        />
+
+        <div
+          className="hero-content"
+          style={{
+            position:
+              'relative',
+            zIndex: 4,
+          }}
+        >
           <span className="hero-label">
             {selectedHero.label}
           </span>
@@ -1009,39 +1061,12 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="hero-visual">
-          <div className="hero-card hero-card-back">
-            <span>
-              02
-            </span>
-          </div>
-
-          <div className="hero-card hero-card-middle">
-            <span>
-              01
-            </span>
-          </div>
-
-          <div className="hero-card hero-card-main">
-            <div className="hero-card-logo">
-              A
-            </div>
-
-            <div>
-              <span>
-                {
-                  selectedHero.label
-                }
-              </span>
-
-              <strong>
-                AMTLIS
-              </strong>
-            </div>
-          </div>
-        </div>
-
-        <div className="hero-pagination">
+        <div
+          className="hero-pagination"
+          style={{
+            zIndex: 5,
+          }}
+        >
           {heroSlides.map(
             (
               slide,
@@ -1124,7 +1149,17 @@ function HomePage() {
                       index,
                     )}`}
                   >
-                    <div className="thumbnail-glow" />
+                    {video.thumbnailPath ? (
+                      <img
+                        className="video-thumbnail-image"
+                        src={
+                          video.thumbnailPath
+                        }
+                        alt=""
+                      />
+                    ) : (
+                      <div className="thumbnail-glow" />
+                    )}
 
                     <span className="top-card-title">
                       {

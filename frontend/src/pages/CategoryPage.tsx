@@ -228,7 +228,12 @@ function CategoryPage() {
         </div>
       ) : (
         <>
-          <header className="discovery-header category-page-header">
+          <header
+            className="discovery-header category-page-header"
+            data-category={
+              normalizedSlug
+            }
+          >
             <span className="discovery-eyebrow">
               CATEGORY
             </span>
