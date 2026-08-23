@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useState,
 } from 'react'
@@ -119,6 +119,11 @@ function HistoryPage() {
       null,
     )
 
+  const [
+    clearConfirmOpen,
+    setClearConfirmOpen,
+  ] = useState(false)
+
   const requestKey =
     `history:${reloadToken}`
 
@@ -178,6 +183,40 @@ function HistoryPage() {
   }, [
     reloadToken,
     requestKey,
+  ])
+
+  useEffect(() => {
+    if (!clearConfirmOpen) {
+      return
+    }
+
+    const handleKeyDown = (
+      event: KeyboardEvent,
+    ) => {
+      if (
+        event.key === 'Escape' &&
+        !actionPending
+      ) {
+        setClearConfirmOpen(
+          false,
+        )
+      }
+    }
+
+    window.addEventListener(
+      'keydown',
+      handleKeyDown,
+    )
+
+    return () => {
+      window.removeEventListener(
+        'keydown',
+        handleKeyDown,
+      )
+    }
+  }, [
+    clearConfirmOpen,
+    actionPending,
   ])
 
   const isCurrentRequest =
@@ -313,8 +352,8 @@ function HistoryPage() {
       }
     }
 
-  const handleClear =
-    async () => {
+  const handleOpenClearConfirm =
+    () => {
       if (
         actionPending ||
         items.length === 0
@@ -322,12 +361,25 @@ function HistoryPage() {
         return
       }
 
-      const confirmed =
-        window.confirm(
-          'Clear all watch history?',
-        )
+      setActionError(null)
+      setClearConfirmOpen(true)
+    }
 
-      if (!confirmed) {
+  const handleCloseClearConfirm =
+    () => {
+      if (actionPending) {
+        return
+      }
+
+      setClearConfirmOpen(false)
+    }
+
+  const handleConfirmClear =
+    async () => {
+      if (
+        actionPending ||
+        items.length === 0
+      ) {
         return
       }
 
@@ -349,6 +401,8 @@ function HistoryPage() {
             }
           },
         )
+
+        setClearConfirmOpen(false)
       } catch {
         setActionError(
           'Watch history could not be cleared.',
@@ -409,7 +463,7 @@ function HistoryPage() {
                   items.length === 0
                 }
                 onClick={
-                  handleClear
+                  handleOpenClearConfirm
                 }
               >
                 Clear history
@@ -645,6 +699,88 @@ function HistoryPage() {
               )
             },
           )}
+        </div>
+      )}
+
+      {clearConfirmOpen && (
+        <div
+          className="history-confirm-backdrop"
+          role="presentation"
+          onMouseDown={(
+            event,
+          ) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              handleCloseClearConfirm()
+            }
+          }}
+        >
+          <div
+            className="history-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="history-clear-title"
+            aria-describedby="history-clear-description"
+          >
+            <div
+              className="history-confirm-icon"
+              aria-hidden="true"
+            >
+              <svg
+                viewBox="0 0 24 24"
+              >
+                <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7m4-7v7" />
+              </svg>
+            </div>
+
+            <span className="history-confirm-eyebrow">
+              WATCH HISTORY
+            </span>
+
+            <h2 id="history-clear-title">
+              Clear watch history?
+            </h2>
+
+            <p id="history-clear-description">
+              All watched videos and
+              saved playback progress
+              will be removed from your
+              history. This action
+              cannot be undone.
+            </p>
+
+            <div className="history-confirm-actions">
+              <button
+                type="button"
+                className="history-confirm-button"
+                disabled={
+                  actionPending
+                }
+                onClick={
+                  handleCloseClearConfirm
+                }
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="history-confirm-button danger"
+                disabled={
+                  actionPending
+                }
+                onClick={() =>
+                  void handleConfirmClear()
+                }
+              >
+                {actionPending
+                  ? 'Clearing...'
+                  : 'Clear history'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
