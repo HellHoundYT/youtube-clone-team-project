@@ -2,9 +2,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using YouTubeClone.Application.Abstractions.Media;
 
-namespace YouTubeClone.Api.Services.Media;
+namespace YouTubeClone.Infrastructure.Media;
 
 public sealed class FfprobeMediaProbeService :
     IMediaProbeService

@@ -1,7 +1,8 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
 using YouTubeClone.Application.Abstractions.Storage;
 
-namespace YouTubeClone.Api.Storage;
+namespace YouTubeClone.Infrastructure.Storage;
 
 public sealed class LocalFileStorageService :
     IFileStorageService

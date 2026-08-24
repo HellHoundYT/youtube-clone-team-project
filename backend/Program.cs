@@ -1,15 +1,11 @@
 using Microsoft.AspNetCore.Http.Features;
-using YouTubeClone.Application.Abstractions.Media;
-using YouTubeClone.Application.Abstractions.Storage;
-using YouTubeClone.Infrastructure;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Api.Services.Favorites;
 using YouTubeClone.Api.Services.History;
-using YouTubeClone.Api.Services.Media;
 using YouTubeClone.Api.Services.Streams;
 using YouTubeClone.Api.Services.Videos;
 using YouTubeClone.Api.Services.WatchParty;
-using YouTubeClone.Api.Storage;
+using YouTubeClone.Infrastructure;
 
 var builder =
     WebApplication.CreateBuilder(args);
@@ -49,14 +45,6 @@ builder.Services.AddSingleton<
 builder.Services.AddSingleton<
     ILiveStreamService,
     LiveStreamService>();
-
-builder.Services.AddSingleton<
-    IFileStorageService,
-    LocalFileStorageService>();
-
-builder.Services.AddSingleton<
-    IMediaProbeService,
-    FfprobeMediaProbeService>();
 
 var app =
     builder.Build();
