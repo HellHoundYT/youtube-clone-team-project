@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Application.Abstractions.Media;
 using YouTubeClone.Application.Abstractions.Storage;
-using YouTubeClone.Infrastructure.Persistence;
+using YouTubeClone.Infrastructure;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Api.Services.Favorites;
 using YouTubeClone.Api.Services.History;
@@ -32,15 +31,8 @@ builder.Services.Configure<FormOptions>(
             500L * 1024L * 1024L;
     });
 
-var connectionString =
-    builder.Configuration
-        .GetConnectionString(
-            "DefaultConnection");
-
-builder.Services.AddDbContext<AppDbContext>(
-    options =>
-        options.UseSqlServer(
-            connectionString));
+builder.Services.AddInfrastructure(
+    builder.Configuration);
 
 builder.Services.AddSingleton<
     IVideoService,
