@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type {
   VideoListItem,
-} from './videos'
+} from '../../domain/video/types'
 
 export interface WatchHistoryItem {
   videoId: string

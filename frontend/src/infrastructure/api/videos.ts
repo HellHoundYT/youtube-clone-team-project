@@ -1,27 +1,17 @@
 import axios, {
   type AxiosProgressEvent,
 } from 'axios'
+import type {
+  VideoDetails,
+  VideoListItem,
+  VideoReactionType,
+} from '../../domain/video/types'
 
-export interface VideoListItem {
-  id: string
-  channelId: string
-  channelName: string
-  channelAvatarPath: string | null
-  category: string | null
-  categorySlug: string | null
-  title: string
-  thumbnailPath: string | null
-  durationSeconds: number
-  viewCount: number
-  publishedAt: string | null
-}
-
-export interface VideoDetails
-  extends VideoListItem {
-  description: string | null
-  videoPath: string
-  visibility: string
-}
+export type {
+  VideoDetails,
+  VideoListItem,
+  VideoReactionType,
+} from '../../domain/video/types'
 
 export interface GetVideosParams {
   page?: number
@@ -36,10 +26,6 @@ export interface UploadVideoRequest {
   durationSeconds: number
   file: File
 }
-
-export type VideoReactionType =
-  | 'Like'
-  | 'Dislike'
 
 export async function getVideos(
   params: GetVideosParams = {},
