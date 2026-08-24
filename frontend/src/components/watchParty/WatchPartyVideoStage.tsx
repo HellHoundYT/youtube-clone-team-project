@@ -20,7 +20,7 @@ import {
   type WatchPartyConnectionStatus,
   type WatchPartyPlayback,
   type WatchPartyRoomState,
-} from '../../api/watchParty'
+} from '../../infrastructure/signalr/watchParty'
 import VideoPlayer, {
   type VideoPlaybackAction,
   type VideoPlaybackCommand,

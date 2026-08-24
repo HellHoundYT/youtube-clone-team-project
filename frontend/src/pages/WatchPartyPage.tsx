@@ -26,7 +26,7 @@ import {
   type WatchPartyConnectionStatus,
   type WatchPartyMessage,
   type WatchPartyRoomState,
-} from '../api/watchParty'
+} from '../infrastructure/signalr/watchParty'
 import {
   getWatchPartySessionId,
   getWatchPartyUserName,

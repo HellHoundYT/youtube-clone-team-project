@@ -18,7 +18,7 @@ import {
   stopLiveChatConnection,
   type LiveChatConnectionStatus,
   type LiveChatMessage,
-} from '../api/liveChat'
+} from '../infrastructure/signalr/liveChat'
 import {
   getLiveStreamById,
   type LiveStreamDetails,
