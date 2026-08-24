@@ -1,4 +1,4 @@
-namespace YouTubeClone.Api.DTOs.Streams;
+namespace YouTubeClone.Application.Features.Streams.Contracts;
 
 public sealed class StreamCategoryDto
 {

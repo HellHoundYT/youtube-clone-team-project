@@ -1,6 +1,6 @@
-using YouTubeClone.Api.DTOs.Streams;
+using YouTubeClone.Application.Features.Streams.Contracts;
 
-namespace YouTubeClone.Api.Services.Streams;
+namespace YouTubeClone.Application.Features.Streams;
 
 public interface ILiveStreamService
 {

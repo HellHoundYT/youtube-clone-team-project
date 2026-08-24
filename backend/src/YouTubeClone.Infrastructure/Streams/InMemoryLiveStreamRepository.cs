@@ -1,9 +1,10 @@
-using YouTubeClone.Api.DTOs.Streams;
+using YouTubeClone.Application.Features.Streams;
+using YouTubeClone.Domain.Streams;
 
-namespace YouTubeClone.Api.Services.Streams;
+namespace YouTubeClone.Infrastructure.Streams;
 
-public sealed class LiveStreamService :
-    ILiveStreamService
+public sealed class InMemoryLiveStreamRepository :
+    ILiveStreamRepository
 {
     private static readonly Guid
         DevelopmentVideoId =
@@ -11,16 +12,16 @@ public sealed class LiveStreamService :
                 "11111111-1111-1111-1111-111111111111");
 
     private readonly IReadOnlyList<
-        LiveStreamDetailsDto> _streams;
+        LiveStream> _streams;
 
-    public LiveStreamService()
+    public InMemoryLiveStreamRepository()
     {
         var now =
             DateTimeOffset.UtcNow;
 
         _streams =
         [
-            new LiveStreamDetailsDto
+            new LiveStream
             {
                 Id =
                     Guid.Parse(
@@ -58,7 +59,7 @@ public sealed class LiveStreamService :
                     now.AddMinutes(-47)
             },
 
-            new LiveStreamDetailsDto
+            new LiveStream
             {
                 Id =
                     Guid.Parse(
@@ -97,7 +98,7 @@ public sealed class LiveStreamService :
                        .AddMinutes(-18)
             },
 
-            new LiveStreamDetailsDto
+            new LiveStream
             {
                 Id =
                     Guid.Parse(
@@ -135,7 +136,7 @@ public sealed class LiveStreamService :
                     now.AddMinutes(-32)
             },
 
-            new LiveStreamDetailsDto
+            new LiveStream
             {
                 Id =
                     Guid.Parse(
@@ -176,137 +177,67 @@ public sealed class LiveStreamService :
         ];
     }
 
-    public Task<IReadOnlyList<LiveStreamListItemDto>>
-        GetLiveStreamsAsync(
-            string? category = null,
+    public Task<IReadOnlyList<LiveStream>>
+        GetAllAsync(
             CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        IEnumerable<LiveStreamDetailsDto> query =
-            _streams.Where(
-                stream =>
-                    stream.IsLive);
-
-        if (!string.IsNullOrWhiteSpace(
-                category))
-        {
-            var normalizedCategory =
-                category.Trim();
-
-            query =
-                query.Where(
-                    stream =>
-                        string.Equals(
-                            stream.Category,
-                            normalizedCategory,
-                            StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(
-                            stream.CategorySlug,
-                            normalizedCategory,
-                            StringComparison.OrdinalIgnoreCase));
-        }
-
-        var result =
-            query
-                .OrderByDescending(
-                    stream =>
-                        stream.ViewerCount)
+        IReadOnlyList<LiveStream> result =
+            _streams
                 .Select(
-                    ToListItem)
+                    CreateSnapshot)
                 .ToList();
-
-        return Task.FromResult<
-            IReadOnlyList<LiveStreamListItemDto>>(
-                result);
-    }
-
-    public Task<LiveStreamDetailsDto?>
-        GetLiveStreamByIdAsync(
-            Guid streamId,
-            CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var stream =
-            _streams.FirstOrDefault(
-                item =>
-                    item.Id == streamId &&
-                    item.IsLive);
 
         return Task.FromResult(
-            stream);
+            result);
     }
 
-    public Task<IReadOnlyList<StreamCategoryDto>>
-        GetCategoriesAsync(
-            CancellationToken cancellationToken = default)
+    private static LiveStream
+        CreateSnapshot(
+            LiveStream stream)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var result =
-            _streams
-                .Where(
-                    stream =>
-                        stream.IsLive)
-                .GroupBy(
-                    stream =>
-                        new
-                        {
-                            stream.Category,
-                            stream.CategorySlug
-                        })
-                .Select(
-                    group =>
-                        new StreamCategoryDto
-                        {
-                            Name =
-                                group.Key.Category,
-                            Slug =
-                                group.Key.CategorySlug,
-                            LiveStreamCount =
-                                group.Count(),
-                            ViewerCount =
-                                group.Sum(
-                                    stream =>
-                                        stream.ViewerCount)
-                        })
-                .OrderByDescending(
-                    category =>
-                        category.ViewerCount)
-                .ToList();
-
-        return Task.FromResult<
-            IReadOnlyList<StreamCategoryDto>>(
-                result);
-    }
-
-    private static LiveStreamListItemDto
-        ToListItem(
-            LiveStreamDetailsDto stream)
-    {
-        return new LiveStreamListItemDto
+        return new LiveStream
         {
             Id =
                 stream.Id,
+
             ChannelId =
                 stream.ChannelId,
+
             ChannelName =
                 stream.ChannelName,
+
             ChannelAvatarPath =
                 stream.ChannelAvatarPath,
+
             Title =
                 stream.Title,
+
+            Description =
+                stream.Description,
+
             Category =
                 stream.Category,
+
             CategorySlug =
                 stream.CategorySlug,
+
             ThumbnailPath =
                 stream.ThumbnailPath,
+
+            PlaybackUrl =
+                stream.PlaybackUrl,
+
+            Tags =
+                stream.Tags.ToArray(),
+
             ViewerCount =
                 stream.ViewerCount,
+
             IsLive =
                 stream.IsLive,
+
             StartedAt =
                 stream.StartedAt
         };

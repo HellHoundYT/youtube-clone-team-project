@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using YouTubeClone.Api.DTOs.Streams;
-using YouTubeClone.Api.Services.Streams;
+using YouTubeClone.Application.Features.Streams.Contracts;
+using YouTubeClone.Application.Features.Streams;
 
 namespace YouTubeClone.Api.Controllers;
 

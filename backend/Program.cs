@@ -3,7 +3,7 @@ using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Application.Features.Favorites;
-using YouTubeClone.Api.Services.Streams;
+using YouTubeClone.Application.Features.Streams;
 using YouTubeClone.Api.Services.WatchParty;
 using YouTubeClone.Infrastructure;
 

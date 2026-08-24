@@ -1,6 +1,6 @@
-namespace YouTubeClone.Api.DTOs.Streams;
+namespace YouTubeClone.Domain.Streams;
 
-public sealed class LiveStreamListItemDto
+public sealed class LiveStream
 {
     public Guid Id { get; init; }
 
@@ -14,6 +14,9 @@ public sealed class LiveStreamListItemDto
     public string Title { get; init; } =
         string.Empty;
 
+    public string Description { get; init; } =
+        string.Empty;
+
     public string Category { get; init; } =
         string.Empty;
 
@@ -21,6 +24,12 @@ public sealed class LiveStreamListItemDto
         string.Empty;
 
     public string? ThumbnailPath { get; init; }
+
+    public string PlaybackUrl { get; init; } =
+        string.Empty;
+
+    public IReadOnlyList<string> Tags { get; init; } =
+        Array.Empty<string>();
 
     public int ViewerCount { get; init; }
 

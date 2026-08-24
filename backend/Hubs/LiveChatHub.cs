@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using YouTubeClone.Api.DTOs.LiveChat;
-using YouTubeClone.Api.Services.Streams;
+using YouTubeClone.Application.Features.Streams;
 
 namespace YouTubeClone.Api.Hubs;
 

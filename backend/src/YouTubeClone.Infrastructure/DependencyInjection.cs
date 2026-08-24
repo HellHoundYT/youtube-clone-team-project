@@ -5,12 +5,14 @@ using YouTubeClone.Application.Abstractions.Media;
 using YouTubeClone.Application.Abstractions.Storage;
 using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.History;
+using YouTubeClone.Application.Features.Streams;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Infrastructure.Media;
 using YouTubeClone.Infrastructure.Persistence;
 using YouTubeClone.Infrastructure.Storage;
 using YouTubeClone.Infrastructure.Favorites;
 using YouTubeClone.Infrastructure.History;
+using YouTubeClone.Infrastructure.Streams;
 using YouTubeClone.Infrastructure.Videos;
 
 namespace YouTubeClone.Infrastructure;
@@ -49,6 +51,10 @@ public static class DependencyInjection
         services.AddSingleton<
             IFavoritesRepository,
             InMemoryFavoritesRepository>();
+
+        services.AddSingleton<
+            ILiveStreamRepository,
+            InMemoryLiveStreamRepository>();
 
         return services;
     }
