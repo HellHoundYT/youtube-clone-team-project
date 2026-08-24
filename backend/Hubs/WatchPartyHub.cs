@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
-using YouTubeClone.Api.DTOs.WatchParty;
-using YouTubeClone.Api.Services.WatchParty;
+using YouTubeClone.Application.Features.WatchParty.Contracts;
+using YouTubeClone.Application.Features.WatchParty;
 
 namespace YouTubeClone.Api.Hubs;
 

@@ -4,7 +4,7 @@ using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.Streams;
-using YouTubeClone.Api.Services.WatchParty;
+using YouTubeClone.Application.Features.WatchParty;
 using YouTubeClone.Infrastructure;
 
 var builder =

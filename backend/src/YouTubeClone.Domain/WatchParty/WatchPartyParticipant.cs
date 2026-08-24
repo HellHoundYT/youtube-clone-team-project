@@ -1,10 +1,7 @@
-using System.Text.Json.Serialization;
+namespace YouTubeClone.Domain.WatchParty;
 
-namespace YouTubeClone.Api.DTOs.WatchParty;
-
-public sealed class WatchPartyParticipantDto
+public sealed class WatchPartyParticipant
 {
-    [JsonIgnore]
     public string SessionId { get; init; } =
         string.Empty;
 

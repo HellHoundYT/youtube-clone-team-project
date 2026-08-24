@@ -1,6 +1,6 @@
-using YouTubeClone.Api.DTOs.WatchParty;
+using YouTubeClone.Application.Features.WatchParty.Contracts;
 
-namespace YouTubeClone.Api.Services.WatchParty;
+namespace YouTubeClone.Application.Features.WatchParty;
 
 public interface IWatchPartyService
 {

@@ -1,4 +1,4 @@
-namespace YouTubeClone.Api.DTOs.WatchParty;
+namespace YouTubeClone.Application.Features.WatchParty.Contracts;
 
 public sealed class WatchPartyLeaveResultDto
 {
