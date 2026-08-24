@@ -11,6 +11,7 @@ import {
 } from 'react-router-dom'
 import {
   afterEach,
+  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -20,6 +21,9 @@ import {
 import type {
   LibraryService,
 } from '../application/library/service'
+import {
+  initializeAppI18n,
+} from '../shared/i18n'
 import HistoryPage from './HistoryPage'
 
 const getWatchHistoryMock =
@@ -65,6 +69,24 @@ const libraryService: LibraryService = {
   removeFavorite:
     vi.fn<LibraryService['removeFavorite']>(),
 }
+const testI18nStorage = {
+  getItem: () =>
+    null,
+
+  setItem: () =>
+    undefined,
+
+  removeItem: () =>
+    undefined,
+}
+
+beforeAll(
+  async () => {
+    await initializeAppI18n(
+      testI18nStorage,
+    )
+  },
+)
 function renderHistoryPage() {
   return render(
     <MemoryRouter>

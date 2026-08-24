@@ -28,7 +28,6 @@ import WatchPartyPage from '../pages/WatchPartyPage'
 import './App.css'
 import '../shared/theme/theme-runtime.css'
 import {
-  configureAuthStore,
   useAuthStore,
 } from '../features/auth/authStore'
 import {
@@ -40,12 +39,7 @@ import {
   liveChatClientFactory,
   watchPartyClientFactory,
   watchPartySessionStore,
-  authService,
 } from './dependencies'
-
-configureAuthStore(
-  authService,
-)
 
 function App() {
   const loadCurrentUser =

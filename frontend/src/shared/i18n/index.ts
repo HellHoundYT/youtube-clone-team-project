@@ -3,6 +3,9 @@ import {
   initReactI18next,
   useTranslation,
 } from 'react-i18next'
+import type {
+  KeyValueStore,
+} from '../storage/keyValueStore'
 import discoveryEn from './locales/discovery.en'
 import discoveryUk from './locales/discovery.uk'
 import en from './locales/en'
@@ -39,6 +42,12 @@ export const supportedLanguages: {
   },
 ]
 
+let configuredStorage:
+KeyValueStore | null = null
+
+let listenerRegistered =
+  false
+
 function normalizeLanguage(
   value:
     | string
@@ -56,17 +65,12 @@ function normalizeLanguage(
   return 'en'
 }
 
-function getInitialLanguage():
-AppLanguage {
-  if (
-    typeof window ===
-    'undefined'
-  ) {
-    return 'en'
-  }
-
+function getInitialLanguage(
+  storage:
+    KeyValueStore,
+): AppLanguage {
   const savedLanguage =
-    window.localStorage.getItem(
+    storage.getItem(
       languageStorageKey,
     )
 
@@ -76,60 +80,16 @@ AppLanguage {
     )
   }
 
+  if (
+    typeof navigator ===
+    'undefined'
+  ) {
+    return 'en'
+  }
+
   return normalizeLanguage(
-    window.navigator.language,
+    navigator.language,
   )
-}
-
-const initialLanguage =
-  getInitialLanguage()
-
-if (!i18n.isInitialized) {
-  void i18n
-    .use(initReactI18next)
-    .init({
-      resources: {
-        en: {
-          translation: {
-            ...en,
-            ...discoveryEn,
-            ...liveEn,
-            ...playmeEn,
-            ...systemEn,
-            ...themesEn,
-            ...watchPartyEn,
-          },
-        },
-
-        uk: {
-          translation: {
-            ...uk,
-            ...discoveryUk,
-            ...liveUk,
-            ...playmeUk,
-            ...systemUk,
-            ...themesUk,
-            ...watchPartyUk,
-          },
-        },
-      },
-
-      lng:
-        initialLanguage,
-
-      fallbackLng:
-        'en',
-
-      supportedLngs: [
-        'en',
-        'uk',
-      ],
-
-      interpolation: {
-        escapeValue:
-          false,
-      },
-    })
 }
 
 function syncDocumentLanguage(
@@ -151,44 +111,116 @@ function syncDocumentLanguage(
 function persistLanguage(
   language: string,
 ) {
-  if (
-    typeof window ===
-    'undefined'
-  ) {
-    return
-  }
+  configuredStorage
+    ?.setItem(
+      languageStorageKey,
+      normalizeLanguage(
+        language,
+      ),
+    )
+}
 
-  window.localStorage.setItem(
-    languageStorageKey,
-    normalizeLanguage(
-      language,
-    ),
+function handleLanguageChanged(
+  language: string,
+) {
+  syncDocumentLanguage(
+    language,
+  )
+
+  persistLanguage(
+    language,
   )
 }
 
-syncDocumentLanguage(
-  initialLanguage,
-)
+export async function initializeAppI18n(
+  storage:
+    KeyValueStore,
+) {
+  configuredStorage =
+    storage
 
-i18n.on(
-  'languageChanged',
-  (language) => {
-    syncDocumentLanguage(
-      language,
+  const initialLanguage =
+    getInitialLanguage(
+      storage,
     )
 
-    persistLanguage(
-      language,
+  if (!i18n.isInitialized) {
+    await i18n
+      .use(
+        initReactI18next,
+      )
+      .init({
+        resources: {
+          en: {
+            translation: {
+              ...en,
+              ...discoveryEn,
+              ...liveEn,
+              ...playmeEn,
+              ...systemEn,
+              ...themesEn,
+              ...watchPartyEn,
+            },
+          },
+
+          uk: {
+            translation: {
+              ...uk,
+              ...discoveryUk,
+              ...liveUk,
+              ...playmeUk,
+              ...systemUk,
+              ...themesUk,
+              ...watchPartyUk,
+            },
+          },
+        },
+
+        lng:
+          initialLanguage,
+
+        fallbackLng:
+          'en',
+
+        supportedLngs: [
+          'en',
+          'uk',
+        ],
+
+        interpolation: {
+          escapeValue:
+            false,
+        },
+      })
+  } else {
+    await i18n.changeLanguage(
+      initialLanguage,
     )
-  },
-)
+  }
+
+  syncDocumentLanguage(
+    i18n.resolvedLanguage ??
+      initialLanguage,
+  )
+
+  if (!listenerRegistered) {
+    i18n.on(
+      'languageChanged',
+      handleLanguageChanged,
+    )
+
+    listenerRegistered =
+      true
+  }
+}
 
 export function useAppTranslation() {
   return useTranslation()
 }
 
 export async function changeAppLanguage(
-  language: AppLanguage,
+  language:
+    AppLanguage,
 ) {
   await i18n.changeLanguage(
     language,

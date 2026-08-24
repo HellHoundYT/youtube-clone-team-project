@@ -1,30 +1,68 @@
 import {
   create,
 } from 'zustand'
+import type {
+  KeyValueStore,
+} from '../../shared/storage/keyValueStore'
 
 interface ChannelState {
   subscribedChannelIds: string[]
-  toggleSubscription: (channelId: string) => void
-  isSubscribed: (channelId: string) => boolean
+
+  toggleSubscription:
+    (
+      channelId: string,
+    ) => void
+
+  isSubscribed:
+    (
+      channelId: string,
+    ) => boolean
 }
 
 const storageKey =
   'amtlis.channel-subscriptions'
 
-function readSubscriptions() {
-  if (typeof window === 'undefined') {
-    return []
+let configuredStorage:
+KeyValueStore | null = null
+
+function getStorage():
+KeyValueStore {
+  if (!configuredStorage) {
+    throw new Error(
+      'Channel storage is not configured.',
+    )
   }
 
+  return configuredStorage
+}
+
+function readSubscriptions(
+  storage:
+    KeyValueStore,
+) {
   try {
     const value =
-      window.localStorage.getItem(storageKey)
-    const parsed = value
-      ? JSON.parse(value)
-      : []
+      storage.getItem(
+        storageKey,
+      )
 
-    return Array.isArray(parsed)
-      ? parsed.filter((item): item is string => typeof item === 'string')
+    const parsed =
+      value
+        ? JSON.parse(
+            value,
+          )
+        : []
+
+    return Array.isArray(
+      parsed,
+    )
+      ? parsed.filter(
+          (
+            item,
+          ): item is string =>
+            typeof item ===
+            'string',
+        )
       : []
   } catch {
     return []
@@ -34,29 +72,79 @@ function readSubscriptions() {
 function saveSubscriptions(
   channelIds: string[],
 ) {
-  window.localStorage.setItem(
-    storageKey,
-    JSON.stringify(channelIds),
-  )
+  getStorage()
+    .setItem(
+      storageKey,
+      JSON.stringify(
+        channelIds,
+      ),
+    )
 }
 
 export const useChannelStore =
-  create<ChannelState>((set, get) => ({
-    subscribedChannelIds: readSubscriptions(),
+  create<ChannelState>(
+    (
+      set,
+      get,
+    ) => ({
+      subscribedChannelIds:
+        [],
 
-    toggleSubscription: (channelId) => {
-      const current =
-        get().subscribedChannelIds
-      const next = current.includes(channelId)
-        ? current.filter((id) => id !== channelId)
-        : [...current, channelId]
+      toggleSubscription:
+        (
+          channelId,
+        ) => {
+          const current =
+            get()
+              .subscribedChannelIds
 
-      saveSubscriptions(next)
-      set({ subscribedChannelIds: next })
-    },
+          const next =
+            current.includes(
+              channelId,
+            )
+              ? current.filter(
+                  (id) =>
+                    id !==
+                    channelId,
+                )
+              : [
+                  ...current,
+                  channelId,
+                ]
 
-    isSubscribed: (channelId) =>
-      get()
-        .subscribedChannelIds
-        .includes(channelId),
-  }))
+          saveSubscriptions(
+            next,
+          )
+
+          set({
+            subscribedChannelIds:
+              next,
+          })
+        },
+
+      isSubscribed:
+        (
+          channelId,
+        ) =>
+          get()
+            .subscribedChannelIds
+            .includes(
+              channelId,
+            ),
+    }),
+  )
+
+export function configureChannelStoreStorage(
+  storage:
+    KeyValueStore,
+) {
+  configuredStorage =
+    storage
+
+  useChannelStore.setState({
+    subscribedChannelIds:
+      readSubscriptions(
+        storage,
+      ),
+  })
+}

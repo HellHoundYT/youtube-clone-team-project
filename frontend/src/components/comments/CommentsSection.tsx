@@ -6,6 +6,9 @@ import {
   useAuthStore,
 } from '../../features/auth/authStore'
 import {
+  getCommentsStorage,
+} from '../../features/comments/commentsStorage'
+import {
   useAppTranslation,
 } from '../../shared/i18n'
 import './CommentsSection.css'
@@ -33,7 +36,7 @@ function readComments(
   videoId: string,
 ): CommentItem[] {
   try {
-    const stored = window.localStorage.getItem(
+    const stored = getCommentsStorage().getItem(
       `${storagePrefix}${videoId}`,
     )
 
@@ -156,7 +159,7 @@ function CommentsSection({
   const [text, setText] = useState('')
 
   const persist = (next: CommentItem[]) => {
-    window.localStorage.setItem(`${storagePrefix}${videoId}`, JSON.stringify(next))
+    getCommentsStorage().setItem(`${storagePrefix}${videoId}`, JSON.stringify(next))
     setComments(next)
   }
 
