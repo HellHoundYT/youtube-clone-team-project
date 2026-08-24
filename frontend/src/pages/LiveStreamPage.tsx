@@ -8,15 +8,14 @@ import {
   Link,
   useParams,
 } from 'react-router-dom'
-import {
-  createLiveChatConnection,
-  sendLiveChatMessage,
-  startLiveChatConnection,
-  stopLiveChatConnection,
-  type LiveChatConnection,
-  type LiveChatConnectionStatus,
-  type LiveChatMessage,
-} from '../infrastructure/signalr/liveChat'
+import type {
+  LiveChatClient,
+  LiveChatClientFactory,
+} from '../application/liveChat/client'
+import type {
+  LiveChatConnectionStatus,
+  LiveChatMessage,
+} from '../application/liveChat/types'
 import type {
   StreamService,
 } from '../application/stream/service'
@@ -115,10 +114,12 @@ function formatChatTime(
 }
 
 interface LiveStreamPageProps {
+  liveChatClientFactory: LiveChatClientFactory
   streamService: StreamService
 }
 
 function LiveStreamPage({
+  liveChatClientFactory,
   streamService,
 }: LiveStreamPageProps) {
   const {
@@ -195,9 +196,9 @@ function LiveStreamPage({
   ] =
     useState(false)
 
-  const connectionRef =
+  const chatClientRef =
     useRef<
-      LiveChatConnection | null
+      LiveChatClient | null
     >(null)
 
   const chatMessagesRef =
@@ -329,8 +330,8 @@ function LiveStreamPage({
     let isDisposed =
       false
 
-    const connection =
-      createLiveChatConnection(
+    const chatClient =
+      liveChatClientFactory.create(
         streamId,
         {
           onMessage: (
@@ -383,16 +384,13 @@ function LiveStreamPage({
         },
       )
 
-    connectionRef.current =
-      connection
+    chatClientRef.current =
+      chatClient
 
     const connect =
       async () => {
         try {
-          await startLiveChatConnection(
-            connection,
-            streamId,
-          )
+          await chatClient.start()
 
           if (
             isDisposed
@@ -437,19 +435,17 @@ function LiveStreamPage({
         true
 
       if (
-        connectionRef.current ===
-        connection
+        chatClientRef.current ===
+        chatClient
       ) {
-        connectionRef.current =
+        chatClientRef.current =
           null
       }
 
-      void stopLiveChatConnection(
-        connection,
-        streamId,
-      )
+      void chatClient.stop()
     }
   }, [
+    liveChatClientFactory,
     streamId,
   ])
 
@@ -474,14 +470,14 @@ function LiveStreamPage({
     ) => {
       event.preventDefault()
 
-      const connection =
-        connectionRef.current
+      const chatClient =
+        chatClientRef.current
 
       const message =
         chatDraft.trim()
 
       if (
-        !connection ||
+        !chatClient ||
         chatStatus !==
           'connected' ||
         !streamId ||
@@ -500,9 +496,7 @@ function LiveStreamPage({
           null,
         )
 
-        await sendLiveChatMessage(
-          connection,
-          streamId,
+        await chatClient.send(
           developmentUserName,
           message,
         )

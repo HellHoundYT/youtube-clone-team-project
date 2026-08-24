@@ -2,176 +2,147 @@ import {
   HubConnectionBuilder,
   HubConnectionState,
   LogLevel,
-  type HubConnection,
 } from '@microsoft/signalr'
+import type {
+  LiveChatClient,
+  LiveChatClientFactory,
+} from '../../application/liveChat/client'
+import type {
+  LiveChatClientOptions,
+  LiveChatMessage,
+} from '../../application/liveChat/types'
 
-export type LiveChatConnection = HubConnection
+export const liveChatClientFactory:
+LiveChatClientFactory = {
+  create(
+    streamId: string,
+    options: LiveChatClientOptions,
+  ): LiveChatClient {
+    const connection =
+      new HubConnectionBuilder()
+        .withUrl(
+          '/hubs/live-chat',
+        )
+        .withAutomaticReconnect([
+          0,
+          2000,
+          5000,
+          10000,
+        ])
+        .configureLogging(
+          LogLevel.Warning,
+        )
+        .build()
 
-export interface LiveChatMessage {
-  id: string
-  streamId: string
-  userId: string | null
-  userName: string
-  message: string
-  sentAt: string
-}
+    connection.on(
+      'ReceiveMessage',
+      (
+        message:
+          LiveChatMessage,
+      ) => {
+        options.onMessage(
+          message,
+        )
+      },
+    )
 
-export type LiveChatConnectionStatus =
-  | 'connecting'
-  | 'connected'
-  | 'reconnecting'
-  | 'disconnected'
+    connection.onreconnecting(
+      () => {
+        options.onStatusChange(
+          'reconnecting',
+        )
+      },
+    )
 
-interface LiveChatConnectionOptions {
-  onMessage: (
-    message: LiveChatMessage,
-  ) => void
+    connection.onreconnected(
+      async () => {
+        try {
+          await connection.invoke(
+            'JoinStream',
+            streamId,
+          )
 
-  onStatusChange: (
-    status: LiveChatConnectionStatus,
-  ) => void
+          options.onStatusChange(
+            'connected',
+          )
+        } catch (
+          error
+        ) {
+          console.error(
+            error,
+          )
 
-  onError?: (
-    message: string,
-  ) => void
-}
+          options.onStatusChange(
+            'disconnected',
+          )
 
-export function createLiveChatConnection(
-  streamId: string,
-  options: LiveChatConnectionOptions,
-): HubConnection {
-  const connection =
-    new HubConnectionBuilder()
-      .withUrl(
-        '/hubs/live-chat',
-      )
-      .withAutomaticReconnect([
-        0,
-        2000,
-        5000,
-        10000,
-      ])
-      .configureLogging(
-        LogLevel.Warning,
-      )
-      .build()
+          options.onError?.(
+            'Could not rejoin the live chat.',
+          )
+        }
+      },
+    )
 
-  connection.on(
-    'ReceiveMessage',
-    (
-      message:
-        LiveChatMessage,
-    ) => {
-      options.onMessage(
-        message,
-      )
-    },
-  )
+    connection.onclose(
+      () => {
+        options.onStatusChange(
+          'disconnected',
+        )
+      },
+    )
 
-  connection.onreconnecting(
-    () => {
-      options.onStatusChange(
-        'reconnecting',
-      )
-    },
-  )
+    return {
+      async start() {
+        await connection.start()
 
-  connection.onreconnected(
-    async () => {
-      try {
         await connection.invoke(
           'JoinStream',
           streamId,
         )
+      },
 
-        options.onStatusChange(
-          'connected',
-        )
-      } catch (
-        error
+      async stop() {
+        try {
+          if (
+            connection.state ===
+            HubConnectionState.Connected
+          ) {
+            await connection.invoke(
+              'LeaveStream',
+              streamId,
+            )
+          }
+        } catch (
+          error
+        ) {
+          console.error(
+            error,
+          )
+        }
+
+        await connection.stop()
+      },
+
+      async send(
+        userName: string,
+        message: string,
       ) {
-        console.error(
-          error,
+        if (
+          connection.state !==
+          HubConnectionState.Connected
+        ) {
+          throw new Error(
+            'Live chat is not connected.',
+          )
+        }
+
+        await connection.invoke(
+          'SendMessage',
+          streamId,
+          userName,
+          message,
         )
-
-        options.onStatusChange(
-          'disconnected',
-        )
-
-        options.onError?.(
-          'Could not rejoin the live chat.',
-        )
-      }
-    },
-  )
-
-  connection.onclose(
-    () => {
-      options.onStatusChange(
-        'disconnected',
-      )
-    },
-  )
-
-  return connection
-}
-
-export async function startLiveChatConnection(
-  connection: HubConnection,
-  streamId: string,
-) {
-  await connection.start()
-
-  await connection.invoke(
-    'JoinStream',
-    streamId,
-  )
-}
-
-export async function stopLiveChatConnection(
-  connection: HubConnection,
-  streamId: string,
-) {
-  try {
-    if (
-      connection.state ===
-      HubConnectionState.Connected
-    ) {
-      await connection.invoke(
-        'LeaveStream',
-        streamId,
-      )
+      },
     }
-  } catch (
-    error
-  ) {
-    console.error(
-      error,
-    )
-  }
-
-  await connection.stop()
-}
-
-export async function sendLiveChatMessage(
-  connection: HubConnection,
-  streamId: string,
-  userName: string,
-  message: string,
-) {
-  if (
-    connection.state !==
-    HubConnectionState.Connected
-  ) {
-    throw new Error(
-      'Live chat is not connected.',
-    )
-  }
-
-  await connection.invoke(
-    'SendMessage',
-    streamId,
-    userName,
-    message,
-  )
+  },
 }

@@ -36,6 +36,7 @@ import {
   streamService,
   libraryService,
   uploadService,
+  liveChatClientFactory,
 } from './dependencies'
 
 function App() {
@@ -113,7 +114,7 @@ function App() {
         <Route
           path="streamers/:streamId"
           element={
-            <LiveStreamPage streamService={streamService} />
+            <LiveStreamPage liveChatClientFactory={liveChatClientFactory} streamService={streamService} />
           }
         />
 

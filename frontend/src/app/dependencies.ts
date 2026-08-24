@@ -28,6 +28,9 @@ import {
 import {
   videoGateway,
 } from '../infrastructure/api/videos'
+import {
+  liveChatClientFactory as signalRLiveChatClientFactory,
+} from '../infrastructure/signalr/liveChat'
 
 export const discoveryService =
   createDiscoveryService(
@@ -53,3 +56,6 @@ export const videoService =
   createVideoService(
     videoGateway,
   )
+
+export const liveChatClientFactory =
+  signalRLiveChatClientFactory
