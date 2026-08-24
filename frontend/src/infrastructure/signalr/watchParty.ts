@@ -5,6 +5,8 @@ import {
   type HubConnection,
 } from '@microsoft/signalr'
 
+export type WatchPartyConnection = HubConnection
+
 export interface WatchPartyParticipant {
   userId: string | null
   userName: string

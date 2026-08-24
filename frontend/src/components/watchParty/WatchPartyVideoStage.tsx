@@ -4,9 +4,6 @@ import {
   useState,
   type RefObject,
 } from 'react'
-import type {
-  HubConnection,
-} from '@microsoft/signalr'
 import {
   getVideoById,
   getVideos,
@@ -17,6 +14,7 @@ import {
   getWatchPartyRoomState,
   setWatchPartyPlayback,
   setWatchPartyVideo,
+  type WatchPartyConnection,
   type WatchPartyConnectionStatus,
   type WatchPartyPlayback,
   type WatchPartyRoomState,
@@ -33,7 +31,7 @@ import './WatchPartyVideoStage.css'
 interface WatchPartyVideoStageProps {
   room: WatchPartyRoomState
   isHost: boolean
-  connectionRef: RefObject<HubConnection | null>
+  connectionRef: RefObject<WatchPartyConnection | null>
   hostSessionId: string
   connectionStatus: WatchPartyConnectionStatus
 

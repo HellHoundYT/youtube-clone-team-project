@@ -5,9 +5,6 @@ import {
   useState,
   type FormEvent,
 } from 'react'
-import type {
-  HubConnection,
-} from '@microsoft/signalr'
 import {
   Link,
   useNavigate,
@@ -23,6 +20,7 @@ import {
   sendWatchPartyMessage,
   startWatchPartyConnection,
   stopWatchPartyConnection,
+  type WatchPartyConnection,
   type WatchPartyConnectionStatus,
   type WatchPartyMessage,
   type WatchPartyRoomState,
@@ -178,7 +176,7 @@ function WatchPartyPage() {
 
   const connectionRef =
     useRef<
-      HubConnection | null
+      WatchPartyConnection | null
     >(null)
 
   const messagesRef =

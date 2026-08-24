@@ -4,9 +4,6 @@ import {
   useState,
   type FormEvent,
 } from 'react'
-import type {
-  HubConnection,
-} from '@microsoft/signalr'
 import {
   Link,
   useParams,
@@ -16,6 +13,7 @@ import {
   sendLiveChatMessage,
   startLiveChatConnection,
   stopLiveChatConnection,
+  type LiveChatConnection,
   type LiveChatConnectionStatus,
   type LiveChatMessage,
 } from '../infrastructure/signalr/liveChat'
@@ -191,7 +189,7 @@ function LiveStreamPage() {
 
   const connectionRef =
     useRef<
-      HubConnection | null
+      LiveChatConnection | null
     >(null)
 
   const chatMessagesRef =

@@ -5,6 +5,8 @@ import {
   type HubConnection,
 } from '@microsoft/signalr'
 
+export type LiveChatConnection = HubConnection
+
 export interface LiveChatMessage {
   id: string
   streamId: string
