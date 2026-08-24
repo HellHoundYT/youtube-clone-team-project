@@ -6,9 +6,9 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
-import {
-  uploadVideo,
-} from '../infrastructure/api/videos'
+import type {
+  UploadService,
+} from '../application/upload/service'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -150,7 +150,13 @@ function formatMegabytes(
   )
 }
 
-function UploadPage() {
+interface UploadPageProps {
+  uploadService: UploadService
+}
+
+function UploadPage({
+  uploadService,
+}: UploadPageProps) {
   const navigate =
     useNavigate()
 
@@ -356,7 +362,7 @@ function UploadPage() {
         )
 
         const video =
-          await uploadVideo(
+          await uploadService.uploadVideo(
             {
               title:
                 title.trim(),
@@ -366,7 +372,11 @@ function UploadPage() {
 
               category,
               durationSeconds,
-              file,
+              source: {
+                name: file.name,
+                size: file.size,
+                native: file,
+              },
             },
             setProgress,
           )

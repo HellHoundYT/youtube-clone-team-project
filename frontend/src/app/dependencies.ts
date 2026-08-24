@@ -8,6 +8,9 @@ import {
   createStreamService,
 } from '../application/stream/service'
 import {
+  createUploadService,
+} from '../application/upload/service'
+import {
   createVideoService,
 } from '../application/video/service'
 import {
@@ -19,6 +22,9 @@ import {
 import {
   streamGateway,
 } from '../infrastructure/api/streams'
+import {
+  uploadGateway,
+} from '../infrastructure/api/upload'
 import {
   videoGateway,
 } from '../infrastructure/api/videos'
@@ -36,6 +42,11 @@ export const libraryService =
 export const streamService =
   createStreamService(
     streamGateway,
+  )
+
+export const uploadService =
+  createUploadService(
+    uploadGateway,
   )
 
 export const videoService =

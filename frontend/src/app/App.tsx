@@ -35,6 +35,7 @@ import {
   videoService,
   streamService,
   libraryService,
+  uploadService,
 } from './dependencies'
 
 function App() {
@@ -140,7 +141,7 @@ function App() {
         <Route
           path="upload"
           element={
-            <UploadPage />
+            <UploadPage uploadService={uploadService} />
           }
         />
 
