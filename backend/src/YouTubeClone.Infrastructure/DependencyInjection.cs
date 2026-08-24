@@ -3,10 +3,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YouTubeClone.Application.Abstractions.Media;
 using YouTubeClone.Application.Abstractions.Storage;
+using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Infrastructure.Media;
 using YouTubeClone.Infrastructure.Persistence;
 using YouTubeClone.Infrastructure.Storage;
+using YouTubeClone.Infrastructure.History;
 using YouTubeClone.Infrastructure.Videos;
 
 namespace YouTubeClone.Infrastructure;
@@ -37,6 +39,10 @@ public static class DependencyInjection
         services.AddSingleton<
             IVideoRepository,
             InMemoryVideoRepository>();
+
+        services.AddSingleton<
+            IWatchHistoryRepository,
+            InMemoryWatchHistoryRepository>();
 
         return services;
     }

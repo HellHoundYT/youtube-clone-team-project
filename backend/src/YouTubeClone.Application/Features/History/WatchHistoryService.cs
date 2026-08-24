@@ -1,40 +1,28 @@
-using System.Collections.Concurrent;
-using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.History.Contracts;
-using YouTubeClone.Application.Features.Videos.Contracts;
 using YouTubeClone.Application.Features.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
+using YouTubeClone.Domain.History;
 
-namespace YouTubeClone.Api.Services.History;
+namespace YouTubeClone.Application.Features.History;
 
 public sealed class WatchHistoryService :
     IWatchHistoryService
 {
-    private sealed class HistoryEntry
-    {
-        public Guid VideoId { get; init; }
-
-        public int ProgressSeconds { get; init; }
-
-        public bool Completed { get; init; }
-
-        public DateTimeOffset LastWatchedAt { get; init; }
-    }
-
-    private readonly ConcurrentDictionary<
-        Guid,
-        HistoryEntry> _history =
-        new();
-
     private readonly IVideoService
         _videoService;
 
-    private int _isPaused;
+    private readonly IWatchHistoryRepository
+        _repository;
 
     public WatchHistoryService(
-        IVideoService videoService)
+        IVideoService videoService,
+        IWatchHistoryRepository repository)
     {
         _videoService =
             videoService;
+
+        _repository =
+            repository;
     }
 
     public async Task<IReadOnlyList<WatchHistoryItemDto>>
@@ -43,17 +31,21 @@ public sealed class WatchHistoryService :
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var entries = _history
-            .Values
-            .OrderByDescending(
-                entry =>
-                    entry.LastWatchedAt)
-            .ToList();
+        var entries =
+            await _repository.GetAllAsync(
+                cancellationToken);
+
+        var orderedEntries =
+            entries
+                .OrderByDescending(
+                    entry =>
+                        entry.LastWatchedAt)
+                .ToList();
 
         var result =
             new List<WatchHistoryItemDto>();
 
-        foreach (var entry in entries)
+        foreach (var entry in orderedEntries)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -95,7 +87,8 @@ public sealed class WatchHistoryService :
             return null;
         }
 
-        if (IsPaused())
+        if (await _repository.IsPausedAsync(
+                cancellationToken))
         {
             return null;
         }
@@ -113,107 +106,107 @@ public sealed class WatchHistoryService :
         }
 
         var entry =
-            new HistoryEntry
+            new WatchHistoryEntry
             {
                 VideoId =
                     videoId,
+
                 ProgressSeconds =
                     safeProgress,
+
                 Completed =
                     completed,
+
                 LastWatchedAt =
                     DateTimeOffset.UtcNow
             };
 
-        _history.AddOrUpdate(
-            videoId,
+        await _repository.UpsertAsync(
             entry,
-            (_, _) => entry);
+            cancellationToken);
 
         return ToHistoryItem(
             entry,
             video);
     }
 
-    public Task<bool> RemoveHistoryItemAsync(
-        Guid videoId,
-        CancellationToken cancellationToken = default)
+    public Task<bool>
+        RemoveHistoryItemAsync(
+            Guid videoId,
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var removed =
-            _history.TryRemove(
-                videoId,
-                out _);
-
-        return Task.FromResult(
-            removed);
+        return _repository.RemoveAsync(
+            videoId,
+            cancellationToken);
     }
 
-    public Task ClearHistoryAsync(
-        CancellationToken cancellationToken = default)
+    public Task
+        ClearHistoryAsync(
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        _history.Clear();
-
-        return Task.CompletedTask;
+        return _repository.ClearAsync(
+            cancellationToken);
     }
 
-    public Task<HistoryStatusDto> GetStatusAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<HistoryStatusDto>
+        GetStatusAsync(
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        return Task.FromResult(
-            new HistoryStatusDto
-            {
-                IsPaused =
-                    IsPaused()
-            });
+        var isPaused =
+            await _repository.IsPausedAsync(
+                cancellationToken);
+
+        return new HistoryStatusDto
+        {
+            IsPaused =
+                isPaused
+        };
     }
 
-    public Task<HistoryStatusDto> SetPausedAsync(
-        bool isPaused,
-        CancellationToken cancellationToken = default)
+    public async Task<HistoryStatusDto>
+        SetPausedAsync(
+            bool isPaused,
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        Interlocked.Exchange(
-            ref _isPaused,
-            isPaused
-                ? 1
-                : 0);
+        var updatedState =
+            await _repository.SetPausedAsync(
+                isPaused,
+                cancellationToken);
 
-        return Task.FromResult(
-            new HistoryStatusDto
-            {
-                IsPaused =
-                    IsPaused()
-            });
-    }
-
-    private bool IsPaused()
-    {
-        return Volatile.Read(
-            ref _isPaused) == 1;
+        return new HistoryStatusDto
+        {
+            IsPaused =
+                updatedState
+        };
     }
 
     private static WatchHistoryItemDto
         ToHistoryItem(
-            HistoryEntry entry,
+            WatchHistoryEntry entry,
             VideoDetailsDto video)
     {
         return new WatchHistoryItemDto
         {
             VideoId =
                 entry.VideoId,
+
             ProgressSeconds =
                 entry.ProgressSeconds,
+
             Completed =
                 entry.Completed,
+
             LastWatchedAt =
                 entry.LastWatchedAt,
+
             Video =
                 ToVideoListItem(
                     video)
@@ -228,24 +221,34 @@ public sealed class WatchHistoryService :
         {
             Id =
                 video.Id,
+
             ChannelId =
                 video.ChannelId,
+
             ChannelName =
                 video.ChannelName,
+
             ChannelAvatarPath =
                 video.ChannelAvatarPath,
+
             Category =
                 video.Category,
+
             CategorySlug =
                 video.CategorySlug,
+
             Title =
                 video.Title,
+
             ThumbnailPath =
                 video.ThumbnailPath,
+
             DurationSeconds =
                 video.DurationSeconds,
+
             ViewCount =
                 video.ViewCount,
+
             PublishedAt =
                 video.PublishedAt
         };

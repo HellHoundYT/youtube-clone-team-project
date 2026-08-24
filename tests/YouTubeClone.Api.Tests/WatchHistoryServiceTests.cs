@@ -1,5 +1,6 @@
 using YouTubeClone.Application.Features.Videos.Contracts;
-using YouTubeClone.Api.Services.History;
+using YouTubeClone.Application.Features.History;
+using YouTubeClone.Infrastructure.History;
 using YouTubeClone.Application.Features.Videos;
 using Xunit;
 
@@ -409,8 +410,12 @@ public sealed class WatchHistoryServiceTests
             new FakeVideoService(
                 videos);
 
+        var repository =
+            new InMemoryWatchHistoryRepository();
+
         return new WatchHistoryService(
-            videoService);
+            videoService,
+            repository);
     }
 
     private static VideoDetailsDto
