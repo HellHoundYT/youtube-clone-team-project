@@ -7,9 +7,11 @@ import {
 import {
   getVideoById,
   getVideos,
-  type VideoDetails,
-  type VideoListItem,
 } from '../../infrastructure/api/videos'
+import type {
+  VideoDetails,
+  VideoListItem,
+} from '../../domain/video/types'
 import {
   getWatchPartyRoomState,
   setWatchPartyPlayback,
