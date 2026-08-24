@@ -1,0 +1,27 @@
+.comments-section { margin-top: 28px; padding-top: 25px; border-top: 1px solid #20222b; }
+.comments-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.comments-heading h2 { margin: 0; color: #fff; font-size: 20px; }
+.comments-heading span { color: #858997; font-size: 13px; }
+.comment-compose, .comment-card, .comment-reply { display: flex; align-items: flex-start; gap: 12px; }
+.comment-avatar { width: 36px; height: 36px; display: grid; place-items: center; flex: 0 0 auto; color: #fff; background: linear-gradient(135deg, #755ef3, #423092); border-radius: 50%; font-size: 13px; font-weight: 800; }
+.comment-compose > div:last-child { flex: 1; }
+.comment-compose textarea, .comment-reply-form input { width: 100%; padding: 10px 0; color: #f5f5fa; background: transparent; border: 0; border-bottom: 1px solid #444754; outline: none; font: inherit; resize: vertical; }
+.comment-compose textarea:focus, .comment-reply-form input:focus { border-color: #8067f7; }
+.comment-compose button, .comment-reply-form button { float: right; margin-top: 9px; padding: 8px 14px; color: #fff; background: #6044dc; border-radius: 7px; font-size: 13px; font-weight: 800; }
+.comment-compose button:disabled { cursor: not-allowed; opacity: .45; }
+.comments-list { display: grid; gap: 22px; clear: both; padding-top: 30px; }
+.comment-content { min-width: 0; flex: 1; }
+.comment-header { display: flex; align-items: baseline; gap: 9px; }
+.comment-header strong, .comment-reply strong { color: #f0f0f5; font-size: 14px; }
+.comment-header span { color: #777b89; font-size: 12px; }
+.comment-content > p, .comment-reply p { margin: 6px 0 9px; color: #c8cad4; line-height: 1.45; white-space: pre-wrap; }
+.comment-actions { display: flex; align-items: center; gap: 6px; }
+.comment-actions button { padding: 5px 8px; color: #9296a5; background: transparent; border-radius: 6px; font-size: 12px; font-weight: 700; }
+.comment-actions button:hover, .comment-actions button.is-active { color: #c2b5ff; background: #201c36; }
+.comment-reply-form { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+.comment-reply-form button { float: none; flex: 0 0 auto; margin: 0; }
+.comment-replies { display: grid; gap: 13px; margin-top: 16px; padding-left: 13px; border-left: 2px solid #2c2b3d; }
+.comment-avatar-small { width: 27px; height: 27px; font-size: 10px; }
+.comment-reply p { margin-bottom: 0; font-size: 14px; }
+.comments-empty { padding: 24px; color: #8a8e9d; background: #101117; border: 1px dashed #30323d; border-radius: 10px; text-align: center; }
+@media (max-width: 620px) { .comments-section { margin-top: 22px; } }
