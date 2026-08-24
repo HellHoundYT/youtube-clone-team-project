@@ -1,6 +1,6 @@
 using YouTubeClone.Application.Features.Videos.Contracts;
 
-namespace YouTubeClone.Api.DTOs.History;
+namespace YouTubeClone.Application.Features.History.Contracts;
 
 public sealed class WatchHistoryItemDto
 {

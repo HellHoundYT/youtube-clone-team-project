@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
-using YouTubeClone.Api.DTOs.History;
+using YouTubeClone.Application.Features.History;
+using YouTubeClone.Application.Features.History.Contracts;
 using YouTubeClone.Application.Features.Videos.Contracts;
 using YouTubeClone.Application.Features.Videos;
 

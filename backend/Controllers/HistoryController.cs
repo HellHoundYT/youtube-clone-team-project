@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.History;
-using YouTubeClone.Api.Services.History;
+using YouTubeClone.Application.Features.History;
+using YouTubeClone.Application.Features.History.Contracts;
 
 namespace YouTubeClone.Api.Controllers;
 

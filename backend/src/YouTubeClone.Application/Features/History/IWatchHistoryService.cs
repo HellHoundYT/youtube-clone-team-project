@@ -1,6 +1,6 @@
-using YouTubeClone.Api.DTOs.History;
+using YouTubeClone.Application.Features.History.Contracts;
 
-namespace YouTubeClone.Api.Services.History;
+namespace YouTubeClone.Application.Features.History;
 
 public interface IWatchHistoryService
 {

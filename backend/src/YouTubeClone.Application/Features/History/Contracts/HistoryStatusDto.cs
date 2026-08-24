@@ -1,4 +1,4 @@
-namespace YouTubeClone.Api.DTOs.History;
+namespace YouTubeClone.Application.Features.History.Contracts;
 
 public sealed class HistoryStatusDto
 {

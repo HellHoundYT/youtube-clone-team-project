@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http.Features;
+using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Api.Services.Favorites;
