@@ -17,60 +17,58 @@ import {
   it,
   vi,
 } from 'vitest'
-import {
-  clearWatchHistory,
-  getHistoryStatus,
-  getWatchHistory,
-  removeHistoryItem,
-  setHistoryPaused,
-} from '../infrastructure/api/library'
+import type {
+  LibraryService,
+} from '../application/library/service'
 import HistoryPage from './HistoryPage'
 
-vi.mock(
-  '../infrastructure/api/library',
-  () => ({
-    clearWatchHistory:
-      vi.fn(),
-    getHistoryStatus:
-      vi.fn(),
-    getWatchHistory:
-      vi.fn(),
-    removeHistoryItem:
-      vi.fn(),
-    setHistoryPaused:
-      vi.fn(),
-  }),
-)
-
 const getWatchHistoryMock =
-  vi.mocked(
-    getWatchHistory,
-  )
+  vi.fn<LibraryService['getWatchHistory']>()
 
 const getHistoryStatusMock =
-  vi.mocked(
-    getHistoryStatus,
-  )
+  vi.fn<LibraryService['getHistoryStatus']>()
 
 const clearWatchHistoryMock =
-  vi.mocked(
-    clearWatchHistory,
-  )
+  vi.fn<LibraryService['clearWatchHistory']>()
 
 const removeHistoryItemMock =
-  vi.mocked(
-    removeHistoryItem,
-  )
+  vi.fn<LibraryService['removeHistoryItem']>()
 
 const setHistoryPausedMock =
-  vi.mocked(
-    setHistoryPaused,
-  )
+  vi.fn<LibraryService['setHistoryPaused']>()
 
+const libraryService: LibraryService = {
+  getWatchHistory:
+    getWatchHistoryMock,
+
+  updateWatchHistory:
+    vi.fn<LibraryService['updateWatchHistory']>(),
+
+  removeHistoryItem:
+    removeHistoryItemMock,
+
+  clearWatchHistory:
+    clearWatchHistoryMock,
+
+  getHistoryStatus:
+    getHistoryStatusMock,
+
+  setHistoryPaused:
+    setHistoryPausedMock,
+
+  getFavorites:
+    vi.fn<LibraryService['getFavorites']>(),
+
+  addFavorite:
+    vi.fn<LibraryService['addFavorite']>(),
+
+  removeFavorite:
+    vi.fn<LibraryService['removeFavorite']>(),
+}
 function renderHistoryPage() {
   return render(
     <MemoryRouter>
-      <HistoryPage />
+      <HistoryPage libraryService={libraryService} />
     </MemoryRouter>,
   )
 }

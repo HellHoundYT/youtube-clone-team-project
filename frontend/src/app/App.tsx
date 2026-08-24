@@ -34,6 +34,7 @@ import {
   discoveryService,
   videoService,
   streamService,
+  libraryService,
 } from './dependencies'
 
 function App() {
@@ -54,7 +55,7 @@ function App() {
         <Route
           index
           element={
-            <HomePage videoService={videoService} />
+            <HomePage libraryService={libraryService} videoService={videoService} />
           }
         />
 
@@ -78,21 +79,21 @@ function App() {
         <Route
           path="library"
           element={
-            <LibraryPage />
+            <LibraryPage libraryService={libraryService} />
           }
         />
 
         <Route
           path="history"
           element={
-            <HistoryPage />
+            <HistoryPage libraryService={libraryService} />
           }
         />
 
         <Route
           path="favorites"
           element={
-            <FavoritesPage />
+            <FavoritesPage libraryService={libraryService} />
           }
         />
 
@@ -164,7 +165,7 @@ function App() {
         <Route
           path="watch/:videoId"
           element={
-            <WatchPage videoService={videoService} />
+            <WatchPage libraryService={libraryService} videoService={videoService} />
           }
         />
       </Route>

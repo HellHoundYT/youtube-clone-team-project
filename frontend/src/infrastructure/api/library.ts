@@ -1,5 +1,14 @@
 import axios from 'axios'
 import type {
+  CancellationSignal,
+} from '../../application/common/cancellation'
+import type {
+  LibraryGateway,
+} from '../../application/library/gateway'
+import type {
+  UpdateHistoryRequest,
+} from '../../application/library/types'
+import type {
   FavoriteItem,
 } from '../../domain/favorite/types'
 import type {
@@ -7,21 +16,8 @@ import type {
   WatchHistoryItem,
 } from '../../domain/history/types'
 
-export type {
-  FavoriteItem,
-} from '../../domain/favorite/types'
-export type {
-  HistoryStatus,
-  WatchHistoryItem,
-} from '../../domain/history/types'
-
-export interface UpdateHistoryRequest {
-  progressSeconds: number
-  completed: boolean
-}
-
 export async function getWatchHistory(
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<WatchHistoryItem[]> {
   const response =
     await axios.get<WatchHistoryItem[]>(
@@ -72,7 +68,7 @@ Promise<void> {
 }
 
 export async function getHistoryStatus(
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<HistoryStatus> {
   const response =
     await axios.get<HistoryStatus>(
@@ -100,7 +96,7 @@ export async function setHistoryPaused(
 }
 
 export async function getFavorites(
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<FavoriteItem[]> {
   const response =
     await axios.get<FavoriteItem[]>(
@@ -130,4 +126,17 @@ export async function removeFavorite(
   await axios.delete(
     `/api/v1/favorites/${videoId}`,
   )
+}
+
+export const libraryGateway:
+LibraryGateway = {
+  getWatchHistory,
+  updateWatchHistory,
+  removeHistoryItem,
+  clearWatchHistory,
+  getHistoryStatus,
+  setHistoryPaused,
+  getFavorites,
+  addFavorite,
+  removeFavorite,
 }

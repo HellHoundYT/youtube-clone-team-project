@@ -5,15 +5,13 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
-import {
-  clearWatchHistory,
-  getHistoryStatus,
-  getWatchHistory,
-  removeHistoryItem,
-  setHistoryPaused,
-  type HistoryStatus,
-  type WatchHistoryItem,
-} from '../infrastructure/api/library'
+import type {
+  LibraryService,
+} from '../application/library/service'
+import type {
+  HistoryStatus,
+  WatchHistoryItem,
+} from '../domain/history/types'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -111,7 +109,13 @@ function formatWatchedDate(
   )
 }
 
-function HistoryPage() {
+interface HistoryPageProps {
+  libraryService: LibraryService
+}
+
+function HistoryPage({
+  libraryService,
+}: HistoryPageProps) {
   const navigate =
     useNavigate()
 
@@ -191,10 +195,10 @@ function HistoryPage() {
       new AbortController()
 
     void Promise.all([
-      getWatchHistory(
+      libraryService.getWatchHistory(
         controller.signal,
       ),
-      getHistoryStatus(
+      libraryService.getHistoryStatus(
         controller.signal,
       ),
     ])
@@ -240,6 +244,7 @@ function HistoryPage() {
       controller.abort()
     }
   }, [
+    libraryService,
     reloadToken,
     requestKey,
   ])
@@ -365,7 +370,7 @@ function HistoryPage() {
         )
 
         const status =
-          await setHistoryPaused(
+          await libraryService.setHistoryPaused(
             !historyStatus.isPaused,
           )
 
@@ -408,7 +413,7 @@ function HistoryPage() {
           true,
         )
 
-        await removeHistoryItem(
+        await libraryService.removeHistoryItem(
           videoId,
         )
 
@@ -485,7 +490,7 @@ function HistoryPage() {
           true,
         )
 
-        await clearWatchHistory()
+        await libraryService.clearWatchHistory()
 
         setState(
           (current) => {

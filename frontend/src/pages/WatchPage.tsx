@@ -7,10 +7,9 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import {
-  getWatchHistory,
-  updateWatchHistory,
-} from '../infrastructure/api/library'
+import type {
+  LibraryService,
+} from '../application/library/service'
 import type {
   VideoService,
 } from '../application/video/service'
@@ -166,10 +165,12 @@ function formatPublishedDate(
 }
 
 interface WatchPageProps {
+  libraryService: LibraryService
   videoService: VideoService
 }
 
 function WatchPage({
+  libraryService,
   videoService,
 }: WatchPageProps) {
   const {
@@ -239,7 +240,7 @@ function WatchPage({
 
           try {
             const history =
-              await getWatchHistory(
+              await libraryService.getWatchHistory(
                 controller.signal,
               )
 
@@ -306,6 +307,7 @@ function WatchPage({
       controller.abort()
     }
   }, [
+    libraryService,
     videoId,
     videoService,
   ])
@@ -484,7 +486,7 @@ function WatchPage({
       completed: boolean,
     ) => {
       try {
-        await updateWatchHistory(
+        await libraryService.updateWatchHistory(
           video.id,
           {
             progressSeconds:

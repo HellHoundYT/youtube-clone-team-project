@@ -451,7 +451,6 @@ function LiveStreamPage({
     }
   }, [
     streamId,
-    streamService,
   ])
 
   useEffect(() => {

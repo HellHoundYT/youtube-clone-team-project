@@ -5,11 +5,12 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
-import {
-  getFavorites,
-  removeFavorite,
-  type FavoriteItem,
-} from '../infrastructure/api/library'
+import type {
+  LibraryService,
+} from '../application/library/service'
+import type {
+  FavoriteItem,
+} from '../domain/favorite/types'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -104,7 +105,13 @@ function formatDate(
   )
 }
 
-function FavoritesPage() {
+interface FavoritesPageProps {
+  libraryService: LibraryService
+}
+
+function FavoritesPage({
+  libraryService,
+}: FavoritesPageProps) {
   const navigate =
     useNavigate()
 
@@ -176,7 +183,7 @@ function FavoritesPage() {
     const controller =
       new AbortController()
 
-    void getFavorites(
+    void libraryService.getFavorites(
       controller.signal,
     )
       .then((items) => {
@@ -212,6 +219,7 @@ function FavoritesPage() {
       controller.abort()
     }
   }, [
+    libraryService,
     reloadToken,
     requestKey,
   ])
@@ -249,7 +257,7 @@ function FavoritesPage() {
           videoId,
         )
 
-        await removeFavorite(
+        await libraryService.removeFavorite(
           videoId,
         )
 

@@ -5,12 +5,15 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
-import {
-  getFavorites,
-  getWatchHistory,
-  type FavoriteItem,
-  type WatchHistoryItem,
-} from '../infrastructure/api/library'
+import type {
+  LibraryService,
+} from '../application/library/service'
+import type {
+  FavoriteItem,
+} from '../domain/favorite/types'
+import type {
+  WatchHistoryItem,
+} from '../domain/history/types'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -78,7 +81,13 @@ function formatDuration(
   ].join(':')
 }
 
-function LibraryPage() {
+interface LibraryPageProps {
+  libraryService: LibraryService
+}
+
+function LibraryPage({
+  libraryService,
+}: LibraryPageProps) {
   const navigate =
     useNavigate()
 
@@ -108,10 +117,10 @@ function LibraryPage() {
       new AbortController()
 
     void Promise.all([
-      getWatchHistory(
+      libraryService.getWatchHistory(
         controller.signal,
       ),
-      getFavorites(
+      libraryService.getFavorites(
         controller.signal,
       ),
     ])
@@ -155,6 +164,7 @@ function LibraryPage() {
       controller.abort()
     }
   }, [
+    libraryService,
     reloadToken,
     requestKey,
   ])

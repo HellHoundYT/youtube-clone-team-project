@@ -253,9 +253,7 @@ function StreamsPage({
         timer,
       )
     }
-  }, [
-    streamService,
-  ])
+  }, [])
 
   useEffect(() => {
     const controller =

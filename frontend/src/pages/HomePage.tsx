@@ -8,10 +8,12 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
-import {
-  getWatchHistory,
-  type WatchHistoryItem,
-} from '../infrastructure/api/library'
+import type {
+  LibraryService,
+} from '../application/library/service'
+import type {
+  WatchHistoryItem,
+} from '../domain/history/types'
 import type {
   VideoService,
 } from '../application/video/service'
@@ -651,10 +653,12 @@ function HomeEmptyState() {
 }
 
 interface HomePageProps {
+  libraryService: LibraryService
   videoService: VideoService
 }
 
 function HomePage({
+  libraryService,
   videoService,
 }: HomePageProps) {
   const navigate =
@@ -896,7 +900,7 @@ function HomePage({
     const controller =
       new AbortController()
 
-    void getWatchHistory(
+    void libraryService.getWatchHistory(
       controller.signal,
     )
       .then(
@@ -943,7 +947,7 @@ function HomePage({
     }
   }, [
     reloadToken,
-    videoService,
+    libraryService,
   ])
 
   useEffect(() => {
