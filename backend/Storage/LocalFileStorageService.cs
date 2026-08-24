@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.StaticFiles;
+using YouTubeClone.Application.Abstractions.Storage;
 
 namespace YouTubeClone.Api.Storage;
 

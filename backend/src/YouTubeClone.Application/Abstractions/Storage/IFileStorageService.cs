@@ -1,4 +1,4 @@
-namespace YouTubeClone.Api.Storage;
+namespace YouTubeClone.Application.Abstractions.Storage;
 
 public interface IFileStorageService
 {

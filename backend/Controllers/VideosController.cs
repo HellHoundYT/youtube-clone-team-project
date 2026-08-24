@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.Videos;
-using YouTubeClone.Api.Services.Media;
+using YouTubeClone.Application.Abstractions.Media;
 using YouTubeClone.Api.Services.Videos;
-using YouTubeClone.Api.Storage;
+using YouTubeClone.Application.Abstractions.Storage;
 
 namespace YouTubeClone.Api.Controllers;
 

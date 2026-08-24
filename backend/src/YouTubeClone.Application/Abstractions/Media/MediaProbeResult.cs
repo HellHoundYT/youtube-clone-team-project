@@ -1,4 +1,4 @@
-namespace YouTubeClone.Api.Services.Media;
+namespace YouTubeClone.Application.Abstractions.Media;
 
 public enum MediaProbeStatus
 {
