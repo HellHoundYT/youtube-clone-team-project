@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom'
 import {
   useAppTranslation,
-} from '../../i18n'
+} from '../../shared/i18n'
 import {
   useAuthStore,
 } from '../../features/auth/authStore'

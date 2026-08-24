@@ -18,7 +18,7 @@ import {
 } from '../api/videos'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 
 interface CategoryDefinition {
   value: string

@@ -17,7 +17,7 @@ import type {
 import VideoGrid from '../components/video/VideoGrid'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './DiscoveryPage.css'
 
 interface CategoryState {

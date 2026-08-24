@@ -1,6 +1,6 @@
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 
 interface PlaceholderPageProps {
   titleKey: string

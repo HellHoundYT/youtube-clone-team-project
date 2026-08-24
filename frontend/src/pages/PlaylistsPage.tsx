@@ -10,7 +10,7 @@ import {
 } from '../features/playlists/playlistStore'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './PlaylistsPage.css'
 
 function PlaylistsPage() {

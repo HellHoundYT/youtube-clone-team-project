@@ -3,7 +3,7 @@ import {
 } from 'react-router-dom'
 import {
   useAppTranslation,
-} from '../../i18n'
+} from '../../shared/i18n'
 
 type IconName =
   | 'home'

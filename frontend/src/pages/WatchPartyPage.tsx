@@ -38,7 +38,7 @@ import {
 import WatchPartyVideoStage from '../components/watchParty/WatchPartyVideoStage'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './WatchPartyPage.css'
 
 function normalizeRoomCode(

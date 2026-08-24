@@ -4,7 +4,7 @@ import {
   supportedLanguages,
   type AppLanguage,
   useAppTranslation,
-} from '../../i18n'
+} from '../../shared/i18n'
 
 function LanguageSwitcher() {
   const {

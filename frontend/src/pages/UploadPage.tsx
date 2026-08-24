@@ -11,7 +11,7 @@ import {
 } from '../api/videos'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './UploadPage.css'
 
 const categories = [

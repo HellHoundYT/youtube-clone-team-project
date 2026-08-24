@@ -16,7 +16,7 @@ import {
 } from '../api/library'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './DiscoveryPage.css'
 import './LibraryPages.css'
 

@@ -22,7 +22,7 @@ import VideoPlayer from '../components/video/VideoPlayer'
 import CommentsSection from '../components/comments/CommentsSection'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './WatchPage.css'
 
 interface WatchLoadState {

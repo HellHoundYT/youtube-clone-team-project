@@ -11,7 +11,7 @@ import {
 } from '../features/auth/authStore'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './AuthProfilePage.css'
 
 type AuthMode =

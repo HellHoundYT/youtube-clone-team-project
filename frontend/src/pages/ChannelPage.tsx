@@ -10,7 +10,7 @@ import {
 } from '../features/channels/channelStore'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './ChannelsPages.css'
 
 function ChannelPage() {

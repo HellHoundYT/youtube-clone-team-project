@@ -6,7 +6,7 @@ import type {
 } from '../../api/videos'
 import {
   useAppTranslation,
-} from '../../i18n'
+} from '../../shared/i18n'
 
 interface VideoGridProps {
   videos: VideoListItem[]

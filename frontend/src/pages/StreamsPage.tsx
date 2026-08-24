@@ -14,7 +14,7 @@ import {
 } from '../api/streams'
 import {
   useAppTranslation,
-} from '../i18n'
+} from '../shared/i18n'
 import './StreamsPages.css'
 
 const categoryKeys:

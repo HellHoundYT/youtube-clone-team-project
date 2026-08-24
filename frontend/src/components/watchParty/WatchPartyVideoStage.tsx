@@ -27,7 +27,7 @@ import VideoPlayer, {
 } from '../video/VideoPlayer'
 import {
   useAppTranslation,
-} from '../../i18n'
+} from '../../shared/i18n'
 import './WatchPartyVideoStage.css'
 
 interface WatchPartyVideoStageProps {
