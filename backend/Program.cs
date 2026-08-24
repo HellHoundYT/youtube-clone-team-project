@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Application.Abstractions.Media;
 using YouTubeClone.Application.Abstractions.Storage;
-using YouTubeClone.Api.Data;
+using YouTubeClone.Infrastructure.Persistence;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Api.Services.Favorites;
 using YouTubeClone.Api.Services.History;

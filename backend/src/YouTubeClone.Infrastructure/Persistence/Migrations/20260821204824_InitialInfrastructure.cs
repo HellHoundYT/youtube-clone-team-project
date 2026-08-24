@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace YouTubeClone.Api.Migrations
+namespace YouTubeClone.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialInfrastructure : Migration

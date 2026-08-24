@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace YouTubeClone.Api.Data;
+namespace YouTubeClone.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {
