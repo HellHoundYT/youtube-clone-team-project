@@ -19,6 +19,7 @@ import {
   type VideoListItem,
 } from '../api/videos'
 import VideoPlayer from '../components/video/VideoPlayer'
+import CommentsSection from '../components/comments/CommentsSection'
 import {
   useAppTranslation,
 } from '../i18n'
@@ -620,6 +621,11 @@ function WatchPage() {
               </p>
             </div>
           )}
+
+          <CommentsSection
+            key={video.id}
+            videoId={video.id}
+          />
         </div>
       </div>
 
