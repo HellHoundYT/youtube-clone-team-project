@@ -12,10 +12,12 @@ import {
   getWatchHistory,
   type WatchHistoryItem,
 } from '../infrastructure/api/library'
-import {
-  getVideos,
-  type VideoListItem,
-} from '../infrastructure/api/videos'
+import type {
+  VideoService,
+} from '../application/video/service'
+import type {
+  VideoListItem,
+} from '../domain/video/types'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -648,7 +650,13 @@ function HomeEmptyState() {
   )
 }
 
-function HomePage() {
+interface HomePageProps {
+  videoService: VideoService
+}
+
+function HomePage({
+  videoService,
+}: HomePageProps) {
   const navigate =
     useNavigate()
 
@@ -830,7 +838,7 @@ function HomePage() {
     const controller =
       new AbortController()
 
-    void getVideos(
+    void videoService.getVideos(
       {
         page: 1,
         pageSize: 50,
@@ -881,6 +889,7 @@ function HomePage() {
     }
   }, [
     reloadToken,
+    videoService,
   ])
 
   useEffect(() => {
@@ -934,6 +943,7 @@ function HomePage() {
     }
   }, [
     reloadToken,
+    videoService,
   ])
 
   useEffect(() => {
@@ -947,7 +957,7 @@ function HomePage() {
     const controller =
       new AbortController()
 
-    void getVideos(
+    void videoService.getVideos(
       {
         page: 1,
 
@@ -1003,6 +1013,7 @@ function HomePage() {
   }, [
     activeCategory,
     reloadToken,
+    videoService,
   ])
 
   const allVideos =

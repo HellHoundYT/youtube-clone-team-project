@@ -6,9 +6,9 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
-import {
-  getVideos,
-} from '../infrastructure/api/videos'
+import type {
+  VideoService,
+} from '../application/video/service'
 import {
   getChannelsFromVideos,
   type ChannelSummary,
@@ -37,7 +37,13 @@ function ChannelAvatar({
   )
 }
 
-function SubscriptionsPage() {
+interface SubscriptionsPageProps {
+  videoService: VideoService
+}
+
+function SubscriptionsPage({
+  videoService,
+}: SubscriptionsPageProps) {
   const navigate = useNavigate()
   const { t } = useAppTranslation()
   const subscribedIds = useChannelStore((state) => state.subscribedChannelIds)
@@ -48,13 +54,15 @@ function SubscriptionsPage() {
   useEffect(() => {
     const controller = new AbortController()
 
-    void getVideos({ page: 1, pageSize: 48 }, controller.signal)
+    void videoService.getVideos({ page: 1, pageSize: 48 }, controller.signal)
       .then((videos) => setChannels(getChannelsFromVideos(videos)))
       .catch(() => setChannels(getChannelsFromVideos([])))
       .finally(() => setIsLoading(false))
 
     return () => controller.abort()
-  }, [])
+  }, [
+    videoService,
+  ])
 
   const subscribedChannels = useMemo(
     () => channels.filter((channel) => subscribedIds.includes(channel.id)),

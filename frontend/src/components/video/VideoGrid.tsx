@@ -3,7 +3,7 @@ import {
 } from 'react-router-dom'
 import type {
   VideoListItem,
-} from '../../infrastructure/api/videos'
+} from '../../domain/video/types'
 import {
   useAppTranslation,
 } from '../../shared/i18n'

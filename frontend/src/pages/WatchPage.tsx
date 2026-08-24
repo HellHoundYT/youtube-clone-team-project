@@ -11,13 +11,13 @@ import {
   getWatchHistory,
   updateWatchHistory,
 } from '../infrastructure/api/library'
-import {
-  getVideoById,
-  getVideoRecommendations,
-  registerVideoView,
-  type VideoDetails,
-  type VideoListItem,
-} from '../infrastructure/api/videos'
+import type {
+  VideoService,
+} from '../application/video/service'
+import type {
+  VideoDetails,
+  VideoListItem,
+} from '../domain/video/types'
 import VideoPlayer from '../components/video/VideoPlayer'
 import CommentsSection from '../components/comments/CommentsSection'
 import {
@@ -165,7 +165,13 @@ function formatPublishedDate(
   )
 }
 
-function WatchPage() {
+interface WatchPageProps {
+  videoService: VideoService
+}
+
+function WatchPage({
+  videoService,
+}: WatchPageProps) {
   const {
     videoId,
   } =
@@ -205,7 +211,7 @@ function WatchPage() {
       async () => {
         try {
           const video =
-            await getVideoById(
+            await videoService.getVideoById(
               videoId,
               controller.signal,
             )
@@ -218,7 +224,7 @@ function WatchPage() {
 
           try {
             recommendations =
-              await getVideoRecommendations(
+              await videoService.getVideoRecommendations(
                 video,
                 controller.signal,
               )
@@ -301,6 +307,7 @@ function WatchPage() {
     }
   }, [
     videoId,
+    videoService,
   ])
 
   if (!videoId) {
@@ -434,7 +441,7 @@ function WatchPage() {
   const handleFirstPlay =
     async () => {
       try {
-        await registerVideoView(
+        await videoService.registerVideoView(
           video.id,
         )
 

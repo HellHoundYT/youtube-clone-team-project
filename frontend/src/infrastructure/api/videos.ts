@@ -2,22 +2,28 @@ import axios, {
   type AxiosProgressEvent,
 } from 'axios'
 import type {
+  CancellationSignal,
+} from '../../application/common/cancellation'
+import type {
+  VideoGateway,
+} from '../../application/video/gateway'
+import type {
+  GetVideosParams,
+} from '../../application/video/types'
+import type {
   VideoDetails,
   VideoListItem,
   VideoReactionType,
 } from '../../domain/video/types'
 
 export type {
+  GetVideosParams,
+} from '../../application/video/types'
+export type {
   VideoDetails,
   VideoListItem,
   VideoReactionType,
 } from '../../domain/video/types'
-
-export interface GetVideosParams {
-  page?: number
-  pageSize?: number
-  category?: string
-}
 
 export interface UploadVideoRequest {
   title: string
@@ -29,7 +35,7 @@ export interface UploadVideoRequest {
 
 export async function getVideos(
   params: GetVideosParams = {},
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<VideoListItem[]> {
   const response =
     await axios.get<VideoListItem[]>(
@@ -45,7 +51,7 @@ export async function getVideos(
 
 export async function getVideoById(
   videoId: string,
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<VideoDetails> {
   const response =
     await axios.get<VideoDetails>(
@@ -64,65 +70,6 @@ export async function registerVideoView(
   await axios.post(
     `/api/v1/videos/${videoId}/view`,
   )
-}
-
-export async function getVideoRecommendations(
-  video: VideoDetails,
-  signal?: AbortSignal,
-): Promise<VideoListItem[]> {
-  const recommendations =
-    new Map<string, VideoListItem>()
-
-  if (video.category) {
-    const categoryVideos =
-      await getVideos(
-        {
-          page: 1,
-          pageSize: 12,
-          category: video.category,
-        },
-        signal,
-      )
-
-    for (const item of categoryVideos) {
-      if (item.id !== video.id) {
-        recommendations.set(
-          item.id,
-          item,
-        )
-      }
-    }
-  }
-
-  if (recommendations.size < 5) {
-    const allVideos =
-      await getVideos(
-        {
-          page: 1,
-          pageSize: 50,
-        },
-        signal,
-      )
-
-    for (const item of allVideos) {
-      if (item.id !== video.id) {
-        recommendations.set(
-          item.id,
-          item,
-        )
-      }
-    }
-  }
-
-  return [
-    ...recommendations.values(),
-  ]
-    .sort(
-      (left, right) =>
-        right.viewCount -
-        left.viewCount,
-    )
-    .slice(0, 5)
 }
 
 export async function uploadVideo(
@@ -174,9 +121,10 @@ export async function uploadVideo(
 
           const progress =
             Math.round(
-              (event.loaded /
-                event.total) *
-                100,
+              (
+                event.loaded /
+                event.total
+              ) * 100,
             )
 
           onProgress?.(
@@ -210,4 +158,13 @@ export async function removeVideoReaction(
   await axios.delete(
     `/api/v1/videos/${videoId}/reaction`,
   )
+}
+
+export const videoGateway:
+VideoGateway = {
+  getVideos,
+  getVideoById,
+  registerVideoView,
+  setVideoReaction,
+  removeVideoReaction,
 }

@@ -32,6 +32,7 @@ import {
 } from '../features/auth/authStore'
 import {
   discoveryService,
+  videoService,
 } from './dependencies'
 
 function App() {
@@ -52,20 +53,20 @@ function App() {
         <Route
           index
           element={
-            <HomePage />
+            <HomePage videoService={videoService} />
           }
         />
 
         <Route
           path="playme"
           element={
-            <PlaymePage />
+            <PlaymePage videoService={videoService} />
           }
         />
 
         <Route
           path="subscriptions"
-          element={<SubscriptionsPage />}
+          element={<SubscriptionsPage videoService={videoService} />}
         />
 
         <Route
@@ -162,7 +163,7 @@ function App() {
         <Route
           path="watch/:videoId"
           element={
-            <WatchPage />
+            <WatchPage videoService={videoService} />
           }
         />
       </Route>

@@ -1,6 +1,6 @@
 import type {
   VideoListItem,
-} from '../../infrastructure/api/videos'
+} from '../../domain/video/types'
 
 export interface ChannelSummary {
   id: string

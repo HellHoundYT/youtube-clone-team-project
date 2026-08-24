@@ -5,11 +5,12 @@ import {
   useState,
   type WheelEvent as ReactWheelEvent,
 } from 'react'
-import {
-  getVideos,
-  registerVideoView,
-  type VideoListItem,
-} from '../infrastructure/api/videos'
+import type {
+  VideoService,
+} from '../application/video/service'
+import type {
+  VideoListItem,
+} from '../domain/video/types'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -194,7 +195,13 @@ function ChevronDownIcon() {
   )
 }
 
-function PlaymePage() {
+interface PlaymePageProps {
+  videoService: VideoService
+}
+
+function PlaymePage({
+  videoService,
+}: PlaymePageProps) {
   const {
     t,
     i18n,
@@ -336,7 +343,7 @@ function PlaymePage() {
           )
 
           const data =
-            await getVideos(
+            await videoService.getVideos(
               {
                 page: 1,
                 pageSize: 12,
@@ -388,7 +395,9 @@ function PlaymePage() {
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [
+    videoService,
+  ])
 
   const goToIndex =
     useCallback(
@@ -592,7 +601,7 @@ function PlaymePage() {
               activeVideo.id,
             )
 
-          void registerVideoView(
+          void videoService.registerVideoView(
             activeVideo.id,
           ).catch(
             (
@@ -614,6 +623,7 @@ function PlaymePage() {
     }
   }, [
     activeIndex,
+    videoService,
     videos,
   ])
 
