@@ -7,7 +7,7 @@ import {
 import {
   BrowserRouter,
 } from 'react-router-dom'
-import App from './App'
+import App from './app/App'
 import './i18n'
 import ThemeProvider from './theme/ThemeProvider'
 import './index.css'
