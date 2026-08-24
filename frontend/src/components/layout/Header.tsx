@@ -9,6 +9,9 @@ import {
 import {
   useAppTranslation,
 } from '../../i18n'
+import {
+  useAuthStore,
+} from '../../features/auth/authStore'
 import LanguageSwitcher from './LanguageSwitcher'
 
 interface HeaderProps {
@@ -73,6 +76,17 @@ function Header({
     searchValue,
     setSearchValue,
   ] = useState('')
+  const profile =
+    useAuthStore((state) => state.profile)
+
+  const profileInitials =
+    profile?.displayName
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ??
+    'IN'
 
   const handleSearch = (
     event:
@@ -197,11 +211,11 @@ function Header({
           )}
           onClick={() =>
             navigate(
-              '/profile',
+              profile ? '/profile' : '/auth',
             )
           }
         >
-          HH
+          {profileInitials}
         </button>
       </div>
     </header>

@@ -3,25 +3,42 @@ import {
   Route,
   Routes,
 } from 'react-router-dom'
+import {
+  useEffect,
+} from 'react'
 import AppLayout from './components/layout/AppLayout'
+import AuthPage from './pages/AuthPage'
+import ChannelPage from './pages/ChannelPage'
 import CategoryPage from './pages/CategoryPage'
 import FavoritesPage from './pages/FavoritesPage'
 import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
 import LibraryPage from './pages/LibraryPage'
 import LiveStreamPage from './pages/LiveStreamPage'
-import PlaceholderPage from './pages/PlaceholderPage'
 import PlaymePage from './pages/PlaymePage'
+import PlaylistsPage from './pages/PlaylistsPage'
+import ProfilePage from './pages/ProfilePage'
 import SearchPage from './pages/SearchPage'
 import StreamsPage from './pages/StreamsPage'
+import SubscriptionsPage from './pages/SubscriptionsPage'
 import ThemesPage from './pages/ThemesPage'
 import UploadPage from './pages/UploadPage'
 import WatchPage from './pages/WatchPage'
 import WatchPartyPage from './pages/WatchPartyPage'
 import './App.css'
 import './theme/theme-runtime.css'
+import {
+  useAuthStore,
+} from './features/auth/authStore'
 
 function App() {
+  const loadCurrentUser =
+    useAuthStore((state) => state.loadCurrentUser)
+
+  useEffect(() => {
+    void loadCurrentUser()
+  }, [loadCurrentUser])
+
   return (
     <Routes>
       <Route
@@ -45,12 +62,12 @@ function App() {
 
         <Route
           path="subscriptions"
-          element={
-            <PlaceholderPage
-              titleKey="system.placeholders.subscriptions.title"
-              descriptionKey="system.placeholders.subscriptions.description"
-            />
-          }
+          element={<SubscriptionsPage />}
+        />
+
+        <Route
+          path="channels/:channelId"
+          element={<ChannelPage />}
         />
 
         <Route
@@ -76,12 +93,7 @@ function App() {
 
         <Route
           path="playlists"
-          element={
-            <PlaceholderPage
-              titleKey="system.placeholders.playlists.title"
-              descriptionKey="system.placeholders.playlists.description"
-            />
-          }
+          element={<PlaylistsPage />}
         />
 
         <Route
@@ -128,12 +140,7 @@ function App() {
 
         <Route
           path="profile"
-          element={
-            <PlaceholderPage
-              titleKey="system.placeholders.profile.title"
-              descriptionKey="system.placeholders.profile.description"
-            />
-          }
+          element={<ProfilePage />}
         />
         <Route
           path="watch-party"
@@ -156,6 +163,11 @@ function App() {
           }
         />
       </Route>
+
+      <Route
+        path="auth"
+        element={<AuthPage />}
+      />
 
       <Route
         path="*"
