@@ -1,22 +1,22 @@
 import axios from 'axios'
 import type {
+  GetCategoryVideosParams,
+  SearchResponse,
+} from '../../application/discovery/types'
+import type {
+  Category,
+} from '../../domain/category/types'
+import type {
   VideoListItem,
 } from '../../domain/video/types'
 
-export interface Category {
-  name: string
-  slug: string
-}
-
-export interface SearchResponse {
-  query: string
-  videos: VideoListItem[]
-}
-
-export interface GetCategoryVideosParams {
-  page?: number
-  pageSize?: number
-}
+export type {
+  GetCategoryVideosParams,
+  SearchResponse,
+} from '../../application/discovery/types'
+export type {
+  Category,
+} from '../../domain/category/types'
 
 export async function searchVideos(
   query: string,
