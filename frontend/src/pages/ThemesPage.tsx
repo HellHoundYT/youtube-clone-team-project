@@ -12,10 +12,10 @@ import {
   themeCatalog,
   type ThemeConfig,
   type ThemeFamily,
-} from '../theme/themeCatalog'
+} from '../shared/theme/themeCatalog'
 import {
   useThemeStore,
-} from '../theme/useThemeStore'
+} from '../shared/theme/useThemeStore'
 import './ThemesPage.css'
 
 const familyOrder:

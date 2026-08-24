@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom'
 import App from './app/App'
 import './shared/i18n'
-import ThemeProvider from './theme/ThemeProvider'
+import ThemeProvider from './shared/theme/ThemeProvider'
 import './index.css'
 
 createRoot(

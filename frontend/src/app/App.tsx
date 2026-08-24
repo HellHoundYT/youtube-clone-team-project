@@ -26,7 +26,7 @@ import UploadPage from '../pages/UploadPage'
 import WatchPage from '../pages/WatchPage'
 import WatchPartyPage from '../pages/WatchPartyPage'
 import './App.css'
-import '../theme/theme-runtime.css'
+import '../shared/theme/theme-runtime.css'
 import {
   useAuthStore,
 } from '../features/auth/authStore'
