@@ -1,29 +1,23 @@
 import axios from 'axios'
 import type {
-  VideoListItem,
-} from '../../domain/video/types'
+  FavoriteItem,
+} from '../../domain/favorite/types'
+import type {
+  HistoryStatus,
+  WatchHistoryItem,
+} from '../../domain/history/types'
 
-export interface WatchHistoryItem {
-  videoId: string
-  progressSeconds: number
-  completed: boolean
-  lastWatchedAt: string
-  video: VideoListItem
-}
-
-export interface HistoryStatus {
-  isPaused: boolean
-}
+export type {
+  FavoriteItem,
+} from '../../domain/favorite/types'
+export type {
+  HistoryStatus,
+  WatchHistoryItem,
+} from '../../domain/history/types'
 
 export interface UpdateHistoryRequest {
   progressSeconds: number
   completed: boolean
-}
-
-export interface FavoriteItem {
-  videoId: string
-  createdAt: string
-  video: VideoListItem
 }
 
 export async function getWatchHistory(

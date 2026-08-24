@@ -1,4 +1,4 @@
-﻿export interface VideoListItem {
+export interface VideoListItem {
   id: string
   channelId: string
   channelName: string
