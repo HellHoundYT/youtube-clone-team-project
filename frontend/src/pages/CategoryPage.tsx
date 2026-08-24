@@ -6,14 +6,15 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import {
-  getCategories,
-  getCategoryVideos,
-  type Category,
-} from '../infrastructure/api/discovery'
+import type {
+  DiscoveryService,
+} from '../application/discovery/service'
+import type {
+  Category,
+} from '../domain/category/types'
 import type {
   VideoListItem,
-} from '../infrastructure/api/videos'
+} from '../domain/video/types'
 import VideoGrid from '../components/video/VideoGrid'
 import {
   useAppTranslation,
@@ -53,7 +54,13 @@ Record<string, string> = {
     'common.category.mixes',
 }
 
-function CategoryPage() {
+interface CategoryPageProps {
+  discoveryService: DiscoveryService
+}
+
+function CategoryPage({
+  discoveryService,
+}: CategoryPageProps) {
   const navigate =
     useNavigate()
 
@@ -110,11 +117,11 @@ function CategoryPage() {
       new AbortController()
 
     void Promise.all([
-      getCategories(
+      discoveryService.getCategories(
         controller.signal,
       ),
 
-      getCategoryVideos(
+      discoveryService.getCategoryVideos(
         normalizedSlug,
         {
           page: 1,
@@ -175,6 +182,7 @@ function CategoryPage() {
       controller.abort()
     }
   }, [
+    discoveryService,
     normalizedSlug,
     reloadToken,
     requestKey,

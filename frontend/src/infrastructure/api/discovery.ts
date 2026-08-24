@@ -1,5 +1,11 @@
 import axios from 'axios'
 import type {
+  CancellationSignal,
+} from '../../application/common/cancellation'
+import type {
+  DiscoveryGateway,
+} from '../../application/discovery/gateway'
+import type {
   GetCategoryVideosParams,
   SearchResponse,
 } from '../../application/discovery/types'
@@ -20,7 +26,7 @@ export type {
 
 export async function searchVideos(
   query: string,
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<SearchResponse> {
   const response =
     await axios.get<SearchResponse>(
@@ -37,7 +43,7 @@ export async function searchVideos(
 }
 
 export async function getCategories(
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<Category[]> {
   const response =
     await axios.get<Category[]>(
@@ -53,7 +59,7 @@ export async function getCategories(
 export async function getCategoryVideos(
   slug: string,
   params: GetCategoryVideosParams = {},
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<VideoListItem[]> {
   const response =
     await axios.get<VideoListItem[]>(
@@ -65,4 +71,10 @@ export async function getCategoryVideos(
     )
 
   return response.data
+}
+export const discoveryGateway:
+DiscoveryGateway = {
+  searchVideos,
+  getCategories,
+  getCategoryVideos,
 }

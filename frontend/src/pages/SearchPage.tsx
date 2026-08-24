@@ -5,12 +5,12 @@ import {
 import {
   useSearchParams,
 } from 'react-router-dom'
-import {
-  searchVideos,
-} from '../infrastructure/api/discovery'
+import type {
+  DiscoveryService,
+} from '../application/discovery/service'
 import type {
   VideoListItem,
-} from '../infrastructure/api/videos'
+} from '../domain/video/types'
 import VideoGrid from '../components/video/VideoGrid'
 import {
   useAppTranslation,
@@ -23,7 +23,13 @@ interface SearchState {
   error: boolean
 }
 
-function SearchPage() {
+interface SearchPageProps {
+  discoveryService: DiscoveryService
+}
+
+function SearchPage({
+  discoveryService,
+}: SearchPageProps) {
   const [
     searchParams,
   ] =
@@ -66,7 +72,7 @@ function SearchPage() {
     const controller =
       new AbortController()
 
-    void searchVideos(
+    void discoveryService.searchVideos(
       query,
       controller.signal,
     )
@@ -109,6 +115,7 @@ function SearchPage() {
       controller.abort()
     }
   }, [
+    discoveryService,
     query,
     reloadToken,
     requestKey,

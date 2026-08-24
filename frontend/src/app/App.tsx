@@ -30,6 +30,9 @@ import '../shared/theme/theme-runtime.css'
 import {
   useAuthStore,
 } from '../features/auth/authStore'
+import {
+  discoveryService,
+} from './dependencies'
 
 function App() {
   const loadCurrentUser =
@@ -120,14 +123,14 @@ function App() {
         <Route
           path="search"
           element={
-            <SearchPage />
+            <SearchPage discoveryService={discoveryService} />
           }
         />
 
         <Route
           path="categories/:slug"
           element={
-            <CategoryPage />
+            <CategoryPage discoveryService={discoveryService} />
           }
         />
 
