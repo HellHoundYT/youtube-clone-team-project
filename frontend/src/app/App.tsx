@@ -33,6 +33,7 @@ import {
 import {
   discoveryService,
   videoService,
+  streamService,
 } from './dependencies'
 
 function App() {
@@ -103,14 +104,14 @@ function App() {
         <Route
           path="streamers"
           element={
-            <StreamsPage />
+            <StreamsPage streamService={streamService} />
           }
         />
 
         <Route
           path="streamers/:streamId"
           element={
-            <LiveStreamPage />
+            <LiveStreamPage streamService={streamService} />
           }
         />
 

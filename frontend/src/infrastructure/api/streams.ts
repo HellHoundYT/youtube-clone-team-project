@@ -1,11 +1,11 @@
 import axios from 'axios'
 import type {
-  LiveStreamDetails,
-  LiveStreamListItem,
-  StreamCategory,
-} from '../../domain/stream/types'
-
-export type {
+  CancellationSignal,
+} from '../../application/common/cancellation'
+import type {
+  StreamGateway,
+} from '../../application/stream/gateway'
+import type {
   LiveStreamDetails,
   LiveStreamListItem,
   StreamCategory,
@@ -13,7 +13,7 @@ export type {
 
 export async function getLiveStreams(
   category?: string,
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<LiveStreamListItem[]> {
   const response =
     await axios.get<LiveStreamListItem[]>(
@@ -32,7 +32,7 @@ export async function getLiveStreams(
 
 export async function getLiveStreamById(
   streamId: string,
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<LiveStreamDetails> {
   const response =
     await axios.get<LiveStreamDetails>(
@@ -46,7 +46,7 @@ export async function getLiveStreamById(
 }
 
 export async function getStreamCategories(
-  signal?: AbortSignal,
+  signal?: CancellationSignal,
 ): Promise<StreamCategory[]> {
   const response =
     await axios.get<StreamCategory[]>(
@@ -57,4 +57,11 @@ export async function getStreamCategories(
     )
 
   return response.data
+}
+
+export const streamGateway:
+StreamGateway = {
+  getLiveStreams,
+  getLiveStreamById,
+  getStreamCategories,
 }

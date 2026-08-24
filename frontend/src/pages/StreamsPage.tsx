@@ -6,12 +6,13 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
-import {
-  getLiveStreams,
-  getStreamCategories,
-  type LiveStreamListItem,
-  type StreamCategory,
-} from '../infrastructure/api/streams'
+import type {
+  StreamService,
+} from '../application/stream/service'
+import type {
+  LiveStreamListItem,
+  StreamCategory,
+} from '../domain/stream/types'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -86,7 +87,13 @@ function formatViewerCount(
 const initialStreamsPageTime =
   Date.now()
 
-function StreamsPage() {
+interface StreamsPageProps {
+  streamService: StreamService
+}
+
+function StreamsPage({
+  streamService,
+}: StreamsPageProps) {
   const navigate =
     useNavigate()
 
@@ -246,7 +253,9 @@ function StreamsPage() {
         timer,
       )
     }
-  }, [])
+  }, [
+    streamService,
+  ])
 
   useEffect(() => {
     const controller =
@@ -256,7 +265,7 @@ function StreamsPage() {
       async () => {
         try {
           const data =
-            await getStreamCategories(
+            await streamService.getStreamCategories(
               controller.signal,
             )
 
@@ -284,7 +293,9 @@ function StreamsPage() {
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [
+    streamService,
+  ])
 
   useEffect(() => {
     const controller =
@@ -302,7 +313,7 @@ function StreamsPage() {
           )
 
           const data =
-            await getLiveStreams(
+            await streamService.getLiveStreams(
               selectedCategory,
               controller.signal,
             )
@@ -346,6 +357,7 @@ function StreamsPage() {
     }
   }, [
     selectedCategory,
+    streamService,
   ])
 
   const totalViewers =

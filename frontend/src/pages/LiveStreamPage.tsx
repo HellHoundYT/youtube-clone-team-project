@@ -17,10 +17,12 @@ import {
   type LiveChatConnectionStatus,
   type LiveChatMessage,
 } from '../infrastructure/signalr/liveChat'
-import {
-  getLiveStreamById,
-  type LiveStreamDetails,
-} from '../infrastructure/api/streams'
+import type {
+  StreamService,
+} from '../application/stream/service'
+import type {
+  LiveStreamDetails,
+} from '../domain/stream/types'
 import {
   useAppTranslation,
 } from '../shared/i18n'
@@ -112,7 +114,13 @@ function formatChatTime(
   )
 }
 
-function LiveStreamPage() {
+interface LiveStreamPageProps {
+  streamService: StreamService
+}
+
+function LiveStreamPage({
+  streamService,
+}: LiveStreamPageProps) {
   const {
     streamId,
   } =
@@ -266,7 +274,7 @@ function LiveStreamPage() {
           )
 
           const data =
-            await getLiveStreamById(
+            await streamService.getLiveStreamById(
               streamId,
               controller.signal,
             )
@@ -310,6 +318,7 @@ function LiveStreamPage() {
     }
   }, [
     streamId,
+    streamService,
   ])
 
   useEffect(() => {
@@ -442,6 +451,7 @@ function LiveStreamPage() {
     }
   }, [
     streamId,
+    streamService,
   ])
 
   useEffect(() => {
