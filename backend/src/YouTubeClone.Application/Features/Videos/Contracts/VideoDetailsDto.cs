@@ -1,4 +1,4 @@
-namespace YouTubeClone.Api.DTOs.Videos;
+namespace YouTubeClone.Application.Features.Videos.Contracts;
 
 public sealed class VideoDetailsDto
 {

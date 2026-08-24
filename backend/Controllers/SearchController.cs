@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.Search;
-using YouTubeClone.Api.Services.Videos;
+using YouTubeClone.Application.Features.Videos;
 
 namespace YouTubeClone.Api.Controllers;
 

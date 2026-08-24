@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
-using YouTubeClone.Api.DTOs.Videos;
+using YouTubeClone.Application.Features.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
 
 namespace YouTubeClone.Api.Services.Videos;
 

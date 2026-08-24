@@ -1,6 +1,6 @@
-﻿using YouTubeClone.Api.DTOs.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
 using YouTubeClone.Api.Services.History;
-using YouTubeClone.Api.Services.Videos;
+using YouTubeClone.Application.Features.Videos;
 using Xunit;
 
 namespace YouTubeClone.Api.Tests.History;

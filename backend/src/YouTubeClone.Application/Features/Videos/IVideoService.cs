@@ -1,6 +1,6 @@
-using YouTubeClone.Api.DTOs.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
 
-namespace YouTubeClone.Api.Services.Videos;
+namespace YouTubeClone.Application.Features.Videos;
 
 public interface IVideoService
 {

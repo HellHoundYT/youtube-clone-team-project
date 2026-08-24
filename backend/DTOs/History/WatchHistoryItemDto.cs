@@ -1,4 +1,4 @@
-using YouTubeClone.Api.DTOs.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
 
 namespace YouTubeClone.Api.DTOs.History;
 

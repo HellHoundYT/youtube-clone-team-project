@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using YouTubeClone.Api.DTOs.Favorites;
-using YouTubeClone.Api.DTOs.Videos;
-using YouTubeClone.Api.Services.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
+using YouTubeClone.Application.Features.Videos;
 
 namespace YouTubeClone.Api.Services.Favorites;
 

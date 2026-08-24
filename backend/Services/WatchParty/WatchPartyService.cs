@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using YouTubeClone.Api.DTOs.WatchParty;
-using YouTubeClone.Api.Services.Videos;
+using YouTubeClone.Application.Features.Videos;
 
 namespace YouTubeClone.Api.Services.WatchParty;
 
