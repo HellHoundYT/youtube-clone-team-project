@@ -6,7 +6,7 @@ import {
   type RegisterRequest,
   type UpdateUserRequest,
   type User,
-} from '../../api/auth'
+} from '../../infrastructure/api/auth'
 
 export type AccountProfile = User
 

@@ -13,7 +13,7 @@ import {
   setHistoryPaused,
   type HistoryStatus,
   type WatchHistoryItem,
-} from '../api/library'
+} from '../infrastructure/api/library'
 import {
   useAppTranslation,
 } from '../shared/i18n'

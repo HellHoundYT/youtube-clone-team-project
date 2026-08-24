@@ -10,14 +10,14 @@ import {
 import {
   getWatchHistory,
   updateWatchHistory,
-} from '../api/library'
+} from '../infrastructure/api/library'
 import {
   getVideoById,
   getVideoRecommendations,
   registerVideoView,
   type VideoDetails,
   type VideoListItem,
-} from '../api/videos'
+} from '../infrastructure/api/videos'
 import VideoPlayer from '../components/video/VideoPlayer'
 import CommentsSection from '../components/comments/CommentsSection'
 import {

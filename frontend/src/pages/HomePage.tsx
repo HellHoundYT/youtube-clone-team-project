@@ -11,11 +11,11 @@ import {
 import {
   getWatchHistory,
   type WatchHistoryItem,
-} from '../api/library'
+} from '../infrastructure/api/library'
 import {
   getVideos,
   type VideoListItem,
-} from '../api/videos'
+} from '../infrastructure/api/videos'
 import {
   useAppTranslation,
 } from '../shared/i18n'

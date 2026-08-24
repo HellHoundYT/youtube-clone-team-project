@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 
 import {
   cleanup,
@@ -23,11 +23,11 @@ import {
   getWatchHistory,
   removeHistoryItem,
   setHistoryPaused,
-} from '../api/library'
+} from '../infrastructure/api/library'
 import HistoryPage from './HistoryPage'
 
 vi.mock(
-  '../api/library',
+  '../infrastructure/api/library',
   () => ({
     clearWatchHistory:
       vi.fn(),

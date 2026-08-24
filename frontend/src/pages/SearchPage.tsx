@@ -7,10 +7,10 @@ import {
 } from 'react-router-dom'
 import {
   searchVideos,
-} from '../api/discovery'
+} from '../infrastructure/api/discovery'
 import type {
   VideoListItem,
-} from '../api/videos'
+} from '../infrastructure/api/videos'
 import VideoGrid from '../components/video/VideoGrid'
 import {
   useAppTranslation,

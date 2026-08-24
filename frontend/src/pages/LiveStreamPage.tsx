@@ -22,7 +22,7 @@ import {
 import {
   getLiveStreamById,
   type LiveStreamDetails,
-} from '../api/streams'
+} from '../infrastructure/api/streams'
 import {
   useAppTranslation,
 } from '../shared/i18n'

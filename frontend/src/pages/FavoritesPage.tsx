@@ -9,7 +9,7 @@ import {
   getFavorites,
   removeFavorite,
   type FavoriteItem,
-} from '../api/library'
+} from '../infrastructure/api/library'
 import {
   useAppTranslation,
 } from '../shared/i18n'

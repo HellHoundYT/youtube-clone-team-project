@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom'
 import {
   getVideos,
-} from '../api/videos'
+} from '../infrastructure/api/videos'
 import {
   getChannelsFromVideos,
   type ChannelSummary,

@@ -12,7 +12,7 @@ import {
   getVideos,
   type VideoDetails,
   type VideoListItem,
-} from '../../api/videos'
+} from '../../infrastructure/api/videos'
 import {
   getWatchPartyRoomState,
   setWatchPartyPlayback,

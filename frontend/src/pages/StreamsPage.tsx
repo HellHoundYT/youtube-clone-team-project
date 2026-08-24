@@ -11,7 +11,7 @@ import {
   getStreamCategories,
   type LiveStreamListItem,
   type StreamCategory,
-} from '../api/streams'
+} from '../infrastructure/api/streams'
 import {
   useAppTranslation,
 } from '../shared/i18n'

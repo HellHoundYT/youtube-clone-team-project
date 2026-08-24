@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom'
 import {
   uploadVideo,
-} from '../api/videos'
+} from '../infrastructure/api/videos'
 import {
   useAppTranslation,
 } from '../shared/i18n'
