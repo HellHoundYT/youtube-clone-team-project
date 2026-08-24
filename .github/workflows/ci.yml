@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   pull_request:
@@ -63,7 +63,7 @@ jobs:
         shell: bash
         run: |
           dotnet run \
-            --project backend/YouTubeClone.Api.csproj \
+            --project backend/src/YouTubeClone.Api/YouTubeClone.Api.csproj \
             --configuration Release \
             --no-build \
             --urls http://127.0.0.1:5276 \
