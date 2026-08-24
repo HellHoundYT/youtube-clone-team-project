@@ -1,6 +1,6 @@
-using YouTubeClone.Api.DTOs.Favorites;
+using YouTubeClone.Application.Features.Favorites.Contracts;
 
-namespace YouTubeClone.Api.Services.Favorites;
+namespace YouTubeClone.Application.Features.Favorites;
 
 public interface IFavoritesService
 {

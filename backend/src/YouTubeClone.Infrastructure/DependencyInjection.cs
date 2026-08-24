@@ -3,11 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YouTubeClone.Application.Abstractions.Media;
 using YouTubeClone.Application.Abstractions.Storage;
+using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Infrastructure.Media;
 using YouTubeClone.Infrastructure.Persistence;
 using YouTubeClone.Infrastructure.Storage;
+using YouTubeClone.Infrastructure.Favorites;
 using YouTubeClone.Infrastructure.History;
 using YouTubeClone.Infrastructure.Videos;
 
@@ -43,6 +45,10 @@ public static class DependencyInjection
         services.AddSingleton<
             IWatchHistoryRepository,
             InMemoryWatchHistoryRepository>();
+
+        services.AddSingleton<
+            IFavoritesRepository,
+            InMemoryFavoritesRepository>();
 
         return services;
     }

@@ -1,33 +1,28 @@
-using System.Collections.Concurrent;
-using YouTubeClone.Api.DTOs.Favorites;
-using YouTubeClone.Application.Features.Videos.Contracts;
+using YouTubeClone.Application.Features.Favorites.Contracts;
 using YouTubeClone.Application.Features.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
+using YouTubeClone.Domain.Favorites;
 
-namespace YouTubeClone.Api.Services.Favorites;
+namespace YouTubeClone.Application.Features.Favorites;
 
 public sealed class FavoritesService :
     IFavoritesService
 {
-    private sealed class FavoriteEntry
-    {
-        public Guid VideoId { get; init; }
-
-        public DateTimeOffset CreatedAt { get; init; }
-    }
-
-    private readonly ConcurrentDictionary<
-        Guid,
-        FavoriteEntry> _favorites =
-        new();
-
     private readonly IVideoService
         _videoService;
 
+    private readonly IFavoritesRepository
+        _repository;
+
     public FavoritesService(
-        IVideoService videoService)
+        IVideoService videoService,
+        IFavoritesRepository repository)
     {
         _videoService =
             videoService;
+
+        _repository =
+            repository;
     }
 
     public async Task<IReadOnlyList<FavoriteItemDto>>
@@ -37,17 +32,20 @@ public sealed class FavoritesService :
         cancellationToken.ThrowIfCancellationRequested();
 
         var entries =
-            _favorites
-                .Values
+            await _repository.GetAllAsync(
+                cancellationToken);
+
+        var orderedEntries =
+            entries
                 .OrderByDescending(
-                    item =>
-                        item.CreatedAt)
+                    entry =>
+                        entry.CreatedAt)
                 .ToList();
 
         var result =
             new List<FavoriteItemDto>();
 
-        foreach (var entry in entries)
+        foreach (var entry in orderedEntries)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -87,38 +85,36 @@ public sealed class FavoritesService :
             return null;
         }
 
-        var newEntry =
+        var candidate =
             new FavoriteEntry
             {
                 VideoId =
                     videoId,
+
                 CreatedAt =
                     DateTimeOffset.UtcNow
             };
 
         var entry =
-            _favorites.GetOrAdd(
-                videoId,
-                newEntry);
+            await _repository.GetOrAddAsync(
+                candidate,
+                cancellationToken);
 
         return ToFavoriteItem(
             entry,
             video);
     }
 
-    public Task<bool> RemoveFavoriteAsync(
-        Guid videoId,
-        CancellationToken cancellationToken = default)
+    public Task<bool>
+        RemoveFavoriteAsync(
+            Guid videoId,
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var removed =
-            _favorites.TryRemove(
-                videoId,
-                out _);
-
-        return Task.FromResult(
-            removed);
+        return _repository.RemoveAsync(
+            videoId,
+            cancellationToken);
     }
 
     private static FavoriteItemDto
@@ -130,8 +126,10 @@ public sealed class FavoritesService :
         {
             VideoId =
                 entry.VideoId,
+
             CreatedAt =
                 entry.CreatedAt,
+
             Video =
                 ToVideoListItem(
                     video)
@@ -146,24 +144,34 @@ public sealed class FavoritesService :
         {
             Id =
                 video.Id,
+
             ChannelId =
                 video.ChannelId,
+
             ChannelName =
                 video.ChannelName,
+
             ChannelAvatarPath =
                 video.ChannelAvatarPath,
+
             Category =
                 video.Category,
+
             CategorySlug =
                 video.CategorySlug,
+
             Title =
                 video.Title,
+
             ThumbnailPath =
                 video.ThumbnailPath,
+
             DurationSeconds =
                 video.DurationSeconds,
+
             ViewCount =
                 video.ViewCount,
+
             PublishedAt =
                 video.PublishedAt
         };

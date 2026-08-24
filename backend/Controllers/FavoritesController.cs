@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using YouTubeClone.Api.DTOs.Favorites;
-using YouTubeClone.Api.Services.Favorites;
+using YouTubeClone.Application.Features.Favorites.Contracts;
+using YouTubeClone.Application.Features.Favorites;
 
 namespace YouTubeClone.Api.Controllers;
 

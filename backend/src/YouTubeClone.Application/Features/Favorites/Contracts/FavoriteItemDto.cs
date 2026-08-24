@@ -1,6 +1,6 @@
 using YouTubeClone.Application.Features.Videos.Contracts;
 
-namespace YouTubeClone.Api.DTOs.Favorites;
+namespace YouTubeClone.Application.Features.Favorites.Contracts;
 
 public sealed class FavoriteItemDto
 {
