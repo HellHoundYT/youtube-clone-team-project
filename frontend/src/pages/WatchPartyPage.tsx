@@ -32,7 +32,7 @@ import {
   markWatchPartyHostRoom,
   removeWatchPartyHostRoom,
   saveWatchPartyUserName,
-} from '../watchPartySession'
+} from '../infrastructure/storage/watchPartySession'
 import WatchPartyVideoStage from '../components/watchParty/WatchPartyVideoStage'
 import {
   useAppTranslation,
