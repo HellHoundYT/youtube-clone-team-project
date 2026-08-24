@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Http.Features;
 using YouTubeClone.Application.Features.History;
+using YouTubeClone.Application.Features.Search;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Api.Hubs;
+using YouTubeClone.Application.Features.Categories;
 using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.Streams;
 using YouTubeClone.Application.Features.WatchParty;
@@ -45,6 +47,14 @@ builder.Services.AddSingleton<
 builder.Services.AddSingleton<
     ILiveStreamService,
     LiveStreamService>();
+
+builder.Services.AddSingleton<
+    ICategoryService,
+    CategoryService>();
+
+builder.Services.AddSingleton<
+    ISearchService,
+    SearchService>();
 
 var app =
     builder.Build();

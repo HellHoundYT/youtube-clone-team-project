@@ -1,4 +1,4 @@
-namespace YouTubeClone.Api.DTOs.Categories;
+namespace YouTubeClone.Application.Features.Categories.Contracts;
 
 public sealed class CategoryDto
 {

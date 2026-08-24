@@ -1,68 +1,37 @@
 using Microsoft.AspNetCore.Mvc;
-using YouTubeClone.Api.DTOs.Categories;
-using YouTubeClone.Application.Features.Videos.Contracts;
+using YouTubeClone.Application.Features.Categories;
+using YouTubeClone.Application.Features.Categories.Contracts;
 using YouTubeClone.Application.Features.Videos;
+using YouTubeClone.Application.Features.Videos.Contracts;
 
 namespace YouTubeClone.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/categories")]
-public sealed class CategoriesController : ControllerBase
+public sealed class CategoriesController :
+    ControllerBase
 {
-    private const int DefaultPageSize = 24;
-    private const int MaxPageSize = 50;
+    private const int DefaultPageSize =
+        24;
 
-    private static readonly IReadOnlyList<CategoryDto>
-        Categories =
-        [
-            new CategoryDto
-            {
-                Name = "Games",
-                Slug = "games"
-            },
-            new CategoryDto
-            {
-                Name = "Cybersport",
-                Slug = "cybersport"
-            },
-            new CategoryDto
-            {
-                Name = "Education",
-                Slug = "education"
-            },
-            new CategoryDto
-            {
-                Name = "Programming",
-                Slug = "programming"
-            },
-            new CategoryDto
-            {
-                Name = "Music",
-                Slug = "music"
-            },
-            new CategoryDto
-            {
-                Name = "Podcasts",
-                Slug = "podcasts"
-            },
-            new CategoryDto
-            {
-                Name = "Films",
-                Slug = "films"
-            },
-            new CategoryDto
-            {
-                Name = "Mixes",
-                Slug = "mixes"
-            }
-        ];
+    private const int MaxPageSize =
+        50;
 
-    private readonly IVideoService _videoService;
+    private readonly ICategoryService
+        _categoryService;
+
+    private readonly IVideoService
+        _videoService;
 
     public CategoriesController(
+        ICategoryService categoryService,
         IVideoService videoService)
     {
-        _videoService = videoService;
+        _categoryService =
+            categoryService;
+
+        _videoService =
+            videoService;
     }
 
     [HttpGet]
@@ -72,7 +41,8 @@ public sealed class CategoriesController : ControllerBase
     public ActionResult<IReadOnlyList<CategoryDto>>
         GetCategories()
     {
-        return Ok(Categories);
+        return Ok(
+            _categoryService.GetCategories());
     }
 
     [HttpGet("{slug}/videos")]
@@ -83,7 +53,8 @@ public sealed class CategoriesController : ControllerBase
         StatusCodes.Status400BadRequest)]
     [ProducesResponseType(
         StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<IReadOnlyList<VideoListItemDto>>>
+    public async Task<
+        ActionResult<IReadOnlyList<VideoListItemDto>>>
         GetCategoryVideos(
             string slug,
             [FromQuery] int page = 1,
@@ -113,15 +84,9 @@ public sealed class CategoriesController : ControllerBase
                 });
         }
 
-        var normalizedSlug =
-            slug.Trim().ToLowerInvariant();
-
         var category =
-            Categories.FirstOrDefault(item =>
-                string.Equals(
-                    item.Slug,
-                    normalizedSlug,
-                    StringComparison.OrdinalIgnoreCase));
+            _categoryService.GetBySlug(
+                slug);
 
         if (category is null)
         {
@@ -140,6 +105,7 @@ public sealed class CategoriesController : ControllerBase
                 category.Slug,
                 cancellationToken);
 
-        return Ok(videos);
+        return Ok(
+            videos);
     }
 }

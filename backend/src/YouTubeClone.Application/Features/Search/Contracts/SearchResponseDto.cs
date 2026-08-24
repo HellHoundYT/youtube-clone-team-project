@@ -1,6 +1,6 @@
 using YouTubeClone.Application.Features.Videos.Contracts;
 
-namespace YouTubeClone.Api.DTOs.Search;
+namespace YouTubeClone.Application.Features.Search.Contracts;
 
 public sealed class SearchResponseDto
 {
