@@ -34,6 +34,10 @@ public static class DependencyInjection
                 options.UseSqlServer(
                     connectionString));
 
+        services.Configure<StorageOptions>(
+            configuration.GetSection(
+                StorageOptions.SectionName));
+
         services.AddSingleton<
             IFileStorageService,
             LocalFileStorageService>();

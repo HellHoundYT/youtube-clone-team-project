@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Options;
 using YouTubeClone.Application.Abstractions.Storage;
 
 namespace YouTubeClone.Infrastructure.Storage;
@@ -13,13 +14,29 @@ public sealed class LocalFileStorageService :
         _contentTypeProvider = new();
 
     public LocalFileStorageService(
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IOptions<StorageOptions> options)
     {
+        var configuredRootPath =
+            options.Value.RootPath;
+
+        var rootPath =
+            string.IsNullOrWhiteSpace(
+                configuredRootPath)
+                ? Path.Combine(
+                    "Storage",
+                    "media")
+                : configuredRootPath.Trim();
+
         _rootPath =
-            Path.Combine(
-                environment.ContentRootPath,
-                "Storage",
-                "media");
+            Path.IsPathRooted(
+                rootPath)
+                ? Path.GetFullPath(
+                    rootPath)
+                : Path.GetFullPath(
+                    Path.Combine(
+                        environment.ContentRootPath,
+                        rootPath));
 
         Directory.CreateDirectory(
             _rootPath);
