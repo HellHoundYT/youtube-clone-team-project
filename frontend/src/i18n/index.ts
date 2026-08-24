@@ -14,6 +14,8 @@ import systemEn from './locales/system.en'
 import systemUk from './locales/system.uk'
 import themesEn from './locales/themes.en'
 import themesUk from './locales/themes.uk'
+import watchPartyEn from './locales/watchParty.en'
+import watchPartyUk from './locales/watchParty.uk'
 import uk from './locales/uk'
 
 export type AppLanguage =
@@ -95,6 +97,7 @@ if (!i18n.isInitialized) {
             ...playmeEn,
             ...systemEn,
             ...themesEn,
+            ...watchPartyEn,
           },
         },
 
@@ -106,6 +109,7 @@ if (!i18n.isInitialized) {
             ...playmeUk,
             ...systemUk,
             ...themesUk,
+            ...watchPartyUk,
           },
         },
       },

@@ -577,6 +577,22 @@ function WatchPage() {
             </span>
           </div>
 
+          <div className="watch-party-action-row">
+            <button
+              type="button"
+              className="watch-start-party-button"
+              onClick={() => {
+                navigate(
+                  `/watch-party?videoId=${encodeURIComponent(video.id)}`,
+                )
+              }}
+            >
+              {t(
+                'watchParty.startFromVideo',
+              )}
+            </button>
+          </div>
+
           <div className="watch-channel-row">
             <div className="watch-channel-identity">
               <div className="watch-channel-avatar">

@@ -24,6 +24,7 @@ import SubscriptionsPage from './pages/SubscriptionsPage'
 import ThemesPage from './pages/ThemesPage'
 import UploadPage from './pages/UploadPage'
 import WatchPage from './pages/WatchPage'
+import WatchPartyPage from './pages/WatchPartyPage'
 import './App.css'
 import './theme/theme-runtime.css'
 import {
@@ -140,6 +141,19 @@ function App() {
         <Route
           path="profile"
           element={<ProfilePage />}
+        />
+        <Route
+          path="watch-party"
+          element={
+            <WatchPartyPage />
+          }
+        />
+
+        <Route
+          path="watch-party/:roomCode"
+          element={
+            <WatchPartyPage />
+          }
         />
 
         <Route

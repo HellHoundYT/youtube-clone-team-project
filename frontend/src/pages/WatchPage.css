@@ -156,3 +156,89 @@
     width: 112px;
   }
 }
+.watch-party-action-row {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: 14px;
+}
+
+.watch-start-party-button {
+  min-height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 18px;
+
+  color: var(--theme-accent);
+
+  background:
+    color-mix(
+      in srgb,
+      var(--theme-accent) 12%,
+      transparent
+    );
+
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--theme-accent) 55%,
+      transparent
+    );
+
+  border-radius:
+    var(--theme-button-radius);
+
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+
+  cursor: pointer;
+
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.watch-start-party-button:hover {
+  color: #ffffff;
+
+  background:
+    var(--theme-accent);
+
+  border-color:
+    var(--theme-accent);
+
+  transform:
+    translateY(-1px);
+}
+
+.watch-start-party-button:active {
+  transform:
+    translateY(0);
+}
+
+.watch-start-party-button:focus-visible {
+  outline:
+    2px solid
+    var(--theme-accent);
+
+  outline-offset:
+    3px;
+}
+
+@media (max-width: 620px) {
+  .watch-party-action-row {
+    justify-content: stretch;
+  }
+
+  .watch-start-party-button {
+    width: 100%;
+  }
+}

@@ -7,6 +7,7 @@ using YouTubeClone.Api.Services.History;
 using YouTubeClone.Api.Services.Media;
 using YouTubeClone.Api.Services.Streams;
 using YouTubeClone.Api.Services.Videos;
+using YouTubeClone.Api.Services.WatchParty;
 using YouTubeClone.Api.Storage;
 
 var builder =
@@ -17,6 +18,10 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddSignalR();
+
+builder.Services.AddSingleton<
+    IWatchPartyService,
+    WatchPartyService>();
 
 builder.Services.Configure<FormOptions>(
     options =>
@@ -70,6 +75,9 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<WatchPartyHub>(
+    "/hubs/watch-party");
 
 app.MapHub<LiveChatHub>(
     "/hubs/live-chat");
