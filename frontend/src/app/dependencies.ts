@@ -1,4 +1,7 @@
 import {
+  createAuthService,
+} from '../application/auth/service'
+import {
   createDiscoveryService,
 } from '../application/discovery/service'
 import {
@@ -13,6 +16,9 @@ import {
 import {
   createVideoService,
 } from '../application/video/service'
+import {
+  authGateway,
+} from '../infrastructure/api/auth'
 import {
   discoveryGateway,
 } from '../infrastructure/api/discovery'
@@ -37,6 +43,11 @@ import {
 import {
   watchPartySessionStore as browserWatchPartySessionStore,
 } from '../infrastructure/storage/watchPartySession'
+
+export const authService =
+  createAuthService(
+    authGateway,
+  )
 
 export const discoveryService =
   createDiscoveryService(
