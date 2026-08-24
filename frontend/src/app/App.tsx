@@ -37,6 +37,8 @@ import {
   libraryService,
   uploadService,
   liveChatClientFactory,
+  watchPartyClientFactory,
+  watchPartySessionStore,
 } from './dependencies'
 
 function App() {
@@ -153,14 +155,14 @@ function App() {
         <Route
           path="watch-party"
           element={
-            <WatchPartyPage />
+            <WatchPartyPage videoService={videoService} watchPartyClientFactory={watchPartyClientFactory} watchPartySessionStore={watchPartySessionStore} />
           }
         />
 
         <Route
           path="watch-party/:roomCode"
           element={
-            <WatchPartyPage />
+            <WatchPartyPage videoService={videoService} watchPartyClientFactory={watchPartyClientFactory} watchPartySessionStore={watchPartySessionStore} />
           }
         />
 

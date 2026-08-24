@@ -31,6 +31,12 @@ import {
 import {
   liveChatClientFactory as signalRLiveChatClientFactory,
 } from '../infrastructure/signalr/liveChat'
+import {
+  watchPartyClientFactory as signalRWatchPartyClientFactory,
+} from '../infrastructure/signalr/watchParty'
+import {
+  watchPartySessionStore as browserWatchPartySessionStore,
+} from '../infrastructure/storage/watchPartySession'
 
 export const discoveryService =
   createDiscoveryService(
@@ -59,3 +65,9 @@ export const videoService =
 
 export const liveChatClientFactory =
   signalRLiveChatClientFactory
+
+export const watchPartyClientFactory =
+  signalRWatchPartyClientFactory
+
+export const watchPartySessionStore =
+  browserWatchPartySessionStore

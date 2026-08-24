@@ -1,3 +1,7 @@
+import type {
+  WatchPartySessionStore,
+} from '../../application/watchParty/sessionStore'
+
 const watchPartySessionStorageKey =
   'amtlis.watchParty.sessionId'
 
@@ -6,55 +10,6 @@ const watchPartyNameStorageKey =
 
 const watchPartyHostRoomsStorageKey =
   'amtlis.watchParty.hostRooms'
-
-export function getWatchPartySessionId() {
-  const existing =
-    window.localStorage.getItem(
-      watchPartySessionStorageKey,
-    )
-
-  if (existing) {
-    return existing
-  }
-
-  const sessionId =
-    crypto.randomUUID()
-
-  window.localStorage.setItem(
-    watchPartySessionStorageKey,
-    sessionId,
-  )
-
-  return sessionId
-}
-
-export function getWatchPartyUserName() {
-  return (
-    window.localStorage.getItem(
-      watchPartyNameStorageKey,
-    ) ?? ''
-  )
-}
-
-export function saveWatchPartyUserName(
-  userName: string,
-) {
-  const normalized =
-    userName.trim()
-
-  if (!normalized) {
-    window.localStorage.removeItem(
-      watchPartyNameStorageKey,
-    )
-
-    return
-  }
-
-  window.localStorage.setItem(
-    watchPartyNameStorageKey,
-    normalized,
-  )
-}
 
 function getHostRooms() {
   const raw =
@@ -103,59 +58,113 @@ function saveHostRooms(
   window.localStorage.setItem(
     watchPartyHostRoomsStorageKey,
     JSON.stringify(
-      Array.from(rooms),
+      Array.from(
+        rooms,
+      ),
     ),
   )
 }
 
-export function markWatchPartyHostRoom(
-  roomCode: string,
-) {
-  const normalized =
-    roomCode
-      .trim()
-      .toUpperCase()
+export const watchPartySessionStore:
+WatchPartySessionStore = {
+  getSessionId() {
+    const existing =
+      window.localStorage.getItem(
+        watchPartySessionStorageKey,
+      )
 
-  if (!normalized) {
-    return
-  }
+    if (existing) {
+      return existing
+    }
 
-  const rooms =
-    getHostRooms()
+    const sessionId =
+      crypto.randomUUID()
 
-  rooms.add(
-    normalized,
-  )
+    window.localStorage.setItem(
+      watchPartySessionStorageKey,
+      sessionId,
+    )
 
-  saveHostRooms(
-    rooms,
-  )
-}
+    return sessionId
+  },
 
-export function isWatchPartyHostRoom(
-  roomCode: string,
-) {
-  return getHostRooms()
-    .has(
+  getUserName() {
+    return (
+      window.localStorage.getItem(
+        watchPartyNameStorageKey,
+      ) ?? ''
+    )
+  },
+
+  saveUserName(
+    userName: string,
+  ) {
+    const normalized =
+      userName.trim()
+
+    if (!normalized) {
+      window.localStorage.removeItem(
+        watchPartyNameStorageKey,
+      )
+
+      return
+    }
+
+    window.localStorage.setItem(
+      watchPartyNameStorageKey,
+      normalized,
+    )
+  },
+
+  markHostRoom(
+    roomCode: string,
+  ) {
+    const normalized =
+      roomCode
+        .trim()
+        .toUpperCase()
+
+    if (!normalized) {
+      return
+    }
+
+    const rooms =
+      getHostRooms()
+
+    rooms.add(
+      normalized,
+    )
+
+    saveHostRooms(
+      rooms,
+    )
+  },
+
+  isHostRoom(
+    roomCode: string,
+  ) {
+    return getHostRooms()
+      .has(
+        roomCode
+          .trim()
+          .toUpperCase(),
+      )
+  },
+
+  removeHostRoom(
+    roomCode: string,
+  ) {
+    const rooms =
+      getHostRooms()
+
+    rooms.delete(
       roomCode
         .trim()
         .toUpperCase(),
     )
-}
 
-export function removeWatchPartyHostRoom(
-  roomCode: string,
-) {
-  const rooms =
-    getHostRooms()
-
-  rooms.delete(
-    roomCode
-      .trim()
-      .toUpperCase(),
-  )
-
-  saveHostRooms(
-    rooms,
-  )
+    saveHostRooms(
+      rooms,
+    )
+  },
 }

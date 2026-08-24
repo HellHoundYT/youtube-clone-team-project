@@ -4,23 +4,23 @@ import {
   useState,
   type RefObject,
 } from 'react'
-import {
-  getVideoById,
-  getVideos,
-} from '../../infrastructure/api/videos'
+import type {
+  VideoService,
+} from '../../application/video/service'
 import type {
   VideoDetails,
   VideoListItem,
 } from '../../domain/video/types'
-import {
-  getWatchPartyRoomState,
-  setWatchPartyPlayback,
-  setWatchPartyVideo,
-  type WatchPartyConnection,
-  type WatchPartyConnectionStatus,
-  type WatchPartyPlayback,
-  type WatchPartyRoomState,
-} from '../../infrastructure/signalr/watchParty'
+import type {
+  WatchPartyClient,
+} from '../../application/watchParty/client'
+import type {
+  WatchPartyConnectionStatus,
+} from '../../application/watchParty/types'
+import type {
+  WatchPartyPlayback,
+  WatchPartyRoomState,
+} from '../../domain/watchParty/types'
 import VideoPlayer, {
   type VideoPlaybackAction,
   type VideoPlaybackCommand,
@@ -31,9 +31,10 @@ import {
 import './WatchPartyVideoStage.css'
 
 interface WatchPartyVideoStageProps {
+  videoService: VideoService
   room: WatchPartyRoomState
   isHost: boolean
-  connectionRef: RefObject<WatchPartyConnection | null>
+  connectionRef: RefObject<WatchPartyClient | null>
   hostSessionId: string
   connectionStatus: WatchPartyConnectionStatus
 
@@ -119,6 +120,7 @@ function createPlaybackRevision(
   return hash >>> 0
 }
 function WatchPartyVideoStage({
+  videoService,
   room,
   isHost,
   connectionRef,
@@ -206,7 +208,7 @@ function WatchPartyVideoStage({
           )
 
           const data =
-            await getVideos(
+            await videoService.getVideos(
               {
                 page: 1,
                 pageSize: 30,
@@ -260,6 +262,7 @@ function WatchPartyVideoStage({
     }
   }, [
     isHost,
+    videoService,
   ])
 
   useEffect(() => {
@@ -287,7 +290,7 @@ function WatchPartyVideoStage({
           )
 
           const data =
-            await getVideoById(
+            await videoService.getVideoById(
               videoId,
               controller.signal,
             )
@@ -342,6 +345,7 @@ function WatchPartyVideoStage({
     }
   }, [
     room.currentVideoId,
+    videoService,
   ])
 
 
@@ -410,9 +414,7 @@ function WatchPartyVideoStage({
         )
 
         const playback =
-          await setWatchPartyVideo(
-            connection,
-            room.roomCode,
+          await connection.setVideo(room.roomCode,
             hostSessionId,
             videoId,
           )
@@ -457,9 +459,7 @@ function WatchPartyVideoStage({
       }
 
       try {
-        await setWatchPartyPlayback(
-          connection,
-          room.roomCode,
+        await connection.setPlayback(room.roomCode,
           hostSessionId,
           currentTime,
           isPlaying,
@@ -494,9 +494,7 @@ function WatchPartyVideoStage({
         )
 
         const playback =
-          await setWatchPartyPlayback(
-            connection,
-            room.roomCode,
+          await connection.setPlayback(room.roomCode,
             hostSessionId,
             action.currentTime,
             action.isPlaying,
@@ -535,9 +533,7 @@ function WatchPartyVideoStage({
 
       try {
         const refreshed =
-          await getWatchPartyRoomState(
-            connection,
-            room.roomCode,
+          await connection.getRoomState(room.roomCode,
           )
 
         onPlaybackStateChange({

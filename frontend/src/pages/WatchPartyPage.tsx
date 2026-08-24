@@ -11,28 +11,23 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom'
-import {
-  closeWatchPartyRoom,
-  createWatchPartyConnection,
-  createWatchPartyRoom,
-  joinWatchPartyRoom,
-  leaveWatchPartyRoom,
-  sendWatchPartyMessage,
-  startWatchPartyConnection,
-  stopWatchPartyConnection,
-  type WatchPartyConnection,
-  type WatchPartyConnectionStatus,
-  type WatchPartyMessage,
-  type WatchPartyRoomState,
-} from '../infrastructure/signalr/watchParty'
-import {
-  getWatchPartySessionId,
-  getWatchPartyUserName,
-  isWatchPartyHostRoom,
-  markWatchPartyHostRoom,
-  removeWatchPartyHostRoom,
-  saveWatchPartyUserName,
-} from '../infrastructure/storage/watchPartySession'
+import type {
+  WatchPartyClient,
+  WatchPartyClientFactory,
+} from '../application/watchParty/client'
+import type {
+  WatchPartyConnectionStatus,
+} from '../application/watchParty/types'
+import type {
+  WatchPartySessionStore,
+} from '../application/watchParty/sessionStore'
+import type {
+  VideoService,
+} from '../application/video/service'
+import type {
+  WatchPartyMessage,
+  WatchPartyRoomState,
+} from '../domain/watchParty/types'
 import WatchPartyVideoStage from '../components/watchParty/WatchPartyVideoStage'
 import {
   useAppTranslation,
@@ -55,7 +50,17 @@ function normalizeRoomCode(
     )
 }
 
-function WatchPartyPage() {
+interface WatchPartyPageProps {
+  videoService: VideoService
+  watchPartyClientFactory: WatchPartyClientFactory
+  watchPartySessionStore: WatchPartySessionStore
+}
+
+function WatchPartyPage({
+  videoService,
+  watchPartyClientFactory,
+  watchPartySessionStore,
+}: WatchPartyPageProps) {
   const {
     roomCode: roomCodeParam,
   } =
@@ -88,8 +93,10 @@ function WatchPartyPage() {
   const sessionId =
     useMemo(
       () =>
-        getWatchPartySessionId(),
-      [],
+        watchPartySessionStore.getSessionId(),
+      [
+        watchPartySessionStore,
+      ],
     )
 
   const normalizedRoomCode =
@@ -102,7 +109,7 @@ function WatchPartyPage() {
   const [nameDraft, setNameDraft] =
     useState(
       () =>
-        getWatchPartyUserName(),
+        watchPartySessionStore.getUserName(),
     )
 
   const [
@@ -111,7 +118,7 @@ function WatchPartyPage() {
   ] =
     useState(
       () =>
-        getWatchPartyUserName(),
+        watchPartySessionStore.getUserName(),
     )
 
   const [
@@ -176,7 +183,7 @@ function WatchPartyPage() {
 
   const connectionRef =
     useRef<
-      WatchPartyConnection | null
+      WatchPartyClient | null
     >(null)
 
   const messagesRef =
@@ -186,7 +193,7 @@ function WatchPartyPage() {
 
   const isHost =
     normalizedRoomCode
-      ? isWatchPartyHostRoom(
+      ? watchPartySessionStore.isHostRoom(
           normalizedRoomCode,
         )
       : false
@@ -257,7 +264,7 @@ function WatchPartyPage() {
     }
 
     const connection =
-      createWatchPartyConnection(
+      watchPartyClientFactory.create(
         {
           onParticipantsChanged: (
             participants,
@@ -366,7 +373,7 @@ function WatchPartyPage() {
               return
             }
 
-            removeWatchPartyHostRoom(
+            watchPartySessionStore.removeHostRoom(
               normalizedRoomCode,
             )
 
@@ -392,9 +399,7 @@ function WatchPartyPage() {
           onReconnected:
             async () => {
               const joined =
-                await joinWatchPartyRoom(
-                  connection,
-                  normalizedRoomCode,
+                await connection.joinRoom(normalizedRoomCode,
                   sessionId,
                   activeUserName,
                 )
@@ -424,14 +429,10 @@ function WatchPartyPage() {
             'connecting',
           )
 
-          await startWatchPartyConnection(
-            connection,
-          )
+          await connection.start()
 
           const joined =
-            await joinWatchPartyRoom(
-              connection,
-              normalizedRoomCode,
+            await connection.joinRoom(normalizedRoomCode,
               sessionId,
               activeUserName,
             )
@@ -478,14 +479,14 @@ function WatchPartyPage() {
           null
       }
 
-      void stopWatchPartyConnection(
-        connection,
-      )
+      void connection.stop()
     }
   }, [
     activeUserName,
     normalizedRoomCode,
     sessionId,
+    watchPartyClientFactory,
+    watchPartySessionStore,
   ])
 
   useEffect(() => {
@@ -519,7 +520,7 @@ function WatchPartyPage() {
       return
     }
 
-    saveWatchPartyUserName(
+    watchPartySessionStore.saveUserName(
       normalizedName,
     )
 
@@ -546,7 +547,7 @@ function WatchPartyPage() {
       }
 
       const connection =
-        createWatchPartyConnection(
+        watchPartyClientFactory.create(
           {},
         )
 
@@ -559,7 +560,7 @@ function WatchPartyPage() {
           null,
         )
 
-        saveWatchPartyUserName(
+        watchPartySessionStore.saveUserName(
           normalizedName,
         )
 
@@ -567,19 +568,15 @@ function WatchPartyPage() {
           normalizedName,
         )
 
-        await startWatchPartyConnection(
-          connection,
-        )
+        await connection.start()
 
         const created =
-          await createWatchPartyRoom(
-            connection,
-            sessionId,
+          await connection.createRoom(sessionId,
             normalizedName,
             initialVideoId,
           )
 
-        markWatchPartyHostRoom(
+        watchPartySessionStore.markHostRoom(
           created.roomCode,
         )
 
@@ -601,9 +598,7 @@ function WatchPartyPage() {
           false,
         )
 
-        await stopWatchPartyConnection(
-          connection,
-        )
+        await connection.stop()
       }
     }
 
@@ -636,7 +631,7 @@ function WatchPartyPage() {
         return
       }
 
-      saveWatchPartyUserName(
+      watchPartySessionStore.saveUserName(
         normalizedName,
       )
 
@@ -686,9 +681,7 @@ function WatchPartyPage() {
           null,
         )
 
-        await sendWatchPartyMessage(
-          connection,
-          room.roomCode,
+        await connection.sendMessage(room.roomCode,
           sessionId,
           message,
         )
@@ -768,19 +761,15 @@ function WatchPartyPage() {
         )
 
         if (isHost) {
-          await closeWatchPartyRoom(
-            connection,
-            room.roomCode,
+          await connection.closeRoom(room.roomCode,
             sessionId,
           )
 
-          removeWatchPartyHostRoom(
+          watchPartySessionStore.removeHostRoom(
             room.roomCode,
           )
         } else {
-          await leaveWatchPartyRoom(
-            connection,
-            room.roomCode,
+          await connection.leaveRoom(room.roomCode,
             sessionId,
           )
         }
@@ -1197,7 +1186,9 @@ function WatchPartyPage() {
 
       <div className="watch-party-room-layout">
         <WatchPartyVideoStage
-          room={
+          videoService={
+            videoService
+          }          room={
             room
           }
           isHost={
