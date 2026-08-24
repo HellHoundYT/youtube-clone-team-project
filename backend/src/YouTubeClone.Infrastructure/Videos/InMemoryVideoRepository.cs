@@ -1,65 +1,54 @@
 using System.Collections.Concurrent;
 using YouTubeClone.Application.Features.Videos;
-using YouTubeClone.Application.Features.Videos.Contracts;
+using YouTubeClone.Domain.Videos;
 
-namespace YouTubeClone.Api.Services.Videos;
+namespace YouTubeClone.Infrastructure.Videos;
 
-public sealed class VideoService : IVideoService
+public sealed class InMemoryVideoRepository :
+    IVideoRepository
 {
-    private readonly ConcurrentDictionary<Guid, VideoDetailsDto>
-        _catalog;
+    private readonly ConcurrentDictionary<
+        Guid,
+        Video> _catalog;
 
-    private readonly ConcurrentDictionary<Guid, long>
-        _runtimeViewCounts = new();
+    private readonly ConcurrentDictionary<
+        Guid,
+        long> _runtimeViewCounts =
+            new();
 
-    public VideoService()
+    public InMemoryVideoRepository()
     {
         _catalog =
-            new ConcurrentDictionary<Guid, VideoDetailsDto>(
+            new ConcurrentDictionary<Guid, Video>(
                 CreateSeedCatalog()
                     .ToDictionary(
-                        video => video.Id,
-                        video => video));
+                        video =>
+                            video.Id,
+                        video =>
+                            video));
     }
 
-    public Task<IReadOnlyList<VideoListItemDto>> GetVideosAsync(
-        int page,
-        int pageSize,
-        string? category,
-        CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<Video>>
+        GetAllAsync(
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        IEnumerable<VideoDetailsDto> query =
-            _catalog.Values;
+        IReadOnlyList<Video> result =
+            _catalog
+                .Values
+                .Select(
+                    CreateSnapshot)
+                .ToList();
 
-        if (!string.IsNullOrWhiteSpace(category))
-        {
-            query = query.Where(video =>
-                string.Equals(
-                    video.Category,
-                    category,
-                    StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(
-                    video.CategorySlug,
-                    category,
-                    StringComparison.OrdinalIgnoreCase));
-        }
-
-        var videos = query
-            .OrderByDescending(video => video.PublishedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(ToListItemDto)
-            .ToList();
-
-        return Task.FromResult<
-            IReadOnlyList<VideoListItemDto>>(videos);
+        return Task.FromResult(
+            result);
     }
 
-    public Task<VideoDetailsDto?> GetVideoByIdAsync(
-        Guid videoId,
-        CancellationToken cancellationToken = default)
+    public Task<Video?>
+        GetByIdAsync(
+            Guid videoId,
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -67,16 +56,19 @@ public sealed class VideoService : IVideoService
                 videoId,
                 out var video))
         {
-            return Task.FromResult<VideoDetailsDto?>(null);
+            return Task.FromResult<Video?>(
+                null);
         }
 
-        return Task.FromResult<VideoDetailsDto?>(
-            ToDetailsDto(video));
+        return Task.FromResult<Video?>(
+            CreateSnapshot(
+                video));
     }
 
-    public Task<long?> RegisterViewAsync(
-        Guid videoId,
-        CancellationToken cancellationToken = default)
+    public Task<long?>
+        IncrementViewCountAsync(
+            Guid videoId,
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -84,39 +76,92 @@ public sealed class VideoService : IVideoService
                 videoId,
                 out var video))
         {
-            return Task.FromResult<long?>(null);
+            return Task.FromResult<long?>(
+                null);
         }
 
         var updatedViewCount =
             _runtimeViewCounts.AddOrUpdate(
                 videoId,
                 video.ViewCount + 1,
-                (_, current) => current + 1);
+                (_, current) =>
+                    current + 1);
 
         return Task.FromResult<long?>(
             updatedViewCount);
     }
 
-    public Task<VideoDetailsDto> CreateVideoAsync(
-        VideoDetailsDto video,
-        CancellationToken cancellationToken = default)
+    public Task<bool>
+        TryAddAsync(
+            Video video,
+            CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (!_catalog.TryAdd(
+        var added =
+            _catalog.TryAdd(
                 video.Id,
-                video))
-        {
-            throw new InvalidOperationException(
-                "A video with this identifier already exists.");
-        }
+                video);
 
         return Task.FromResult(
-            ToDetailsDto(video));
+            added);
+    }
+
+    private Video CreateSnapshot(
+        Video video)
+    {
+        var viewCount =
+            GetViewCount(
+                video);
+
+        return new Video
+        {
+            Id =
+                video.Id,
+
+            ChannelId =
+                video.ChannelId,
+
+            ChannelName =
+                video.ChannelName,
+
+            ChannelAvatarPath =
+                video.ChannelAvatarPath,
+
+            Category =
+                video.Category,
+
+            CategorySlug =
+                video.CategorySlug,
+
+            Title =
+                video.Title,
+
+            Description =
+                video.Description,
+
+            VideoPath =
+                video.VideoPath,
+
+            ThumbnailPath =
+                video.ThumbnailPath,
+
+            DurationSeconds =
+                video.DurationSeconds,
+
+            ViewCount =
+                viewCount,
+
+            Visibility =
+                video.Visibility,
+
+            PublishedAt =
+                video.PublishedAt
+        };
     }
 
     private long GetViewCount(
-        VideoDetailsDto video)
+        Video video)
     {
         return _runtimeViewCounts.TryGetValue(
             video.Id,
@@ -125,63 +170,7 @@ public sealed class VideoService : IVideoService
             : video.ViewCount;
     }
 
-    private VideoListItemDto ToListItemDto(
-        VideoDetailsDto video)
-    {
-        return new VideoListItemDto
-        {
-            Id = video.Id,
-            ChannelId = video.ChannelId,
-            ChannelName = video.ChannelName,
-            ChannelAvatarPath =
-                video.ChannelAvatarPath,
-            Category = video.Category,
-            CategorySlug =
-                video.CategorySlug,
-            Title = video.Title,
-            ThumbnailPath =
-                video.ThumbnailPath,
-            DurationSeconds =
-                video.DurationSeconds,
-            ViewCount =
-                GetViewCount(video),
-            PublishedAt =
-                video.PublishedAt
-        };
-    }
-
-    private VideoDetailsDto ToDetailsDto(
-        VideoDetailsDto video)
-    {
-        return new VideoDetailsDto
-        {
-            Id = video.Id,
-            ChannelId = video.ChannelId,
-            ChannelName = video.ChannelName,
-            ChannelAvatarPath =
-                video.ChannelAvatarPath,
-            Category = video.Category,
-            CategorySlug =
-                video.CategorySlug,
-            Title = video.Title,
-            Description =
-                video.Description,
-            VideoPath =
-                video.VideoPath,
-            ThumbnailPath =
-                video.ThumbnailPath,
-            DurationSeconds =
-                video.DurationSeconds,
-            ViewCount =
-                GetViewCount(video),
-            Visibility =
-                video.Visibility,
-            PublishedAt =
-                video.PublishedAt
-        };
-    }
-
-    private static IReadOnlyList<VideoDetailsDto>
+    private static IReadOnlyList<Video>
         CreateSeedCatalog()
     {
         return
@@ -328,8 +317,9 @@ public sealed class VideoService : IVideoService
         ];
     }
 
-    private static string? GetSeedThumbnailPath(
-        Guid videoId)
+    private static string?
+        GetSeedThumbnailPath(
+            Guid videoId)
     {
         return videoId.ToString() switch
         {
@@ -363,52 +353,71 @@ public sealed class VideoService : IVideoService
             "10101010-1010-1010-1010-101010101010" =>
                 "/demo/thumbnails/learn-fast.webp",
 
-            _ => null
+            _ =>
+                null
         };
     }
 
-    private static VideoDetailsDto CreateSeedVideo(
-        string id,
-        string channelId,
-        string channelName,
-        string category,
-        string categorySlug,
-        string title,
-        string description,
-        int durationSeconds,
-        long viewCount,
-        DateTimeOffset publishedAt)
+    private static Video
+        CreateSeedVideo(
+            string id,
+            string channelId,
+            string channelName,
+            string category,
+            string categorySlug,
+            string title,
+            string description,
+            int durationSeconds,
+            long viewCount,
+            DateTimeOffset publishedAt)
     {
-        var videoId = Guid.Parse(id);
+        var videoId =
+            Guid.Parse(
+                id);
 
-        return new VideoDetailsDto
+        return new Video
         {
-            Id = videoId,
+            Id =
+                videoId,
+
             ChannelId =
-                Guid.Parse(channelId),
+                Guid.Parse(
+                    channelId),
+
             ChannelName =
                 channelName,
+
             ChannelAvatarPath =
                 null,
+
             Category =
                 category,
+
             CategorySlug =
                 categorySlug,
+
             Title =
                 title,
+
             Description =
                 description,
+
             VideoPath =
                 $"/api/v1/videos/{videoId}/stream",
+
             ThumbnailPath =
                 GetSeedThumbnailPath(
                     videoId),
+
             DurationSeconds =
                 durationSeconds,
+
             ViewCount =
                 viewCount,
+
             Visibility =
                 "Public",
+
             PublishedAt =
                 publishedAt
         };

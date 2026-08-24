@@ -4,7 +4,6 @@ using YouTubeClone.Api.Hubs;
 using YouTubeClone.Api.Services.Favorites;
 using YouTubeClone.Api.Services.History;
 using YouTubeClone.Api.Services.Streams;
-using YouTubeClone.Api.Services.Videos;
 using YouTubeClone.Api.Services.WatchParty;
 using YouTubeClone.Infrastructure;
 
