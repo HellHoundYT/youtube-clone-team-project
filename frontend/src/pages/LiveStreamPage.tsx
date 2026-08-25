@@ -32,6 +32,15 @@ import './LiveChat.css'
 const developmentUserName =
   'Guest Viewer'
 
+const reactionOptions = [
+  { emoji: '❤️', tone: 'heart' },
+  { emoji: '👍', tone: 'like' },
+  { emoji: '😂', tone: 'laugh' },
+  { emoji: '😮', tone: 'wow' },
+  { emoji: '😢', tone: 'sad' },
+  { emoji: '🔥', tone: 'fire' },
+] as const
+
 const categoryKeys:
 Record<string, string> = {
   programming:
@@ -188,6 +197,54 @@ function LiveStreamPage() {
     setIsSending,
   ] =
     useState(false)
+
+  const [
+    isFollowing,
+    setIsFollowing,
+  ] =
+    useState(false)
+
+  const [
+    editingMessageId,
+    setEditingMessageId,
+  ] =
+    useState<string | null>(
+      null,
+    )
+
+  const [
+    editingDraft,
+    setEditingDraft,
+  ] =
+    useState('')
+
+  const [
+    repliesByMessage,
+    setRepliesByMessage,
+  ] =
+    useState<
+      Record<string, LiveChatMessage[]>
+    >({})
+
+  const [
+    replyTargetId,
+    setReplyTargetId,
+  ] =
+    useState<string | null>(null)
+
+  const [
+    replyDraft,
+    setReplyDraft,
+  ] =
+    useState('')
+
+  const [
+    reactionCounts,
+    setReactionCounts,
+  ] =
+    useState<
+      Record<string, Record<string, number>>
+    >({})
 
   const connectionRef =
     useRef<
@@ -520,6 +577,107 @@ function LiveStreamPage() {
       }
     }
 
+  const startEditingMessage = (
+    message: LiveChatMessage,
+  ) => {
+    setEditingMessageId(message.id)
+    setEditingDraft(message.message)
+  }
+
+  const saveEditedMessage = (
+    messageId: string,
+  ) => {
+    const message = editingDraft.trim()
+
+    if (!message) return
+
+    setChatMessages((current) =>
+      current.map((item) =>
+        item.id === messageId
+          ? { ...item, message }
+          : item,
+      ),
+    )
+    setEditingMessageId(null)
+    setEditingDraft('')
+  }
+
+  const deleteMessage = (
+    messageId: string,
+  ) => {
+    setChatMessages((current) =>
+      current.filter((message) =>
+        message.id !== messageId,
+      ),
+    )
+    setEditingMessageId(null)
+    setEditingDraft('')
+    setRepliesByMessage(
+      (current) => {
+        const next = { ...current }
+        delete next[messageId]
+        return next
+      },
+    )
+  }
+
+  const submitReply = (
+    messageId: string,
+  ) => {
+    const message = replyDraft.trim()
+
+    if (!message || !streamId) return
+
+    const reply: LiveChatMessage = {
+      id: crypto.randomUUID(),
+      streamId,
+      userId: null,
+      userName: developmentUserName,
+      message,
+      sentAt: new Date().toISOString(),
+    }
+
+    setRepliesByMessage(
+      (current) => ({
+        ...current,
+        [messageId]: [
+          ...(current[messageId] ?? []),
+          reply,
+        ],
+      }),
+    )
+    setReplyTargetId(null)
+    setReplyDraft('')
+  }
+
+  const toggleReaction = (
+    messageId: string,
+    emoji: string,
+  ) => {
+    setReactionCounts(
+      (current) => {
+        const messageReactions =
+          current[messageId] ?? {}
+
+        const currentCount =
+          messageReactions[emoji] ?? 0
+
+        const nextReactions = {
+          ...messageReactions,
+          [emoji]:
+            currentCount > 0
+              ? 0
+              : 1,
+        }
+
+        return {
+          ...current,
+          [messageId]: nextReactions,
+        }
+      },
+    )
+  }
+
   if (!streamId) {
     return (
       <section className="streams-page">
@@ -680,15 +838,20 @@ function LiveStreamPage() {
 
               <button
                 type="button"
-                className="live-follow-button"
-                disabled
-                title={t(
-                  'liveStream.followHint',
-                )}
+                className={`live-follow-button ${
+                  isFollowing
+                    ? 'is-following'
+                    : ''
+                }`}
+                onClick={() =>
+                  setIsFollowing(
+                    (value) => !value,
+                  )
+                }
               >
-                {t(
-                  'liveStream.follow',
-                )}
+                {isFollowing
+                  ? t('liveStream.following')
+                  : t('liveStream.follow')}
               </button>
             </div>
 
@@ -793,13 +956,157 @@ function LiveStreamPage() {
                           locale,
                         )}
                       </time>
+
+                      <button
+                        type="button"
+                        className="live-chat-reply-trigger"
+                        onClick={() => {
+                          setReplyTargetId(message.id)
+                          setReplyDraft('')
+                        }}
+                      >
+                        {t('liveStream.chat.reply')}
+                      </button>
+
+                      {message.userName ===
+                        developmentUserName && (
+                        <div className="live-chat-actions">
+                          <button type="button" onClick={() => startEditingMessage(message)}>
+                            {t('liveStream.chat.edit')}
+                          </button>
+
+                          <button type="button" onClick={() => deleteMessage(message.id)}>
+                            {t('liveStream.chat.delete')}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    <p>
-                      {
-                        message.message
-                      }
-                    </p>
+                    {editingMessageId === message.id ? (
+                      <form
+                        className="live-chat-edit"
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          saveEditedMessage(message.id)
+                        }}
+                      >
+                        <input
+                          value={editingDraft}
+                          maxLength={500}
+                          autoFocus
+                          onChange={(event) => setEditingDraft(event.target.value)}
+                        />
+
+                        <button type="submit" disabled={!editingDraft.trim()}>
+                          {t('liveStream.chat.save')}
+                        </button>
+
+                        <button type="button" onClick={() => {
+                          setEditingMessageId(null)
+                          setEditingDraft('')
+                        }}>
+                          {t('liveStream.chat.cancel')}
+                        </button>
+                      </form>
+                    ) : (
+                      <p>{message.message}</p>
+                    )}
+
+                    <div className="live-chat-reaction-picker">
+                      {reactionOptions.map((reaction) => (
+                        <button
+                          type="button"
+                          key={reaction.emoji}
+                          aria-label={`${t('liveStream.chat.react')} ${reaction.emoji}`}
+                          onClick={() =>
+                            toggleReaction(
+                              message.id,
+                              reaction.emoji,
+                            )
+                          }
+                        >
+                          {reaction.emoji}
+                        </button>
+                      ))}
+                    </div>
+
+                    {Object.entries(
+                      reactionCounts[
+                        message.id
+                      ] ?? {},
+                    )
+                      .filter(([, count]) => count > 0)
+                      .length > 0 && (
+                      <div className="live-chat-reactions">
+                        {Object.entries(
+                          reactionCounts[
+                            message.id
+                          ] ?? {},
+                        )
+                          .filter(([, count]) => count > 0)
+                          .map(([emoji, count]) => {
+                            const tone =
+                              reactionOptions.find(
+                                (reaction) =>
+                                  reaction.emoji === emoji,
+                              )?.tone ?? 'like'
+
+                            return (
+                              <button
+                                type="button"
+                                key={emoji}
+                                className={`reaction-${tone}`}
+                                onClick={() =>
+                                  toggleReaction(
+                                    message.id,
+                                    emoji,
+                                  )
+                                }
+                              >
+                                {emoji}
+                                <span>{count}</span>
+                              </button>
+                            )
+                          })}
+                      </div>
+                    )}
+
+                    {(repliesByMessage[message.id] ?? []).map(
+                      (reply) => (
+                        <div className="live-chat-reply" key={reply.id}>
+                          <strong>{reply.userName}</strong>
+                          <time>{formatChatTime(reply.sentAt, locale)}</time>
+                          <p>{reply.message}</p>
+                        </div>
+                      ),
+                    )}
+
+                    {replyTargetId === message.id && (
+                      <form
+                        className="live-chat-reply-form"
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          submitReply(message.id)
+                        }}
+                      >
+                        <input
+                          value={replyDraft}
+                          maxLength={500}
+                          autoFocus
+                          placeholder={t('liveStream.chat.replyPlaceholder')}
+                          onChange={(event) => setReplyDraft(event.target.value)}
+                        />
+                        <button type="submit" disabled={!replyDraft.trim()}>
+                          {t('liveStream.chat.reply')}
+                        </button>
+                        <button type="button" onClick={() => {
+                          setReplyTargetId(null)
+                          setReplyDraft('')
+                        }}>
+                          {t('liveStream.chat.cancel')}
+                        </button>
+                      </form>
+                    )}
                   </article>
                 ),
               )
