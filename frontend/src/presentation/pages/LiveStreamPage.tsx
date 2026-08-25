@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -13,8 +14,12 @@ import type {
   LiveChatClientFactory,
 } from '../../application/liveChat/client'
 import type {
+  LiveChatSessionStore,
+} from '../../application/liveChat/sessionStore'
+import type {
   LiveChatConnectionStatus,
   LiveChatMessage,
+  LiveChatReactionUpdate,
 } from '../../application/liveChat/types'
 import type {
   StreamService,
@@ -30,6 +35,33 @@ import './LiveChat.css'
 
 const developmentUserName =
   'Guest Viewer'
+
+const reactionOptions = [
+  {
+    emoji: '\u2764\uFE0F',
+    tone: 'heart',
+  },
+  {
+    emoji: '\u{1F44D}',
+    tone: 'like',
+  },
+  {
+    emoji: '\u{1F602}',
+    tone: 'laugh',
+  },
+  {
+    emoji: '\u{1F62E}',
+    tone: 'wow',
+  },
+  {
+    emoji: '\u{1F622}',
+    tone: 'sad',
+  },
+  {
+    emoji: '\u{1F525}',
+    tone: 'fire',
+  },
+] as const
 
 const categoryKeys:
 Record<string, string> = {
@@ -113,13 +145,112 @@ function formatChatTime(
   )
 }
 
+function upsertMessage(
+  messages: LiveChatMessage[],
+  incoming: LiveChatMessage,
+) {
+  const index =
+    messages.findIndex(
+      message =>
+        message.id ===
+        incoming.id,
+    )
+
+  if (index < 0) {
+    return [
+      ...messages,
+      incoming,
+    ].slice(
+      -200,
+    )
+  }
+
+  const next =
+    [...messages]
+
+  next[index] =
+    incoming
+
+  return next
+}
+
+function applyReactionUpdate(
+  message: LiveChatMessage,
+  update: LiveChatReactionUpdate,
+) {
+  if (
+    message.id !==
+    update.messageId
+  ) {
+    return message
+  }
+
+  const existing =
+    message.reactions.find(
+      reaction =>
+        reaction.emoji ===
+        update.emoji,
+    )
+
+  const reactedByCurrentSession =
+    update.reactedByCurrentSession ??
+    existing?.reactedByCurrentSession ??
+    false
+
+  if (update.count <= 0) {
+    return {
+      ...message,
+      reactions:
+        message.reactions.filter(
+          reaction =>
+            reaction.emoji !==
+            update.emoji,
+        ),
+    }
+  }
+
+  const nextReaction = {
+    emoji:
+      update.emoji,
+
+    count:
+      update.count,
+
+    reactedByCurrentSession,
+  }
+
+  if (!existing) {
+    return {
+      ...message,
+      reactions: [
+        ...message.reactions,
+        nextReaction,
+      ],
+    }
+  }
+
+  return {
+    ...message,
+    reactions:
+      message.reactions.map(
+        reaction =>
+          reaction.emoji ===
+          update.emoji
+            ? nextReaction
+            : reaction,
+      ),
+  }
+}
+
 interface LiveStreamPageProps {
   liveChatClientFactory: LiveChatClientFactory
+  liveChatSessionStore: LiveChatSessionStore
   streamService: StreamService
 }
 
 function LiveStreamPage({
   liveChatClientFactory,
+  liveChatSessionStore,
   streamService,
 }: LiveStreamPageProps) {
   const {
@@ -196,6 +327,34 @@ function LiveStreamPage({
   ] =
     useState(false)
 
+  const [
+    editingMessageId,
+    setEditingMessageId,
+  ] =
+    useState<
+      string | null
+    >(null)
+
+  const [
+    editingDraft,
+    setEditingDraft,
+  ] =
+    useState('')
+
+  const [
+    replyTargetId,
+    setReplyTargetId,
+  ] =
+    useState<
+      string | null
+    >(null)
+
+  const [
+    replyDraft,
+    setReplyDraft,
+  ] =
+    useState('')
+
   const chatClientRef =
     useRef<
       LiveChatClient | null
@@ -205,6 +364,18 @@ function LiveStreamPage({
     useRef<
       HTMLDivElement | null
     >(null)
+
+  const topLevelMessages =
+    useMemo(
+      () =>
+        chatMessages.filter(
+          message =>
+            !message.parentMessageId,
+        ),
+      [
+        chatMessages,
+      ],
+    )
 
   const getCategoryLabel = (
     category: string,
@@ -330,11 +501,30 @@ function LiveStreamPage({
     let isDisposed =
       false
 
+    const sessionId =
+      liveChatSessionStore
+        .getSessionId()
+
     const chatClient =
       liveChatClientFactory.create(
         streamId,
+        sessionId,
         {
-          onMessage: (
+          onSnapshot: (
+            messages,
+          ) => {
+            if (
+              isDisposed
+            ) {
+              return
+            }
+
+            setChatMessages(
+              messages,
+            )
+          },
+
+          onMessageAdded: (
             message,
           ) => {
             if (
@@ -344,14 +534,74 @@ function LiveStreamPage({
             }
 
             setChatMessages(
-              (
-                current,
-              ) =>
-                [
-                  ...current,
+              current =>
+                upsertMessage(
+                  current,
                   message,
-                ].slice(
-                  -100,
+                ),
+            )
+          },
+
+          onMessageUpdated: (
+            message,
+          ) => {
+            if (
+              isDisposed
+            ) {
+              return
+            }
+
+            setChatMessages(
+              current =>
+                upsertMessage(
+                  current,
+                  message,
+                ),
+            )
+          },
+
+          onMessagesDeleted: (
+            messageIds,
+          ) => {
+            if (
+              isDisposed
+            ) {
+              return
+            }
+
+            const removed =
+              new Set(
+                messageIds,
+              )
+
+            setChatMessages(
+              current =>
+                current.filter(
+                  message =>
+                    !removed.has(
+                      message.id,
+                    ),
+                ),
+            )
+          },
+
+          onReactionUpdated: (
+            update,
+          ) => {
+            if (
+              isDisposed
+            ) {
+              return
+            }
+
+            setChatMessages(
+              current =>
+                current.map(
+                  message =>
+                    applyReactionUpdate(
+                      message,
+                      update,
+                    ),
                 ),
             )
           },
@@ -446,6 +696,7 @@ function LiveStreamPage({
     }
   }, [
     liveChatClientFactory,
+    liveChatSessionStore,
     streamId,
   ])
 
@@ -480,7 +731,6 @@ function LiveStreamPage({
         !chatClient ||
         chatStatus !==
           'connected' ||
-        !streamId ||
         !message ||
         isSending
       ) {
@@ -517,6 +767,192 @@ function LiveStreamPage({
       } finally {
         setIsSending(
           false,
+        )
+      }
+    }
+
+  const startEditingMessage = (
+    message:
+      LiveChatMessage,
+  ) => {
+    if (!message.isOwn) {
+      return
+    }
+
+    setEditingMessageId(
+      message.id,
+    )
+
+    setEditingDraft(
+      message.message,
+    )
+  }
+
+  const saveEditedMessage =
+    async (
+      messageId: string,
+    ) => {
+      const chatClient =
+        chatClientRef.current
+
+      const message =
+        editingDraft.trim()
+
+      if (
+        !chatClient ||
+        !message
+      ) {
+        return
+      }
+
+      try {
+        setChatErrorKey(
+          null,
+        )
+
+        await chatClient.edit(
+          messageId,
+          message,
+        )
+
+        setEditingMessageId(
+          null,
+        )
+
+        setEditingDraft(
+          '',
+        )
+      } catch (
+        error
+      ) {
+        console.error(
+          error,
+        )
+
+        setChatErrorKey(
+          'liveStream.chat.genericError',
+        )
+      }
+    }
+
+  const deleteMessage =
+    async (
+      messageId: string,
+    ) => {
+      const chatClient =
+        chatClientRef.current
+
+      if (!chatClient) {
+        return
+      }
+
+      try {
+        setChatErrorKey(
+          null,
+        )
+
+        await chatClient.delete(
+          messageId,
+        )
+
+        setEditingMessageId(
+          null,
+        )
+
+        setEditingDraft(
+          '',
+        )
+      } catch (
+        error
+      ) {
+        console.error(
+          error,
+        )
+
+        setChatErrorKey(
+          'liveStream.chat.genericError',
+        )
+      }
+    }
+
+  const submitReply =
+    async (
+      messageId: string,
+    ) => {
+      const chatClient =
+        chatClientRef.current
+
+      const message =
+        replyDraft.trim()
+
+      if (
+        !chatClient ||
+        !message
+      ) {
+        return
+      }
+
+      try {
+        setChatErrorKey(
+          null,
+        )
+
+        await chatClient.reply(
+          messageId,
+          developmentUserName,
+          message,
+        )
+
+        setReplyTargetId(
+          null,
+        )
+
+        setReplyDraft(
+          '',
+        )
+      } catch (
+        error
+      ) {
+        console.error(
+          error,
+        )
+
+        setChatErrorKey(
+          'liveStream.chat.genericError',
+        )
+      }
+    }
+
+  const toggleReaction =
+    async (
+      messageId: string,
+      emoji: string,
+    ) => {
+      const chatClient =
+        chatClientRef.current
+
+      if (!chatClient) {
+        return
+      }
+
+      try {
+        setChatErrorKey(
+          null,
+        )
+
+        await chatClient.toggleReaction(
+          messageId,
+          emoji,
+        )
+      } catch (
+        error
+      ) {
+        console.error(
+          error,
+        )
+
+        setChatErrorKey(
+          'liveStream.chat.genericError',
         )
       }
     }
@@ -757,7 +1193,7 @@ function LiveStreamPage({
             }
             className="live-chat-messages"
           >
-            {chatMessages.length ===
+            {topLevelMessages.length ===
             0 ? (
               <div className="live-chat-empty">
                 <strong>
@@ -773,36 +1209,321 @@ function LiveStreamPage({
                 </span>
               </div>
             ) : (
-              chatMessages.map(
-                (message) => (
-                  <article
-                    key={
-                      message.id
-                    }
-                    className="live-chat-message"
-                  >
-                    <div className="live-chat-message-head">
-                      <strong>
-                        {
-                          message.userName
-                        }
-                      </strong>
+              topLevelMessages.map(
+                (message) => {
+                  const replies =
+                    chatMessages.filter(
+                      item =>
+                        item.parentMessageId ===
+                        message.id,
+                    )
 
-                      <time>
-                        {formatChatTime(
-                          message.sentAt,
-                          locale,
-                        )}
-                      </time>
-                    </div>
-
-                    <p>
-                      {
-                        message.message
+                  return (
+                    <article
+                      key={
+                        message.id
                       }
-                    </p>
-                  </article>
-                ),
+                      className="live-chat-message"
+                    >
+                      <div className="live-chat-message-head">
+                        <strong>
+                          {
+                            message.userName
+                          }
+                        </strong>
+
+                        <time>
+                          {formatChatTime(
+                            message.sentAt,
+                            locale,
+                          )}
+                        </time>
+
+                        <button
+                          type="button"
+                          className="live-chat-reply-trigger"
+                          onClick={() => {
+                            setReplyTargetId(
+                              message.id,
+                            )
+                            setReplyDraft(
+                              '',
+                            )
+                          }}
+                        >
+                          {t(
+                            'liveStream.chat.reply',
+                          )}
+                        </button>
+
+                        {message.isOwn && (
+                          <div className="live-chat-actions">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                startEditingMessage(
+                                  message,
+                                )
+                              }
+                            >
+                              {t(
+                                'liveStream.chat.edit',
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void deleteMessage(
+                                  message.id,
+                                )
+                              }}
+                            >
+                              {t(
+                                'liveStream.chat.delete',
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {editingMessageId ===
+                      message.id ? (
+                        <form
+                          className="live-chat-edit"
+                          onSubmit={(
+                            event,
+                          ) => {
+                            event.preventDefault()
+
+                            void saveEditedMessage(
+                              message.id,
+                            )
+                          }}
+                        >
+                          <input
+                            value={
+                              editingDraft
+                            }
+                            maxLength={
+                              500
+                            }
+                            autoFocus
+                            onChange={(
+                              event,
+                            ) =>
+                              setEditingDraft(
+                                event.target
+                                  .value,
+                              )
+                            }
+                          />
+
+                          <button
+                            type="submit"
+                            disabled={
+                              !editingDraft.trim()
+                            }
+                          >
+                            {t(
+                              'liveStream.chat.save',
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingMessageId(
+                                null,
+                              )
+                              setEditingDraft(
+                                '',
+                              )
+                            }}
+                          >
+                            {t(
+                              'liveStream.chat.cancel',
+                            )}
+                          </button>
+                        </form>
+                      ) : (
+                        <p>
+                          {
+                            message.message
+                          }
+                        </p>
+                      )}
+
+                      <div className="live-chat-reaction-picker">
+                        {reactionOptions.map(
+                          (
+                            reaction,
+                          ) => (
+                            <button
+                              type="button"
+                              key={
+                                reaction.emoji
+                              }
+                              aria-label={`${t(
+                                'liveStream.chat.react',
+                              )} ${reaction.emoji}`}
+                              onClick={() => {
+                                void toggleReaction(
+                                  message.id,
+                                  reaction.emoji,
+                                )
+                              }}
+                            >
+                              {
+                                reaction.emoji
+                              }
+                            </button>
+                          ),
+                        )}
+                      </div>
+
+                      {message.reactions.length >
+                        0 && (
+                        <div className="live-chat-reactions">
+                          {message.reactions.map(
+                            (
+                              reaction,
+                            ) => {
+                              const tone =
+                                reactionOptions.find(
+                                  option =>
+                                    option.emoji ===
+                                    reaction.emoji,
+                                )?.tone ??
+                                'like'
+
+                              return (
+                                <button
+                                  type="button"
+                                  key={
+                                    reaction.emoji
+                                  }
+                                  className={`reaction-${tone}${reaction.reactedByCurrentSession ? ' is-active' : ''}`}
+                                  onClick={() => {
+                                    void toggleReaction(
+                                      message.id,
+                                      reaction.emoji,
+                                    )
+                                  }}
+                                >
+                                  {
+                                    reaction.emoji
+                                  }
+                                  <span>
+                                    {
+                                      reaction.count
+                                    }
+                                  </span>
+                                </button>
+                              )
+                            },
+                          )}
+                        </div>
+                      )}
+
+                      {replies.map(
+                        (
+                          reply,
+                        ) => (
+                          <div
+                            className="live-chat-reply"
+                            key={
+                              reply.id
+                            }
+                          >
+                            <strong>
+                              {
+                                reply.userName
+                              }
+                            </strong>
+
+                            <time>
+                              {formatChatTime(
+                                reply.sentAt,
+                                locale,
+                              )}
+                            </time>
+
+                            <p>
+                              {
+                                reply.message
+                              }
+                            </p>
+                          </div>
+                        ),
+                      )}
+
+                      {replyTargetId ===
+                        message.id && (
+                        <form
+                          className="live-chat-reply-form"
+                          onSubmit={(
+                            event,
+                          ) => {
+                            event.preventDefault()
+
+                            void submitReply(
+                              message.id,
+                            )
+                          }}
+                        >
+                          <input
+                            value={
+                              replyDraft
+                            }
+                            maxLength={
+                              500
+                            }
+                            autoFocus
+                            placeholder={t(
+                              'liveStream.chat.replyPlaceholder',
+                            )}
+                            onChange={(
+                              event,
+                            ) =>
+                              setReplyDraft(
+                                event.target
+                                  .value,
+                              )
+                            }
+                          />
+
+                          <button
+                            type="submit"
+                            disabled={
+                              !replyDraft.trim()
+                            }
+                          >
+                            {t(
+                              'liveStream.chat.reply',
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyTargetId(
+                                null,
+                              )
+                              setReplyDraft(
+                                '',
+                              )
+                            }}
+                          >
+                            {t(
+                              'liveStream.chat.cancel',
+                            )}
+                          </button>
+                        </form>
+                      )}
+                    </article>
+                  )
+                },
               )
             )}
           </div>

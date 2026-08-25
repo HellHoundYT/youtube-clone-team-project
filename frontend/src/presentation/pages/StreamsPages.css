@@ -422,16 +422,28 @@
   padding: 0 18px;
   border: 0;
   border-radius: 10px;
-  background: #6f46ff;
+  background: #e83f61;
   color: #ffffff;
   font: inherit;
   font-size: 12px;
   font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
 }
 
-.live-follow-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+.live-follow-button:hover {
+  background: #f05270;
+  transform: translateY(-1px);
+}
+
+.live-follow-button.is-following {
+  background: #6f46ff;
+}
+
+.live-follow-button.is-following:hover {
+  background: #815dff;
 }
 
 .live-description {

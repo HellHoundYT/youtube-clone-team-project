@@ -100,6 +100,9 @@ const liveEn = {
     follow:
       'Follow',
 
+    following:
+      'Following',
+
     followHint:
       'Subscriptions will be connected with the Channels module.',
 
@@ -139,6 +142,14 @@ const liveEn = {
 
       send:
         'Send',
+
+      edit: 'Edit',
+      delete: 'Delete',
+      save: 'Save',
+      cancel: 'Cancel',
+      reply: 'Reply',
+      replyPlaceholder: 'Write a reply...',
+      react: 'React with a smile',
 
       connectionFailed:
         'Live chat connection failed.',
