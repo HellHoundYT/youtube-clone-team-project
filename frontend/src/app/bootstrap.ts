@@ -1,15 +1,15 @@
 import {
   configureCommentsStorage,
-} from '../features/comments/commentsStorage'
+} from '../presentation/features/comments/commentsStorage'
 import {
   configureAuthStore,
-} from '../features/auth/authStore'
+} from '../presentation/features/auth/authStore'
 import {
   configureChannelStoreStorage,
-} from '../features/channels/channelStore'
+} from '../presentation/features/channels/channelStore'
 import {
   configurePlaylistStoreStorage,
-} from '../features/playlists/playlistStore'
+} from '../presentation/features/playlists/playlistStore'
 import {
   browserKeyValueStore,
 } from '../infrastructure/storage/browserKeyValueStore'
