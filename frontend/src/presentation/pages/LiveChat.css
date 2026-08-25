@@ -94,12 +94,242 @@
   font-size: 8px;
 }
 
+.live-chat-actions {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.live-chat-reply-trigger {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #a98fff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.live-chat-message:hover .live-chat-reply-trigger,
+.live-chat-message:focus-within .live-chat-reply-trigger {
+  opacity: 1;
+}
+
+.live-chat-actions .live-chat-reply-trigger {
+  display: none;
+}
+
+.live-chat-message:hover .live-chat-actions,
+.live-chat-message:focus-within .live-chat-actions {
+  opacity: 1;
+}
+
+.live-chat-actions button,
+.live-chat-edit button {
+  border: 0;
+  background: transparent;
+  color: #a98fff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.live-chat-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.live-chat-reactions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 23px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: #22222a;
+  color: #e8e5ed;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.live-chat-reactions span {
+  font-size: 9px;
+}
+
+.live-chat-reactions .reaction-heart {
+  border-color: rgba(255, 91, 132, 0.5);
+  background: rgba(255, 64, 115, 0.15);
+}
+
+.live-chat-reactions .reaction-like {
+  border-color: rgba(93, 165, 255, 0.5);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.live-chat-reactions .reaction-laugh {
+  border-color: rgba(255, 198, 66, 0.52);
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.live-chat-reactions .reaction-wow {
+  border-color: rgba(120, 198, 255, 0.5);
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.live-chat-reactions .reaction-sad {
+  border-color: rgba(143, 167, 255, 0.5);
+  background: rgba(99, 102, 241, 0.16);
+}
+
+.live-chat-reactions .reaction-fire {
+  border-color: rgba(255, 137, 66, 0.55);
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.live-chat-reaction-picker {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #3a3547;
+  border-radius: 999px;
+  background: #25212d;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-3px) scale(0.95);
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+
+.live-chat-message {
+  position: relative;
+}
+
+.live-chat-message:hover .live-chat-reaction-picker,
+.live-chat-message:focus-within .live-chat-reaction-picker {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-3px) scale(1);
+}
+
+.live-chat-reaction-picker button {
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.live-chat-reaction-picker button:hover {
+  background: #3c3550;
+  transform: scale(1.17);
+}
+
+.live-chat-reply {
+  margin-top: 8px;
+  margin-left: 14px;
+  padding: 7px 9px;
+  border-left: 2px solid #6341ce;
+  background: #19191f;
+  border-radius: 0 7px 7px 0;
+}
+
+.live-chat-reply strong {
+  color: #b497ff;
+  font-size: 9px;
+}
+
+.live-chat-reply time {
+  margin-left: 6px;
+  color: #60606a;
+  font-size: 8px;
+}
+
+.live-chat-reply p {
+  margin: 4px 0 0;
+  color: #c5c5cb;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.live-chat-reply-form {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 0 14px;
+}
+
+.live-chat-reply-form input {
+  min-width: 0;
+  height: 29px;
+  flex: 1;
+  padding: 0 8px;
+  border: 1px solid #4b4168;
+  border-radius: 6px;
+  outline: none;
+  background: #15151b;
+  color: #eeeeef;
+  font: inherit;
+  font-size: 10px;
+}
+
+.live-chat-reply-form button {
+  border: 0;
+  background: transparent;
+  color: #a98fff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.live-chat-actions button:last-child {
+  color: #ff7993;
+}
+
 .live-chat-message p {
   margin: 4px 0 0;
   overflow-wrap: anywhere;
   color: #c5c5cb;
   font-size: 11px;
   line-height: 1.45;
+}
+
+.live-chat-edit {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.live-chat-edit input {
+  min-width: 0;
+  height: 29px;
+  flex: 1;
+  padding: 0 8px;
+  border: 1px solid #6f46ff;
+  border-radius: 6px;
+  outline: none;
+  background: #15151b;
+  color: #eeeeef;
+  font: inherit;
+  font-size: 10px;
+}
+
+.live-chat-edit button {
+  padding: 0 4px;
 }
 
 .live-chat-identity {

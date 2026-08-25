@@ -9,13 +9,31 @@ import type {
 } from '../../application/liveChat/client'
 import type {
   LiveChatClientOptions,
+  LiveChatDeleteResult,
   LiveChatMessage,
+  LiveChatReactionUpdate,
 } from '../../application/liveChat/types'
+
+function retryDelay(
+  previousRetryCount: number,
+) {
+  const exponent =
+    Math.min(
+      previousRetryCount,
+      3,
+    )
+
+  return Math.min(
+    10000,
+    1000 * (2 ** exponent),
+  )
+}
 
 export const liveChatClientFactory:
 LiveChatClientFactory = {
   create(
     streamId: string,
+    sessionId: string,
     options: LiveChatClientOptions,
   ): LiveChatClient {
     const connection =
@@ -23,25 +41,78 @@ LiveChatClientFactory = {
         .withUrl(
           '/hubs/live-chat',
         )
-        .withAutomaticReconnect([
-          0,
-          2000,
-          5000,
-          10000,
-        ])
+        .withAutomaticReconnect({
+          nextRetryDelayInMilliseconds:
+            (context) =>
+              retryDelay(
+                context.previousRetryCount,
+              ),
+        })
         .configureLogging(
           LogLevel.Warning,
         )
         .build()
 
+    const joinStream =
+      async () => {
+        const snapshot =
+          await connection.invoke<
+            LiveChatMessage[]
+          >(
+            'JoinStream',
+            streamId,
+            sessionId,
+          )
+
+        options.onSnapshot(
+          snapshot,
+        )
+      }
+
     connection.on(
-      'ReceiveMessage',
+      'MessageAdded',
       (
         message:
           LiveChatMessage,
       ) => {
-        options.onMessage(
+        options.onMessageAdded(
           message,
+        )
+      },
+    )
+
+    connection.on(
+      'MessageUpdated',
+      (
+        message:
+          LiveChatMessage,
+      ) => {
+        options.onMessageUpdated(
+          message,
+        )
+      },
+    )
+
+    connection.on(
+      'MessagesDeleted',
+      (
+        result:
+          LiveChatDeleteResult,
+      ) => {
+        options.onMessagesDeleted(
+          result.messageIds,
+        )
+      },
+    )
+
+    connection.on(
+      'ReactionUpdated',
+      (
+        update:
+          LiveChatReactionUpdate,
+      ) => {
+        options.onReactionUpdated(
+          update,
         )
       },
     )
@@ -57,10 +128,7 @@ LiveChatClientFactory = {
     connection.onreconnected(
       async () => {
         try {
-          await connection.invoke(
-            'JoinStream',
-            streamId,
-          )
+          await joinStream()
 
           options.onStatusChange(
             'connected',
@@ -95,10 +163,7 @@ LiveChatClientFactory = {
       async start() {
         await connection.start()
 
-        await connection.invoke(
-          'JoinStream',
-          streamId,
-        )
+        await joinStream()
       },
 
       async stop() {
@@ -136,11 +201,99 @@ LiveChatClientFactory = {
           )
         }
 
-        await connection.invoke(
-          'SendMessage',
-          streamId,
-          userName,
-          message,
+        const created =
+          await connection.invoke<
+            LiveChatMessage
+          >(
+            'SendMessage',
+            streamId,
+            sessionId,
+            userName,
+            message,
+          )
+
+        options.onMessageAdded(
+          created,
+        )
+      },
+
+      async edit(
+        messageId: string,
+        message: string,
+      ) {
+        const updated =
+          await connection.invoke<
+            LiveChatMessage
+          >(
+            'EditMessage',
+            streamId,
+            sessionId,
+            messageId,
+            message,
+          )
+
+        options.onMessageUpdated(
+          updated,
+        )
+      },
+
+      async delete(
+        messageId: string,
+      ) {
+        const result =
+          await connection.invoke<
+            LiveChatDeleteResult
+          >(
+            'DeleteMessage',
+            streamId,
+            sessionId,
+            messageId,
+          )
+
+        options.onMessagesDeleted(
+          result.messageIds,
+        )
+      },
+
+      async reply(
+        parentMessageId: string,
+        userName: string,
+        message: string,
+      ) {
+        const created =
+          await connection.invoke<
+            LiveChatMessage
+          >(
+            'ReplyToMessage',
+            streamId,
+            sessionId,
+            userName,
+            parentMessageId,
+            message,
+          )
+
+        options.onMessageAdded(
+          created,
+        )
+      },
+
+      async toggleReaction(
+        messageId: string,
+        emoji: string,
+      ) {
+        const update =
+          await connection.invoke<
+            LiveChatReactionUpdate
+          >(
+            'ToggleReaction',
+            streamId,
+            sessionId,
+            messageId,
+            emoji,
+          )
+
+        options.onReactionUpdated(
+          update,
         )
       },
     }

@@ -37,6 +37,7 @@ import {
   libraryService,
   uploadService,
   liveChatClientFactory,
+  liveChatSessionStore,
   watchPartyClientFactory,
   watchPartySessionStore,
 } from './dependencies'
@@ -116,7 +117,11 @@ function App() {
         <Route
           path="streamers/:streamId"
           element={
-            <LiveStreamPage liveChatClientFactory={liveChatClientFactory} streamService={streamService} />
+            <LiveStreamPage
+              liveChatClientFactory={liveChatClientFactory}
+              liveChatSessionStore={liveChatSessionStore}
+              streamService={streamService}
+            />
           }
         />
 
@@ -152,6 +157,7 @@ function App() {
           path="profile"
           element={<ProfilePage />}
         />
+
         <Route
           path="watch-party"
           element={
