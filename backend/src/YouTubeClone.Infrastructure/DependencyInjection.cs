@@ -64,7 +64,7 @@ public static class DependencyInjection
 
         services.AddSingleton<
             IWatchPartyRepository,
-            InMemoryWatchPartyRepository>();
+            FileWatchPartyRepository>();
 
         services.AddSingleton<
             IWatchPartyRoomCodeGenerator,

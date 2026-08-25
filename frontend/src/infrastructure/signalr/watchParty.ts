@@ -27,12 +27,22 @@ WatchPartyClientFactory = {
         .withUrl(
           '/hubs/watch-party',
         )
-        .withAutomaticReconnect([
-          0,
-          2000,
-          5000,
-          10000,
-        ])
+        .withAutomaticReconnect({
+          nextRetryDelayInMilliseconds:
+            (
+              retryContext,
+            ) =>
+              Math.min(
+                1000 *
+                  2 **
+                    Math.min(
+                      retryContext
+                        .previousRetryCount,
+                      4,
+                    ),
+                10000,
+              ),
+        })
         .configureLogging(
           LogLevel.Warning,
         )

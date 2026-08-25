@@ -33,7 +33,9 @@ interface VideoPlayerProps {
     | VideoPlaybackCommand
     | null
 
-  onFirstPlay?: () => void
+  onFirstPlay?: (
+    currentTime: number,
+  ) => void
 
   onProgress?: (
     currentTime: number,
@@ -341,7 +343,12 @@ function VideoPlayer({
       countedSourceRef.current =
         src
 
-      onFirstPlay?.()
+      onFirstPlay?.(
+        Math.max(
+          0,
+          element.currentTime,
+        ),
+      )
     }
 
     emitPlaybackAction(

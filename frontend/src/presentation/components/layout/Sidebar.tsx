@@ -60,6 +60,14 @@ const libraryNavigation:
 NavigationItem[] = [
   {
     labelKey:
+      'watchParty.title',
+    path:
+      '/watch-party',
+    icon:
+      'play',
+  },
+  {
+    labelKey:
       'layout.navigation.library',
     path: '/library',
     icon: 'library',

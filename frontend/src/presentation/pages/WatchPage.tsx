@@ -441,7 +441,9 @@ function WatchPage({
     )
 
   const handleFirstPlay =
-    async () => {
+    async (
+      currentTime: number,
+    ) => {
       try {
         await videoService.registerVideoView(
           video.id,
@@ -477,8 +479,28 @@ function WatchPage({
         // interrupted by a view
         // counter failure.
       }
-    }
 
+      try {
+        await libraryService.updateWatchHistory(
+          video.id,
+          {
+            progressSeconds:
+              Math.max(
+                0,
+                Math.floor(
+                  currentTime,
+                ),
+              ),
+
+            completed:
+              false,
+          },
+        )
+      } catch {
+        // History errors must not
+        // interrupt playback.
+      }
+    }
   const handleProgress =
     async (
       currentTime: number,
@@ -520,8 +542,12 @@ function WatchPage({
             loadState
               .initialProgressSeconds
           }
-          onFirstPlay={() => {
-            void handleFirstPlay()
+          onFirstPlay={(
+            currentTime,
+          ) => {
+            void handleFirstPlay(
+              currentTime,
+            )
           }}
           onProgress={(
             currentTime,

@@ -757,3 +757,10 @@
 .watch-party-connection-status {
   font-size: 11px;
 }
+/* watch-party-side-panel-fixed-height */
+@media (min-width: 1001px) {
+  .watch-party-side-panel {
+    height: 620px;
+    align-self: start;
+  }
+}
