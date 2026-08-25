@@ -1,7 +1,8 @@
 using System.Text.Json;
-using YouTubeClone.Api.DTOs.Videos;
-using YouTubeClone.Api.Services.Videos;
-using YouTubeClone.Api.Services.WatchParty;
+using YouTubeClone.Application.Features.Videos.Contracts;
+using YouTubeClone.Application.Features.Videos;
+using YouTubeClone.Application.Features.WatchParty;
+using YouTubeClone.Infrastructure.WatchParty;
 using Xunit;
 
 namespace YouTubeClone.Api.Tests.WatchParty;
@@ -645,8 +646,16 @@ public sealed class WatchPartyServiceTests
                         "Video Two")
                 });
 
+        var repository =
+            new InMemoryWatchPartyRepository();
+
+        var roomCodeGenerator =
+            new WatchPartyRoomCodeGenerator();
+
         return new WatchPartyService(
-            videoService);
+            videoService,
+            repository,
+            roomCodeGenerator);
     }
 
     private static VideoDetailsDto

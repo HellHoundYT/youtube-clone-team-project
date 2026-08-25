@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YouTubeClone.Api/YouTubeClone.Api.csproj" />
+    <Project Path="src/YouTubeClone.Application/YouTubeClone.Application.csproj" />
+    <Project Path="src/YouTubeClone.Domain/YouTubeClone.Domain.csproj" />
+    <Project Path="src/YouTubeClone.Infrastructure/YouTubeClone.Infrastructure.csproj" />
+  </Folder>
   <Project Path="../tests/YouTubeClone.Api.Tests/YouTubeClone.Api.Tests.csproj" />
-  <Project Path="YouTubeClone.Api.csproj" />
 </Solution>
