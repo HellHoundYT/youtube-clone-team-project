@@ -15,6 +15,7 @@ import HistoryPage from './pages/HistoryPage'
 import HomePage from './pages/HomePage'
 import LibraryPage from './pages/LibraryPage'
 import LiveStreamPage from './pages/LiveStreamPage'
+import MusicPage from './pages/MusicPage'
 import PlaymePage from './pages/PlaymePage'
 import PlaylistsPage from './pages/PlaylistsPage'
 import ProfilePage from './pages/ProfilePage'
@@ -57,6 +58,11 @@ function App() {
           element={
             <PlaymePage />
           }
+        />
+
+        <Route
+          path="music"
+          element={<MusicPage />}
         />
 
         <Route

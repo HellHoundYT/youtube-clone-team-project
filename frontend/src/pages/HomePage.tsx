@@ -659,7 +659,6 @@ function HomePage() {
 
   const [
     activeCategory,
-    setActiveCategory,
   ] =
     useState('All')
 
@@ -1263,11 +1262,30 @@ function HomePage() {
                   ? 'is-active'
                   : ''
               }`}
-              onClick={() =>
-                setActiveCategory(
-                  category.value,
+              onClick={() => {
+                if (
+                  category.value ===
+                  'All'
+                ) {
+                  navigate('/')
+                  return
+                }
+
+                if (
+                  category.value ===
+                  'Music'
+                ) {
+                  navigate('/music')
+                  return
+                }
+
+                navigate(
+                  `/categories/${
+                    category.value
+                      .toLowerCase()
+                  }`,
                 )
-              }
+              }}
             >
               {t(
                 category.translationKey,

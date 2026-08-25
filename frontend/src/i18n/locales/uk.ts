@@ -48,6 +48,7 @@ const uk = {
     navigation: {
       home: 'Головна',
       playme: 'Playme',
+      music: 'Музика',
       subscriptions: 'Підписки',
       library: 'Бібліотека',
       history: 'Історія',
@@ -56,6 +57,19 @@ const uk = {
       streamers: 'Стрімери',
       themes: 'Теми',
     },
+  },
+
+  music: {
+    eyebrow: 'AMTLIS MUSIC',
+    title: 'Саундтрек для вашого моменту',
+    description: 'Свіжі релізи, улюблені треки та мікси для будь-якого настрою.',
+    listenNow: 'Слухати зараз',
+    popular: 'Популярне зараз',
+    madeForYou: 'Створено для вас',
+    queue: 'Ваша черга',
+    playing: 'Зараз грає',
+    play: 'Відтворити',
+    pause: 'Пауза',
   },
 
   home: {

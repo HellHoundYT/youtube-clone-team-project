@@ -8,6 +8,7 @@ import {
 type IconName =
   | 'home'
   | 'play'
+  | 'music'
   | 'subscriptions'
   | 'library'
   | 'history'
@@ -44,6 +45,12 @@ NavigationItem[] = [
       'layout.navigation.playme',
     path: '/playme',
     icon: 'play',
+  },
+
+  {
+    labelKey: 'layout.navigation.music',
+    path: '/music',
+    icon: 'music',
   },
 
   {
@@ -136,6 +143,16 @@ function NavigationIcon({
         />
 
         <path d="m10 8 6 4-6 4Z" />
+      </svg>
+    )
+  }
+
+  if (name === 'music') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 18V6l10-2v12" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="16" cy="16" r="3" />
       </svg>
     )
   }

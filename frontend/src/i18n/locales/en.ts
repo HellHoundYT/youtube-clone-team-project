@@ -48,6 +48,7 @@ const en = {
     navigation: {
       home: 'Home',
       playme: 'Playme',
+      music: 'Music',
       subscriptions: 'Subscriptions',
       library: 'Library',
       history: 'History',
@@ -56,6 +57,19 @@ const en = {
       streamers: 'Streamers',
       themes: 'Themes',
     },
+  },
+
+  music: {
+    eyebrow: 'AMTLIS MUSIC',
+    title: 'Soundtrack for your moment',
+    description: 'Fresh releases, familiar favourites and mixes for every mood.',
+    listenNow: 'Listen now',
+    popular: 'Popular right now',
+    madeForYou: 'Made for you',
+    queue: 'Your queue',
+    playing: 'Now playing',
+    play: 'Play',
+    pause: 'Pause',
   },
 
   home: {
