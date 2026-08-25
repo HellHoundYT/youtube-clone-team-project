@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
-using YouTubeClone.Api.DTOs.LiveChat;
+using YouTubeClone.Application.Features.LiveChat;
+using YouTubeClone.Application.Features.LiveChat.Contracts;
 using YouTubeClone.Application.Features.Streams;
 
 namespace YouTubeClone.Api.Hubs;
@@ -7,32 +8,43 @@ namespace YouTubeClone.Api.Hubs;
 public sealed class LiveChatHub :
     Hub
 {
-    private const int MaxUserNameLength =
-        40;
-
-    private const int MaxMessageLength =
-        500;
-
     private readonly ILiveStreamService
         _liveStreamService;
 
+    private readonly ILiveChatService
+        _liveChatService;
+
     public LiveChatHub(
-        ILiveStreamService liveStreamService)
+        ILiveStreamService liveStreamService,
+        ILiveChatService liveChatService)
     {
         _liveStreamService =
             liveStreamService;
+
+        _liveChatService =
+            liveChatService;
     }
 
-    public async Task JoinStream(
-        Guid streamId)
+    public async Task<
+        IReadOnlyList<LiveChatMessageDto>>
+        JoinStream(
+            Guid streamId,
+            string sessionId)
     {
         await EnsureStreamExistsAsync(
             streamId);
 
         await Groups.AddToGroupAsync(
             Context.ConnectionId,
-            GetGroupName(streamId),
+            GetGroupName(
+                streamId),
             Context.ConnectionAborted);
+
+        return Execute(
+            () =>
+                _liveChatService.GetSnapshot(
+                    streamId,
+                    sessionId));
     }
 
     public async Task LeaveStream(
@@ -40,84 +52,174 @@ public sealed class LiveChatHub :
     {
         await Groups.RemoveFromGroupAsync(
             Context.ConnectionId,
-            GetGroupName(streamId),
+            GetGroupName(
+                streamId),
             Context.ConnectionAborted);
     }
 
-    public async Task SendMessage(
-        Guid streamId,
-        string userName,
-        string message)
+    public async Task<LiveChatMessageDto>
+        SendMessage(
+            Guid streamId,
+            string sessionId,
+            string userName,
+            string message)
     {
         await EnsureStreamExistsAsync(
             streamId);
 
-        var normalizedUserName =
-            userName?.Trim() ??
-            string.Empty;
-
-        var normalizedMessage =
-            message?.Trim() ??
-            string.Empty;
-
-        if (string.IsNullOrWhiteSpace(
-                normalizedUserName))
-        {
-            throw new HubException(
-                "User name is required.");
-        }
-
-        if (normalizedUserName.Length >
-            MaxUserNameLength)
-        {
-            throw new HubException(
-                $"User name must not exceed {MaxUserNameLength} characters.");
-        }
-
-        if (string.IsNullOrWhiteSpace(
-                normalizedMessage))
-        {
-            throw new HubException(
-                "Message is required.");
-        }
-
-        if (normalizedMessage.Length >
-            MaxMessageLength)
-        {
-            throw new HubException(
-                $"Message must not exceed {MaxMessageLength} characters.");
-        }
-
-        var chatMessage =
-            new LiveChatMessageDto
-            {
-                Id =
-                    Guid.NewGuid(),
-
-                StreamId =
-                    streamId,
-
-                UserId =
-                    null,
-
-                UserName =
-                    normalizedUserName,
-
-                Message =
-                    normalizedMessage,
-
-                SentAt =
-                    DateTimeOffset.UtcNow
-            };
+        var result =
+            Execute(
+                () =>
+                    _liveChatService.SendMessage(
+                        streamId,
+                        sessionId,
+                        userName,
+                        message));
 
         await Clients
-            .Group(
+            .OthersInGroup(
                 GetGroupName(
                     streamId))
             .SendAsync(
-                "ReceiveMessage",
-                chatMessage,
+                "MessageAdded",
+                ToPublic(
+                    result),
                 Context.ConnectionAborted);
+
+        return result;
+    }
+
+    public async Task<LiveChatMessageDto>
+        EditMessage(
+            Guid streamId,
+            string sessionId,
+            Guid messageId,
+            string message)
+    {
+        await EnsureStreamExistsAsync(
+            streamId);
+
+        var result =
+            Execute(
+                () =>
+                    _liveChatService.EditMessage(
+                        streamId,
+                        sessionId,
+                        messageId,
+                        message));
+
+        await Clients
+            .OthersInGroup(
+                GetGroupName(
+                    streamId))
+            .SendAsync(
+                "MessageUpdated",
+                ToPublic(
+                    result),
+                Context.ConnectionAborted);
+
+        return result;
+    }
+
+    public async Task<LiveChatDeleteResultDto>
+        DeleteMessage(
+            Guid streamId,
+            string sessionId,
+            Guid messageId)
+    {
+        await EnsureStreamExistsAsync(
+            streamId);
+
+        var result =
+            Execute(
+                () =>
+                    _liveChatService.DeleteMessage(
+                        streamId,
+                        sessionId,
+                        messageId));
+
+        await Clients
+            .OthersInGroup(
+                GetGroupName(
+                    streamId))
+            .SendAsync(
+                "MessagesDeleted",
+                result,
+                Context.ConnectionAborted);
+
+        return result;
+    }
+
+    public async Task<LiveChatMessageDto>
+        ReplyToMessage(
+            Guid streamId,
+            string sessionId,
+            string userName,
+            Guid parentMessageId,
+            string message)
+    {
+        await EnsureStreamExistsAsync(
+            streamId);
+
+        var result =
+            Execute(
+                () =>
+                    _liveChatService.ReplyToMessage(
+                        streamId,
+                        sessionId,
+                        userName,
+                        parentMessageId,
+                        message));
+
+        await Clients
+            .OthersInGroup(
+                GetGroupName(
+                    streamId))
+            .SendAsync(
+                "MessageAdded",
+                ToPublic(
+                    result),
+                Context.ConnectionAborted);
+
+        return result;
+    }
+
+    public async Task<LiveChatReactionUpdateDto>
+        ToggleReaction(
+            Guid streamId,
+            string sessionId,
+            Guid messageId,
+            string emoji)
+    {
+        await EnsureStreamExistsAsync(
+            streamId);
+
+        var result =
+            Execute(
+                () =>
+                    _liveChatService.ToggleReaction(
+                        streamId,
+                        sessionId,
+                        messageId,
+                        emoji));
+
+        var publicResult =
+            result with
+            {
+                ReactedByCurrentSession =
+                    null
+            };
+
+        await Clients
+            .OthersInGroup(
+                GetGroupName(
+                    streamId))
+            .SendAsync(
+                "ReactionUpdated",
+                publicResult,
+                Context.ConnectionAborted);
+
+        return result;
     }
 
     private async Task
@@ -134,6 +236,46 @@ public sealed class LiveChatHub :
         {
             throw new HubException(
                 "Live stream was not found.");
+        }
+    }
+
+    private static LiveChatMessageDto
+        ToPublic(
+            LiveChatMessageDto message)
+    {
+        var reactions =
+            message.Reactions
+                .Select(
+                    reaction =>
+                        reaction with
+                        {
+                            ReactedByCurrentSession =
+                                null
+                        })
+                .ToArray();
+
+        return message with
+        {
+            IsOwn =
+                false,
+
+            Reactions =
+                reactions
+        };
+    }
+
+    private static TResult
+        Execute<TResult>(
+            Func<TResult> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (InvalidOperationException error)
+        {
+            throw new HubException(
+                error.Message);
         }
     }
 

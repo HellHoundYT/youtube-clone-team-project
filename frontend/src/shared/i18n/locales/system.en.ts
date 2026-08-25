@@ -46,6 +46,8 @@ const systemEn = {
       invalidEmail: 'Enter a valid email address.',
       invalidPassword: 'Password must contain at least 6 characters.',
       missingName: 'Enter a display name.',
+      submitting: 'Please wait…',
+      requestFailed: 'We could not complete the request. Please try again.',
       orContinue: 'or continue with',
       continueFacebook: 'Continue with Facebook',
       continueGoogle: 'Continue with Google',

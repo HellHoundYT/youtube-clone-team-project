@@ -119,6 +119,8 @@
 
 .account-primary { color: #fff; background: #6547e7; }
 .account-primary:hover { background: #785ff0; }
+.account-primary:disabled,
+.social-auth-button:disabled { cursor: wait; opacity: 0.64; }
 .account-secondary { color: #f0eff8; background: #22242e; border: 1px solid #363947; }
 .account-secondary:hover { background: #2b2e3a; }
 .account-error { margin: -2px 0 0; color: #ff8f9b; font-size: 14px; }

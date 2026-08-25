@@ -46,6 +46,8 @@ const systemUk = {
       invalidEmail: 'Введіть коректну адресу електронної пошти.',
       invalidPassword: 'Пароль має містити щонайменше 6 символів.',
       missingName: 'Введіть ім’я для відображення.',
+      submitting: 'Будь ласка, зачекайте…',
+      requestFailed: 'Не вдалося виконати запит. Спробуйте ще раз.',
       orContinue: 'або продовжити через',
       continueFacebook: 'Продовжити через Facebook',
       continueGoogle: 'Продовжити через Google',

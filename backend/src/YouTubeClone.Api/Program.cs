@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Http.Features;
-using YouTubeClone.Application.Features.History;
-using YouTubeClone.Application.Features.Search;
-using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Application.Features.Categories;
 using YouTubeClone.Application.Features.Favorites;
+using YouTubeClone.Application.Features.History;
+using YouTubeClone.Application.Features.LiveChat;
+using YouTubeClone.Application.Features.Search;
 using YouTubeClone.Application.Features.Streams;
+using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Application.Features.WatchParty;
 using YouTubeClone.Infrastructure;
 
@@ -21,6 +22,10 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<
     IWatchPartyService,
     WatchPartyService>();
+
+builder.Services.AddSingleton<
+    ILiveChatService,
+    LiveChatService>();
 
 builder.Services.Configure<FormOptions>(
     options =>

@@ -41,6 +41,9 @@ import {
   watchPartyClientFactory as signalRWatchPartyClientFactory,
 } from '../infrastructure/signalr/watchParty'
 import {
+  liveChatSessionStore as browserLiveChatSessionStore,
+} from '../infrastructure/storage/liveChatSession'
+import {
   watchPartySessionStore as browserWatchPartySessionStore,
 } from '../infrastructure/storage/watchPartySession'
 
@@ -76,6 +79,9 @@ export const videoService =
 
 export const liveChatClientFactory =
   signalRLiveChatClientFactory
+
+export const liveChatSessionStore =
+  browserLiveChatSessionStore
 
 export const watchPartyClientFactory =
   signalRWatchPartyClientFactory
