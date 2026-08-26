@@ -1,9 +1,11 @@
+import axios from 'axios'
 import {
   type FormEvent,
   useState,
 } from 'react'
 import {
   Link,
+  useLocation,
   useNavigate,
 } from 'react-router-dom'
 import {
@@ -12,6 +14,9 @@ import {
 import {
   useAppTranslation,
 } from '../../shared/i18n'
+import AuthFormField from '../components/auth/AuthFormField'
+import AuthForm from '../components/auth/AuthForm'
+import AuthSubmitButton from '../components/auth/AuthSubmitButton'
 import './AuthProfilePage.css'
 
 type AuthMode =
@@ -27,6 +32,8 @@ type SocialProvider =
 function AuthPage() {
   const navigate =
     useNavigate()
+  const location =
+    useLocation()
   const {
     t,
   } = useAppTranslation()
@@ -34,13 +41,17 @@ function AuthPage() {
     useAuthStore((state) => state.register)
   const signIn =
     useAuthStore((state) => state.signIn)
-  const [mode, setMode] =
-    useState<AuthMode>('sign-in')
+  const mode: AuthMode =
+    location.pathname === '/register'
+      ? 'register'
+      : 'sign-in'
   const [email, setEmail] =
     useState('')
   const [password, setPassword] =
     useState('')
   const [displayName, setDisplayName] =
+    useState('')
+  const [confirmPassword, setConfirmPassword] =
     useState('')
   const [error, setError] =
     useState('')
@@ -51,14 +62,13 @@ function AuthPage() {
     event: FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault()
+    setError('')
 
     if (isSubmitting) {
       return
     }
 
-    setError('')
-
-    if (!email.includes('@')) {
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
       setError(t('system.auth.invalidEmail'))
       return
     }
@@ -68,42 +78,62 @@ function AuthPage() {
       return
     }
 
-    setIsSubmitting(true)
+    if (mode === 'register') {
+      const name = displayName.trim()
 
-    try {
-      if (mode === 'register') {
-        const name = displayName.trim()
+      if (!name) {
+        setError(t('system.auth.missingName'))
+        return
+      }
 
-        if (!name) {
-          setError(t('system.auth.missingName'))
-          return
-        }
+      if (password !== confirmPassword) {
+        setError(t('system.auth.passwordsDoNotMatch'))
+        return
+      }
 
+      setIsSubmitting(true)
+
+      try {
         await register({
           email: email.trim().toLowerCase(),
           password,
           displayName: name,
         })
-      } else {
-        await signIn(
-          email.trim().toLowerCase(),
-          password,
+        navigate('/profile')
+      } catch {
+        setError(t('system.auth.requestFailed'))
+      } finally {
+        setIsSubmitting(false)
+      } catch (error) {
+        setError(
+          axios.isAxiosError(error) && !error.response
+            ? t('system.auth.apiUnavailable')
+            : t('system.auth.requestFailed'),
         )
+      } finally {
+        setIsSubmitting(false)
       }
 
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await signIn(
+        email.trim().toLowerCase(),
+        password,
+      )
       navigate('/profile')
-    } catch {
-      setError(t('system.auth.requestFailed'))
+    } catch (error) {
+      setError(
+        axios.isAxiosError(error) && !error.response
+          ? t('system.auth.apiUnavailable')
+          : t('system.auth.requestFailed'),
+      )
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const changeMode = (
-    nextMode: AuthMode,
-  ) => {
-    setMode(nextMode)
-    setError('')
   }
 
   const handleSocialAuth = async (
@@ -120,15 +150,38 @@ function AuthPage() {
     setError('')
     setIsSubmitting(true)
 
+    const socialAccount = {
+      displayName: provider,
+      email: `${providerKey}-user@amtlis.local`,
+      password: 'local-oauth',
+    }
+
     try {
       await register({
-        displayName: provider,
-        email: `${providerKey}-user@amtlis.local`,
-        password: 'local-oauth',
+        ...socialAccount,
       })
       navigate('/profile')
-    } catch {
-      setError(t('system.auth.requestFailed'))
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        try {
+          await signIn(socialAccount.email, socialAccount.password)
+          navigate('/profile')
+          return
+        } catch (signInError) {
+          setError(
+            axios.isAxiosError(signInError) && !signInError.response
+              ? t('system.auth.apiUnavailable')
+              : t('system.auth.requestFailed'),
+          )
+          return
+        }
+      }
+
+      setError(
+        axios.isAxiosError(error) && !error.response
+          ? t('system.auth.apiUnavailable')
+          : t('system.auth.requestFailed'),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -157,8 +210,7 @@ function AuthPage() {
           <button
             className={mode === 'sign-in' ? 'is-active' : ''}
             type="button"
-            onClick={() => changeMode('sign-in')}
-            disabled={isSubmitting}
+            onClick={() => navigate('/login')}
           >
             {t('system.auth.signIn')}
           </button>
@@ -166,53 +218,58 @@ function AuthPage() {
           <button
             className={mode === 'register' ? 'is-active' : ''}
             type="button"
-            onClick={() => changeMode('register')}
-            disabled={isSubmitting}
+            onClick={() => navigate('/register')}
           >
             {t('system.auth.register')}
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="account-form"
-          aria-busy={isSubmitting}
-        >
+        <AuthForm onSubmit={handleSubmit} aria-busy={isSubmitting}>
           {mode === 'register' && (
-            <label>
-              {t('system.auth.displayName')}
-              <input
+            <AuthFormField
+              label={t('system.auth.displayName')}
                 value={displayName}
                 maxLength={40}
-                autoComplete="name"
-                onChange={(event) => setDisplayName(event.target.value)}
+              autoComplete="name"
+                required
                 disabled={isSubmitting}
-              />
-            </label>
+                onChange={(event) => setDisplayName(event.target.value)}
+            />
           )}
 
-          <label>
-            {t('system.auth.email')}
-            <input
+          <AuthFormField
+              label={t('system.auth.email')}
               type="email"
               value={email}
               autoComplete="email"
-              onChange={(event) => setEmail(event.target.value)}
+              required
               disabled={isSubmitting}
-            />
-          </label>
+              onChange={(event) => setEmail(event.target.value)}
+          />
 
-          <label>
-            {t('system.auth.password')}
-            <input
+          <AuthFormField
+              label={t('system.auth.password')}
               type="password"
               value={password}
               minLength={6}
               autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-              onChange={(event) => setPassword(event.target.value)}
+              required
               disabled={isSubmitting}
+              onChange={(event) => setPassword(event.target.value)}
+          />
+
+          {mode === 'register' && (
+            <AuthFormField
+              label={t('system.auth.confirmPassword')}
+              type="password"
+              value={confirmPassword}
+              minLength={6}
+              autoComplete="new-password"
+              required
+              disabled={isSubmitting}
+              onChange={(event) => setConfirmPassword(event.target.value)}
             />
-          </label>
+          )}
 
           {error && (
             <p className="account-error" role="alert">
@@ -220,18 +277,15 @@ function AuthPage() {
             </p>
           )}
 
-          <button
-            className="account-primary"
-            type="submit"
-            disabled={isSubmitting}
+          <AuthSubmitButton
+            isLoading={isSubmitting}
+            loadingLabel={t('system.auth.submitting')}
           >
-            {isSubmitting
-              ? t('system.auth.loading')
-              : mode === 'sign-in'
-                ? t('system.auth.signIn')
-                : t('system.auth.createAccount')}
-          </button>
-        </form>
+            {mode === 'sign-in'
+              ? t('system.auth.signIn')
+              : t('system.auth.createAccount')}
+          </AuthSubmitButton>
+        </AuthForm>
 
         <div className="social-auth">
           <div className="social-auth-divider">

@@ -186,6 +186,16 @@ function App() {
       />
 
       <Route
+        path="login"
+        element={<AuthPage />}
+      />
+
+      <Route
+        path="register"
+        element={<AuthPage />}
+      />
+
+      <Route
         path="*"
         element={
           <Navigate
