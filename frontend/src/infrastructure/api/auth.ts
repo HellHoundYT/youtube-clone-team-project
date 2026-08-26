@@ -14,9 +14,13 @@ import type {
 interface AuthResponse {
   user: User
   accessToken: string
+  refreshToken: string
 }
 
 let accessToken:
+string | null = null
+
+let refreshToken:
 string | null = null
 
 function setAccessToken(
@@ -24,6 +28,12 @@ function setAccessToken(
 ) {
   accessToken =
     token
+}
+
+function setRefreshToken(
+  token: string | null,
+) {
+  refreshToken = token
 }
 
 function authorizedConfig() {
@@ -90,6 +100,9 @@ AuthGateway = {
     setAccessToken(
       response.data.accessToken,
     )
+    setRefreshToken(
+      response.data.refreshToken,
+    )
 
     return response.data.user
   },
@@ -110,6 +123,9 @@ AuthGateway = {
 
     setAccessToken(
       response.data.accessToken,
+    )
+    setRefreshToken(
+      response.data.refreshToken,
     )
 
     return response.data.user
@@ -135,16 +151,23 @@ AuthGateway = {
   },
 
   async signOut() {
-    await axios.post(
+    if (refreshToken) {
+      await axios.post(
       '/api/v1/auth/logout',
-      undefined,
+      { refreshToken },
       {
         withCredentials:
           true,
+
+        ...authorizedConfig(),
       },
-    )
+      )
+    }
 
     setAccessToken(
+      null,
+    )
+    setRefreshToken(
       null,
     )
   },
