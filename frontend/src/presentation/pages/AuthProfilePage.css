@@ -88,7 +88,8 @@
 
 .account-form input,
 .profile-form input,
-.profile-form textarea {
+.profile-form textarea,
+.profile-form select {
   width: 100%;
   padding: 12px 13px;
   color: #fff;
@@ -101,7 +102,8 @@
 
 .account-form input:focus,
 .profile-form input:focus,
-.profile-form textarea:focus {
+.profile-form textarea:focus,
+.profile-form select:focus {
   border-color: #8067f7;
   box-shadow: 0 0 0 3px rgba(128, 103, 247, 0.16);
 }
@@ -148,6 +150,9 @@
 
 .profile-hero p:last-child { margin: 8px 0 0; color: #b7aafb; }
 .profile-avatar { width: 76px; height: 76px; display: grid; place-items: center; flex: 0 0 auto; color: #fff; background: linear-gradient(135deg, #876eff, #4c33bf); border-radius: 50%; font-size: 26px; font-weight: 900; }
+.profile-avatar-control { display: grid; gap: 7px; color: #cfc5ff; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; }
+.profile-avatar-control input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+.profile-avatar img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
 .profile-grid { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 22px; }
 .profile-form { padding: 28px; }
 .profile-form-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 6px; }

@@ -8,6 +8,9 @@ import type {
 } from './types'
 
 export interface AuthGateway {
+  restoreSession():
+  Promise<User | null>
+
   getCurrentUser():
   Promise<User | null>
 

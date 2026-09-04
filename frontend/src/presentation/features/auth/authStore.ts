@@ -19,6 +19,9 @@ interface AuthState {
   profile:
     AccountProfile | null
 
+  isInitialized:
+    boolean
+
   loadCurrentUser:
     () => Promise<void>
 
@@ -70,16 +73,26 @@ export const useAuthStore =
     (set) => ({
       profile: null,
 
+      isInitialized: false,
+
       loadCurrentUser:
         async () => {
-          const user =
-            await getAuthService()
-              .getCurrentUser()
+          try {
+            const user =
+              await getAuthService()
+                .restoreSession()
 
-          set({
-            profile:
-              user,
-          })
+            set({
+              profile:
+                user,
+              isInitialized: true,
+            })
+          } catch {
+            set({
+              profile: null,
+              isInitialized: true,
+            })
+          }
         },
 
       signIn:
@@ -97,6 +110,7 @@ export const useAuthStore =
           set({
             profile:
               user,
+            isInitialized: true,
           })
         },
 
@@ -113,6 +127,7 @@ export const useAuthStore =
           set({
             profile:
               user,
+            isInitialized: true,
           })
         },
 
@@ -140,6 +155,7 @@ export const useAuthStore =
           set({
             profile:
               null,
+            isInitialized: true,
           })
         },
     }),

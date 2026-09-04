@@ -4,6 +4,7 @@ import {
 } from 'react'
 import {
   Link,
+  useLocation,
   useNavigate,
 } from 'react-router-dom'
 import {
@@ -27,6 +28,8 @@ type SocialProvider =
 function AuthPage() {
   const navigate =
     useNavigate()
+  const location =
+    useLocation()
   const {
     t,
   } = useAppTranslation()
@@ -46,6 +49,11 @@ function AuthPage() {
     useState('')
   const [isSubmitting, setIsSubmitting] =
     useState(false)
+  const destination =
+    (location.state as {
+      from?: string
+    } | null)?.from ??
+    '/profile'
 
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
@@ -91,7 +99,12 @@ function AuthPage() {
         )
       }
 
-      navigate('/profile')
+      navigate(
+        destination,
+        {
+          replace: true,
+        },
+      )
     } catch {
       setError(t('system.auth.requestFailed'))
     } finally {
@@ -126,7 +139,12 @@ function AuthPage() {
         email: `${providerKey}-user@amtlis.local`,
         password: 'local-oauth',
       })
-      navigate('/profile')
+      navigate(
+        destination,
+        {
+          replace: true,
+        },
+      )
     } catch {
       setError(t('system.auth.requestFailed'))
     } finally {

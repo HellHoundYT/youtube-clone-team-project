@@ -120,6 +120,8 @@ const systemEn = {
       email: 'Email',
       about: 'About',
       aboutPlaceholder: 'Tell viewers a little about yourself',
+      changeAvatar: 'Change avatar',
+      theme: 'Profile theme',
       saveChanges: 'Save changes',
       account: 'Account',
       status: 'Status',

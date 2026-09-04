@@ -11,6 +11,9 @@ import type {
 } from './types'
 
 export interface AuthService {
+  restoreSession():
+  Promise<User | null>
+
   getCurrentUser():
   Promise<User | null>
 
@@ -33,6 +36,9 @@ export function createAuthService(
   gateway: AuthGateway,
 ): AuthService {
   return {
+    restoreSession:
+      gateway.restoreSession,
+
     getCurrentUser:
       gateway.getCurrentUser,
 

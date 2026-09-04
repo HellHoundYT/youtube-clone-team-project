@@ -122,6 +122,8 @@ const systemUk = {
       email: 'Електронна пошта',
       about: 'Про себе',
       aboutPlaceholder: 'Розкажіть глядачам трохи про себе',
+      changeAvatar: 'Змінити аватар',
+      theme: 'Тема профілю',
       saveChanges: 'Зберегти зміни',
       account: 'Обліковий запис',
       status: 'Стан',

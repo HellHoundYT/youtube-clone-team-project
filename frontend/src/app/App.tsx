@@ -25,6 +25,7 @@ import ThemesPage from '../presentation/pages/ThemesPage'
 import UploadPage from '../presentation/pages/UploadPage'
 import WatchPage from '../presentation/pages/WatchPage'
 import WatchPartyPage from '../presentation/pages/WatchPartyPage'
+import ProtectedRoute from '../presentation/components/auth/ProtectedRoute'
 import './App.css'
 import '../shared/theme/theme-runtime.css'
 import {
@@ -146,16 +147,14 @@ function App() {
           }
         />
 
-        <Route
-          path="upload"
-          element={
-            <UploadPage uploadService={uploadService} />
-          }
-        />
+      <Route
+        path="upload"
+        element={<ProtectedRoute><UploadPage uploadService={uploadService} /></ProtectedRoute>}
+      />
 
-        <Route
-          path="profile"
-          element={<ProfilePage />}
+      <Route
+        path="profile"
+        element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
         />
 
         <Route

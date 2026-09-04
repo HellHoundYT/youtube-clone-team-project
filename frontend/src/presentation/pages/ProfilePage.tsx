@@ -1,5 +1,7 @@
 import {
   type FormEvent,
+  type ChangeEvent,
+  useEffect,
   useState,
 } from 'react'
 import {
@@ -13,6 +15,17 @@ import {
 import {
   useAppTranslation,
 } from '../../shared/i18n'
+import {
+  defaultThemeId,
+  themeCatalog,
+} from '../../shared/theme/themeCatalog'
+import {
+  useThemeStore,
+} from '../../shared/theme/useThemeStore'
+import {
+  loadProfilePreferences,
+  saveProfilePreferences,
+} from '../../infrastructure/storage/profilePreferences'
 import './AuthProfilePage.css'
 
 function ProfilePage() {
@@ -27,12 +40,38 @@ function ProfilePage() {
     useAuthStore((state) => state.updateProfile)
   const signOut =
     useAuthStore((state) => state.signOut)
+  const selectedThemeId =
+    useThemeStore((state) => state.selectedThemeId)
+  const setTheme =
+    useThemeStore((state) => state.setTheme)
   const [form, setForm] =
     useState<AccountProfile | null>(profile)
+  const [avatarDataUrl, setAvatarDataUrl] =
+    useState<string | null>(
+      () => profile
+        ? loadProfilePreferences(profile.id).avatarDataUrl
+        : null,
+    )
   const [saved, setSaved] =
     useState(false)
   const [saveError, setSaveError] =
     useState('')
+  const profileId =
+    profile?.id
+
+  useEffect(() => {
+    if (!profileId) {
+      return
+    }
+
+    const preferences =
+      loadProfilePreferences(profileId)
+    const themeId =
+      preferences.themeId ??
+      defaultThemeId
+
+    setTheme(themeId)
+  }, [profileId, setTheme])
 
   if (!profile || !form) {
     return (
@@ -99,10 +138,72 @@ function ProfilePage() {
     navigate('/')
   }
 
+  const handleAvatarChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file =
+      event.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    const reader =
+      new FileReader()
+
+    reader.addEventListener(
+      'load',
+      () => {
+        const nextAvatar =
+          typeof reader.result === 'string'
+            ? reader.result
+            : null
+
+        setAvatarDataUrl(nextAvatar)
+        saveProfilePreferences(
+          profile.id,
+          {
+            avatarDataUrl: nextAvatar,
+            themeId: selectedThemeId,
+          },
+        )
+      },
+      {
+        once: true,
+      },
+    )
+    reader.readAsDataURL(file)
+  }
+
+  const handleThemeChange = (
+    themeId: string,
+  ) => {
+    setTheme(themeId)
+    saveProfilePreferences(
+      profile.id,
+      {
+        avatarDataUrl,
+        themeId,
+      },
+    )
+  }
+
   return (
     <section className="account-page profile-page">
       <div className="profile-hero">
-        <div className="profile-avatar">{initials}</div>
+        <label className="profile-avatar-control">
+          <span className="profile-avatar">
+            {avatarDataUrl
+              ? <img src={avatarDataUrl} alt="" />
+              : initials}
+          </span>
+          <span>{t('system.profile.changeAvatar')}</span>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={handleAvatarChange}
+          />
+        </label>
         <div>
           <p className="account-eyebrow">{t('system.profile.eyebrow')}</p>
           <h1>{profile.displayName}</h1>
@@ -135,6 +236,19 @@ function ProfilePage() {
           <label>
             {t('system.profile.about')}
             <textarea value={form.bio} maxLength={240} rows={4} placeholder={t('system.profile.aboutPlaceholder')} onChange={(event) => updateField('bio', event.target.value)} />
+          </label>
+          <label>
+            {t('system.profile.theme')}
+            <select
+              value={selectedThemeId}
+              onChange={(event) => handleThemeChange(event.target.value)}
+            >
+              {themeCatalog.map((theme) => (
+                <option key={theme.id} value={theme.id}>
+                  {theme.name}
+                </option>
+              ))}
+            </select>
           </label>
 
           {saveError && (
