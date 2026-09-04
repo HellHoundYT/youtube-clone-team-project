@@ -33,8 +33,15 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(
             options =>
-                options.UseSqlServer(
-                    connectionString));
+            {
+                if (configuration["Database:Provider"] == "InMemory")
+                {
+                    options.UseInMemoryDatabase("YouTubeCloneTests");
+                    return;
+                }
+
+                options.UseSqlServer(connectionString);
+            });
 
         services.Configure<StorageOptions>(
             configuration.GetSection(
