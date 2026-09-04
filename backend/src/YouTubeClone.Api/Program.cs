@@ -1,4 +1,9 @@
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using YouTubeClone.Domain.Users;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Application.Features.Categories;
 using YouTubeClone.Application.Features.Favorites;
@@ -14,6 +19,22 @@ var builder =
     WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"]!))
+        };
+    });
 
 builder.Services.AddOpenApi();
 
@@ -69,6 +90,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -80,3 +102,5 @@ app.MapHub<LiveChatHub>(
     "/hubs/live-chat");
 
 app.Run();
+
+public partial class Program;

@@ -44,6 +44,8 @@ function AuthPage() {
     useState('')
   const [error, setError] =
     useState('')
+  const [isSubmitting, setIsSubmitting] =
+    useState(false)
 
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
@@ -60,27 +62,35 @@ function AuthPage() {
       return
     }
 
-    if (mode === 'register') {
-      const name = displayName.trim()
+    setError('')
+    setIsSubmitting(true)
+    try {
+      if (mode === 'register') {
+        const name = displayName.trim()
 
-      if (!name) {
-        setError(t('system.auth.missingName'))
-        return
+        if (!name) {
+          setError(t('system.auth.missingName'))
+          return
+        }
+
+        await register({
+          email: email.trim().toLowerCase(),
+          password,
+          displayName: name,
+        })
+      } else {
+        await signIn(
+          email.trim().toLowerCase(),
+          password,
+        )
       }
 
-      await register({
-        email: email.trim().toLowerCase(),
-        password,
-        displayName: name,
-      })
-    } else {
-      await signIn(
-        email.trim().toLowerCase(),
-        password,
-      )
+      navigate('/profile')
+    } catch {
+      setError(t('system.auth.requestFailed'))
+    } finally {
+      setIsSubmitting(false)
     }
-
-    navigate('/profile')
   }
 
   const changeMode = (
@@ -129,6 +139,7 @@ function AuthPage() {
             className={mode === 'sign-in' ? 'is-active' : ''}
             type="button"
             onClick={() => changeMode('sign-in')}
+            disabled={isSubmitting}
           >
             {t('system.auth.signIn')}
           </button>
@@ -137,6 +148,7 @@ function AuthPage() {
             className={mode === 'register' ? 'is-active' : ''}
             type="button"
             onClick={() => changeMode('register')}
+            disabled={isSubmitting}
           >
             {t('system.auth.register')}
           </button>
@@ -151,6 +163,7 @@ function AuthPage() {
                 maxLength={40}
                 autoComplete="name"
                 onChange={(event) => setDisplayName(event.target.value)}
+                disabled={isSubmitting}
               />
             </label>
           )}
@@ -162,6 +175,7 @@ function AuthPage() {
               value={email}
               autoComplete="email"
               onChange={(event) => setEmail(event.target.value)}
+              disabled={isSubmitting}
             />
           </label>
 
@@ -173,6 +187,7 @@ function AuthPage() {
               minLength={6}
               autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
               onChange={(event) => setPassword(event.target.value)}
+              disabled={isSubmitting}
             />
           </label>
 
@@ -182,8 +197,10 @@ function AuthPage() {
             </p>
           )}
 
-          <button className="account-primary" type="submit">
-            {mode === 'sign-in'
+          <button className="account-primary" type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? t('system.auth.loading')
+              : mode === 'sign-in'
               ? t('system.auth.signIn')
               : t('system.auth.createAccount')}
           </button>
