@@ -17,23 +17,63 @@ interface AuthResponse {
   refreshToken: string
 }
 
+const accessTokenStorageKey =
+  'amtlis.access-token'
+
+const refreshTokenStorageKey =
+  'amtlis.refresh-token'
+
+function readSessionToken(
+  key: string,
+) {
+  try {
+    return window.sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function saveSessionToken(
+  key: string,
+  token: string | null,
+) {
+  try {
+    if (token) {
+      window.sessionStorage.setItem(key, token)
+      return
+    }
+
+    window.sessionStorage.removeItem(key)
+  } catch {
+    // The application can still use the token in memory when storage is unavailable.
+  }
+}
+
 let accessToken:
-string | null = null
+string | null = readSessionToken(accessTokenStorageKey)
 
 let refreshToken:
-string | null = null
+string | null = readSessionToken(refreshTokenStorageKey)
 
 function setAccessToken(
   token: string | null,
 ) {
   accessToken =
     token
+  saveSessionToken(
+    accessTokenStorageKey,
+    token,
+  )
 }
 
 function setRefreshToken(
   token: string | null,
 ) {
   refreshToken = token
+  saveSessionToken(
+    refreshTokenStorageKey,
+    token,
+  )
 }
 
 function authorizedConfig() {
@@ -151,24 +191,26 @@ AuthGateway = {
   },
 
   async signOut() {
-    if (refreshToken) {
-      await axios.post(
-      '/api/v1/auth/logout',
-      { refreshToken },
-      {
-        withCredentials:
-          true,
+    try {
+      if (refreshToken) {
+        await axios.post(
+          '/api/v1/auth/logout',
+          { refreshToken },
+          {
+            withCredentials:
+              true,
 
-        ...authorizedConfig(),
-      },
+            ...authorizedConfig(),
+          },
+        )
+      }
+    } finally {
+      setAccessToken(
+        null,
+      )
+      setRefreshToken(
+        null,
       )
     }
-
-    setAccessToken(
-      null,
-    )
-    setRefreshToken(
-      null,
-    )
   },
 }
