@@ -100,10 +100,6 @@ function AuthPage() {
           displayName: name,
         })
         navigate('/profile')
-      } catch {
-        setError(t('system.auth.requestFailed'))
-      } finally {
-        setIsSubmitting(false)
       } catch (error) {
         setError(
           axios.isAxiosError(error) && !error.response
