@@ -33,6 +33,7 @@ import {
 import {
   discoveryService,
   videoService,
+  channelService,
   streamService,
   libraryService,
   uploadService,
@@ -78,7 +79,7 @@ function App() {
 
         <Route
           path="channels/:channelId"
-          element={<ChannelPage />}
+          element={<ChannelPage channelService={channelService} />}
         />
 
         <Route
