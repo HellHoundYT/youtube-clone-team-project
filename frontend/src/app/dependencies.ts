@@ -16,6 +16,7 @@ import {
 import {
   createVideoService,
 } from '../application/video/service'
+import { createChannelService } from '../application/channel/service'
 import {
   authGateway,
 } from '../infrastructure/api/auth'
@@ -34,6 +35,7 @@ import {
 import {
   videoGateway,
 } from '../infrastructure/api/videos'
+import { channelGateway } from '../infrastructure/api/channels'
 import {
   liveChatClientFactory as signalRLiveChatClientFactory,
 } from '../infrastructure/signalr/liveChat'
@@ -76,6 +78,8 @@ export const videoService =
   createVideoService(
     videoGateway,
   )
+
+export const channelService = createChannelService(channelGateway)
 
 export const liveChatClientFactory =
   signalRLiveChatClientFactory
