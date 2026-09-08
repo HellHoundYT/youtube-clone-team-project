@@ -121,11 +121,22 @@ function AuthPage() {
     setIsSubmitting(true)
 
     try {
-      await register({
-        displayName: provider,
-        email: `${providerKey}-user@amtlis.local`,
-        password: 'local-oauth',
-      })
+      const email =
+        `${providerKey}-user@amtlis.local`
+
+      try {
+        await register({
+          displayName: provider,
+          email,
+          password: 'local-oauth',
+        })
+      } catch {
+        await signIn(
+          email,
+          'local-oauth',
+        )
+      }
+
       navigate('/profile')
     } catch {
       setError(t('system.auth.requestFailed'))
