@@ -1,5 +1,7 @@
 namespace YouTubeClone.Domain.Users;
 
+using YouTubeClone.Domain.Playlists;
+
 public sealed class User
 {
     public Guid Id { get; set; }
@@ -18,4 +20,7 @@ public sealed class User
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } =
         new List<RefreshToken>();
+
+    public ICollection<Playlist> Playlists { get; set; } =
+        new List<Playlist>();
 }
