@@ -8,6 +8,7 @@ import {
 } from 'react'
 import AppLayout from '../presentation/components/layout/AppLayout'
 import AuthPage from '../presentation/pages/AuthPage'
+import RequireAuth from '../presentation/components/auth/RequireAuth'
 import ChannelPage from '../presentation/pages/ChannelPage'
 import CategoryPage from '../presentation/pages/CategoryPage'
 import FavoritesPage from '../presentation/pages/FavoritesPage'
@@ -146,17 +147,19 @@ function App() {
           }
         />
 
-        <Route
-          path="upload"
-          element={
-            <UploadPage uploadService={uploadService} />
-          }
-        />
+        <Route element={<RequireAuth />}>
+          <Route
+            path="upload"
+            element={
+              <UploadPage uploadService={uploadService} />
+            }
+          />
 
-        <Route
-          path="profile"
-          element={<ProfilePage />}
-        />
+          <Route
+            path="profile"
+            element={<ProfilePage />}
+          />
+        </Route>
 
         <Route
           path="watch-party"

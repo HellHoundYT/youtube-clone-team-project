@@ -19,6 +19,9 @@ interface AuthState {
   profile:
     AccountProfile | null
 
+  isLoading:
+    boolean
+
   loadCurrentUser:
     () => Promise<void>
 
@@ -70,16 +73,25 @@ export const useAuthStore =
     (set) => ({
       profile: null,
 
+      isLoading: true,
+
       loadCurrentUser:
         async () => {
-          const user =
-            await getAuthService()
-              .getCurrentUser()
+          try {
+            const user =
+              await getAuthService()
+                .getCurrentUser()
 
-          set({
-            profile:
-              user,
-          })
+            set({
+              profile:
+                user,
+            })
+          } finally {
+            set({
+              isLoading:
+                false,
+            })
+          }
         },
 
       signIn:
