@@ -53,6 +53,7 @@ const systemUk = {
       continueGoogle: 'Продовжити через Google',
       continueX: 'Продовжити через X',
       continueApple: 'Продовжити через Apple',
+      comingSoon: 'Незабаром',
     },
 
     channels: {

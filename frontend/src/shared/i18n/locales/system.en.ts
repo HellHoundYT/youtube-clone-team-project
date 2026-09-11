@@ -53,6 +53,7 @@ const systemEn = {
       continueGoogle: 'Continue with Google',
       continueX: 'Continue with X',
       continueApple: 'Continue with Apple',
+      comingSoon: 'Coming soon',
     },
 
     channels: {
