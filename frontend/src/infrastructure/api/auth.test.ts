@@ -26,7 +26,10 @@ const user = {
   id: 'user-1',
   email: 'user@example.com',
   displayName: 'User',
-  bio: null,
+  handle: '@user',
+  bio: '',
+  avatarDataUrl: null,
+  themeId: null,
 }
 
 describe(
@@ -141,6 +144,32 @@ describe(
             'amtlis.access-token',
           ),
         ).toBe('access-2')
+      },
+    )
+
+    it(
+      'sends avatar and theme preferences to the profile API',
+      async () => {
+        axiosMock.post.mockResolvedValue({
+          data: { user, accessToken: 'access-1', refreshToken: 'refresh-1' },
+        })
+        axiosMock.put.mockResolvedValue({
+          data: { ...user, avatarDataUrl: 'data:image/png;base64,AA==', themeId: 'cyber-red' },
+        })
+
+        const { authGateway } = await import('./auth')
+        await authGateway.signIn({ email: user.email, password: 'password' })
+        await authGateway.updateCurrentUser({
+          ...user,
+          avatarDataUrl: 'data:image/png;base64,AA==',
+          themeId: 'cyber-red',
+        })
+
+        expect(axiosMock.put).toHaveBeenCalledWith(
+          '/api/v1/users/me',
+          expect.objectContaining({ themeId: 'cyber-red' }),
+          expect.objectContaining({ headers: { Authorization: 'Bearer access-1' } }),
+        )
       },
     )
   },

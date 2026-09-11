@@ -45,4 +45,10 @@ public sealed class UpdateCurrentUserRequestDto
 
     [MaxLength(240)]
     public string Bio { get; init; } = string.Empty;
+
+    [MaxLength(2_000_000)]
+    public string? AvatarDataUrl { get; init; }
+
+    [MaxLength(64)]
+    public string? ThemeId { get; init; }
 }

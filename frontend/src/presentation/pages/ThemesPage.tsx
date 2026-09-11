@@ -16,6 +16,9 @@ import {
 import {
   useThemeStore,
 } from '../../shared/theme/useThemeStore'
+import {
+  useAuthStore,
+} from '../features/auth/authStore'
 import './ThemesPage.css'
 
 const familyOrder:
@@ -548,11 +551,18 @@ function ThemesPage() {
         state.setTheme,
     )
 
-  const resetTheme =
-    useThemeStore(
-      (state) =>
-        state.resetTheme,
-    )
+  const profile = useAuthStore((state) => state.profile)
+  const updateProfile = useAuthStore((state) => state.updateProfile)
+
+  const saveTheme = (themeId: string) => {
+    setTheme(themeId)
+    if (profile) {
+      void updateProfile({
+        ...profile,
+        themeId,
+      })
+    }
+  }
 
   const selectedTheme =
     getThemeById(
@@ -615,7 +625,7 @@ function ThemesPage() {
               defaultThemeId
             }
             onClick={
-              resetTheme
+              () => saveTheme(defaultThemeId)
             }
           >
             {t(
@@ -742,7 +752,7 @@ function ThemesPage() {
                         theme.id
                       }
                       onSelect={() =>
-                        setTheme(
+                        saveTheme(
                           theme.id,
                         )
                       }

@@ -12,6 +12,10 @@ public sealed class User
 
     public string Bio { get; set; } = string.Empty;
 
+    public string? AvatarDataUrl { get; set; }
+
+    public string? ThemeId { get; set; }
+
     public string PasswordHash { get; set; } = string.Empty;
 
     public DateTimeOffset CreatedAt { get; set; }

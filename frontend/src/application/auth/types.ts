@@ -13,4 +13,6 @@ export interface UpdateUserRequest {
   email: string
   handle: string
   bio: string
+  avatarDataUrl: string | null
+  themeId: string | null
 }

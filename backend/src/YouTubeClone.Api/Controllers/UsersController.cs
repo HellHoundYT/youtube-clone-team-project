@@ -62,10 +62,12 @@ public sealed class UsersController : ControllerBase
         user.UserName = userName;
         user.DisplayName = request.DisplayName.Trim();
         user.Bio = request.Bio.Trim();
+        user.AvatarDataUrl = request.AvatarDataUrl;
+        user.ThemeId = request.ThemeId;
         await _db.SaveChangesAsync(cancellationToken);
         return Ok(Map(user));
     }
 
     private static CurrentUserDto Map(User user) =>
-        new(user.Id, user.Email, user.DisplayName, $"@{user.UserName}", user.Bio);
+        new(user.Id, user.Email, user.DisplayName, $"@{user.UserName}", user.Bio, user.AvatarDataUrl, user.ThemeId);
 }

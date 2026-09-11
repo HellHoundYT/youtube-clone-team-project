@@ -11,6 +11,9 @@ import type {
 import type {
   User,
 } from '../../../domain/user/types'
+import {
+  useThemeStore,
+} from '../../../shared/theme/useThemeStore'
 
 export type AccountProfile =
   User
@@ -86,6 +89,9 @@ export const useAuthStore =
               profile:
                 user,
             })
+            if (user?.themeId) {
+              useThemeStore.getState().setTheme(user.themeId)
+            }
           } finally {
             set({
               isLoading:
@@ -110,6 +116,9 @@ export const useAuthStore =
             profile:
               user,
           })
+          if (user.themeId) {
+            useThemeStore.getState().setTheme(user.themeId)
+          }
         },
 
       register:

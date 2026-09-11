@@ -24,6 +24,8 @@ public class AppDbContext : DbContext
             entity.Property(user => user.UserName).HasMaxLength(64).IsRequired();
             entity.Property(user => user.DisplayName).HasMaxLength(100).IsRequired();
             entity.Property(user => user.Bio).HasMaxLength(240).IsRequired();
+            entity.Property(user => user.AvatarDataUrl).HasMaxLength(2_000_000);
+            entity.Property(user => user.ThemeId).HasMaxLength(64);
             entity.Property(user => user.PasswordHash).HasMaxLength(512).IsRequired();
             entity.HasIndex(user => user.Email).IsUnique();
             entity.HasIndex(user => user.UserName).IsUnique();

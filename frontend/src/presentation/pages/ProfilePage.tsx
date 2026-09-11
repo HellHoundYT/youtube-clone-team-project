@@ -102,7 +102,11 @@ function ProfilePage() {
   return (
     <section className="account-page profile-page">
       <div className="profile-hero">
-        <div className="profile-avatar">{initials}</div>
+        <div className="profile-avatar">
+          {profile.avatarDataUrl
+            ? <img src={profile.avatarDataUrl} alt="" />
+            : initials}
+        </div>
         <div>
           <p className="account-eyebrow">{t('system.profile.eyebrow')}</p>
           <h1>{profile.displayName}</h1>
@@ -135,6 +139,10 @@ function ProfilePage() {
           <label>
             {t('system.profile.about')}
             <textarea value={form.bio} maxLength={240} rows={4} placeholder={t('system.profile.aboutPlaceholder')} onChange={(event) => updateField('bio', event.target.value)} />
+          </label>
+          <label>
+            Avatar data URL
+            <input value={form.avatarDataUrl ?? ''} onChange={(event) => updateField('avatarDataUrl', event.target.value || null)} />
           </label>
 
           {saveError && (

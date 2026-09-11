@@ -31,6 +31,8 @@ const user: User = {
   displayName: 'User',
   handle: 'user',
   bio: '',
+  avatarDataUrl: null,
+  themeId: null,
 }
 
 function AuthPage() {
