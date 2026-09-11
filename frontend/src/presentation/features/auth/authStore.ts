@@ -11,6 +11,9 @@ import type {
 import type {
   User,
 } from '../../../domain/user/types'
+import {
+  useThemeStore,
+} from '../../../shared/theme/useThemeStore'
 
 export type AccountProfile =
   User
@@ -18,6 +21,9 @@ export type AccountProfile =
 interface AuthState {
   profile:
     AccountProfile | null
+
+  isLoading:
+    boolean
 
   loadCurrentUser:
     () => Promise<void>
@@ -70,16 +76,28 @@ export const useAuthStore =
     (set) => ({
       profile: null,
 
+      isLoading: true,
+
       loadCurrentUser:
         async () => {
-          const user =
-            await getAuthService()
-              .getCurrentUser()
+          try {
+            const user =
+              await getAuthService()
+                .getCurrentUser()
 
-          set({
-            profile:
-              user,
-          })
+            set({
+              profile:
+                user,
+            })
+            if (user?.themeId) {
+              useThemeStore.getState().setTheme(user.themeId)
+            }
+          } finally {
+            set({
+              isLoading:
+                false,
+            })
+          }
         },
 
       signIn:
@@ -98,6 +116,9 @@ export const useAuthStore =
             profile:
               user,
           })
+          if (user.themeId) {
+            useThemeStore.getState().setTheme(user.themeId)
+          }
         },
 
       register:

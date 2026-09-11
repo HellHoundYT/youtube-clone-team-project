@@ -1,4 +1,6 @@
-import axios from 'axios'
+import axios, {
+  type AxiosResponse,
+} from 'axios'
 import type {
   AuthGateway,
 } from '../../application/auth/gateway'
@@ -17,65 +19,140 @@ interface AuthResponse {
   refreshToken: string
 }
 
+const accessTokenStorageKey =
+  'amtlis.access-token'
+
+const refreshTokenStorageKey =
+  'amtlis.refresh-token'
+
+function readSessionToken(
+  key: string,
+) {
+  try {
+    return window.sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function saveSessionToken(
+  key: string,
+  token: string | null,
+) {
+  try {
+    if (token) {
+      window.sessionStorage.setItem(key, token)
+      return
+    }
+
+    window.sessionStorage.removeItem(key)
+  } catch {
+    // The token remains available in memory when storage is unavailable.
+  }
+}
+
 let accessToken:
-string | null = null
+string | null = readSessionToken(accessTokenStorageKey)
 
 let refreshToken:
-string | null = null
+string | null = readSessionToken(refreshTokenStorageKey)
 
 function setAccessToken(
   token: string | null,
 ) {
   accessToken =
     token
+  saveSessionToken(
+    accessTokenStorageKey,
+    token,
+  )
 }
 
 function setRefreshToken(
   token: string | null,
 ) {
   refreshToken = token
+  saveSessionToken(
+    refreshTokenStorageKey,
+    token,
+  )
 }
 
-function authorizedConfig() {
-  if (!accessToken) {
-    throw new Error(
-      'No authenticated user.',
-    )
-  }
-
+function authorizedConfig(
+  token: string,
+) {
   return {
     headers: {
       Authorization:
-        `Bearer ${accessToken}`,
+        `Bearer ${token}`,
     },
   }
 }
 
-function optionalAuthorizedConfig() {
-  return accessToken
-    ? {
-        headers: {
-          Authorization:
-            `Bearer ${accessToken}`,
-        },
-      }
-    : {}
+async function refreshAccessToken() {
+  if (!refreshToken) {
+    throw new Error(
+      'No refresh token is available.',
+    )
+  }
+
+  const response =
+    await axios.post<AuthResponse>(
+      '/api/v1/auth/refresh',
+      { refreshToken },
+      {
+        withCredentials:
+          true,
+      },
+    )
+
+  setAccessToken(
+    response.data.accessToken,
+  )
+  setRefreshToken(
+    response.data.refreshToken,
+  )
+
+  return response.data.accessToken
+}
+
+async function withAuthenticatedRequest<T>(
+  request: (token: string) => Promise<AxiosResponse<T>>,
+) {
+  const token =
+    accessToken ?? await refreshAccessToken()
+
+  try {
+    return await request(token)
+  } catch (error) {
+    if (!axios.isAxiosError(error) || error.response?.status !== 401) {
+      throw error
+    }
+
+    return request(
+      await refreshAccessToken(),
+    )
+  }
 }
 
 export const authGateway:
 AuthGateway = {
   async getCurrentUser() {
+    if (!accessToken && !refreshToken) {
+      return null
+    }
+
     try {
       const response =
-        await axios.get<User>(
+        await withAuthenticatedRequest((token) => axios.get<User>(
           '/api/v1/users/me',
           {
             withCredentials:
               true,
 
-            ...optionalAuthorizedConfig(),
+            ...authorizedConfig(token),
           },
-        )
+        ))
 
       return response.data
     } catch {
@@ -136,39 +213,41 @@ AuthGateway = {
       UpdateUserRequest,
   ) {
     const response =
-      await axios.put<User>(
+      await withAuthenticatedRequest((token) => axios.put<User>(
         '/api/v1/users/me',
         request,
         {
           withCredentials:
             true,
 
-          ...authorizedConfig(),
+          ...authorizedConfig(token),
         },
-      )
+      ))
 
     return response.data
   },
 
   async signOut() {
-    if (refreshToken) {
-      await axios.post(
-      '/api/v1/auth/logout',
-      { refreshToken },
-      {
-        withCredentials:
-          true,
+    try {
+      if (refreshToken) {
+        await withAuthenticatedRequest((token) => axios.post(
+          '/api/v1/auth/logout',
+          { refreshToken },
+          {
+            withCredentials:
+              true,
 
-        ...authorizedConfig(),
-      },
+            ...authorizedConfig(token),
+          },
+        ))
+      }
+    } finally {
+      setAccessToken(
+        null,
+      )
+      setRefreshToken(
+        null,
       )
     }
-
-    setAccessToken(
-      null,
-    )
-    setRefreshToken(
-      null,
-    )
   },
 }

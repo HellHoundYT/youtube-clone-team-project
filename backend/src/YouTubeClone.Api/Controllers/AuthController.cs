@@ -103,6 +103,6 @@ public sealed class AuthController : ControllerBase
         return new AuthResponseDto(Map(user), new JwtSecurityTokenHandler().WriteToken(token), rawRefreshToken);
     }
 
-    private static CurrentUserDto Map(User user) => new(user.Id, user.Email, user.DisplayName, $"@{user.UserName}", user.Bio);
+    private static CurrentUserDto Map(User user) => new(user.Id, user.Email, user.DisplayName, $"@{user.UserName}", user.Bio, user.AvatarDataUrl, user.ThemeId);
     private static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 }

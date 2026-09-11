@@ -1,7 +1,8 @@
 .account-page {
   width: min(100%, 1040px);
   margin: 0 auto;
-  padding: 40px 0 72px;
+  box-sizing: border-box;
+  padding: 40px 16px 72px;
 }
 
 .auth-page,
@@ -21,6 +22,7 @@
 }
 
 .auth-card {
+  box-sizing: border-box;
   width: min(100%, 460px);
   padding: 34px;
 }
@@ -120,7 +122,7 @@
 .account-primary { color: #fff; background: #6547e7; }
 .account-primary:hover { background: #785ff0; }
 .account-primary:disabled,
-.social-auth-button:disabled { cursor: wait; opacity: 0.64; }
+.social-auth-button:disabled { cursor: not-allowed; opacity: 0.64; }
 .account-secondary { color: #f0eff8; background: #22242e; border: 1px solid #363947; }
 .account-secondary:hover { background: #2b2e3a; }
 .account-error { margin: -2px 0 0; color: #ff8f9b; font-size: 14px; }
@@ -148,6 +150,7 @@
 
 .profile-hero p:last-child { margin: 8px 0 0; color: #b7aafb; }
 .profile-avatar { width: 76px; height: 76px; display: grid; place-items: center; flex: 0 0 auto; color: #fff; background: linear-gradient(135deg, #876eff, #4c33bf); border-radius: 50%; font-size: 26px; font-weight: 900; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .profile-grid { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 22px; }
 .profile-form { padding: 28px; }
 .profile-form-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
@@ -161,7 +164,7 @@
 .profile-side-card dd { margin: 0; color: #e2e3ea; font-weight: 700; text-align: right; }
 
 @media (max-width: 760px) {
-  .account-page { padding: 24px 0 48px; }
+  .account-page { padding: 24px 16px 48px; }
   .auth-card, .profile-form, .profile-side-card { padding: 22px; }
   .profile-grid { grid-template-columns: 1fr; }
   .profile-hero { padding: 22px; }
