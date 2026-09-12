@@ -9,7 +9,13 @@ namespace YouTubeClone.Api.Tests;
 public sealed class ChannelsApiIntegrationTests : IClassFixture<AuthApiFactory>
 {
     private readonly HttpClient _client;
-    public ChannelsApiIntegrationTests(AuthApiFactory factory) => _client = factory.CreateClient();
+    private readonly AuthApiFactory _factory;
+
+    public ChannelsApiIntegrationTests(AuthApiFactory factory)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+    }
 
     [Fact]
     public async Task Authenticated_user_can_create_subscribe_and_unsubscribe()
@@ -22,9 +28,27 @@ public sealed class ChannelsApiIntegrationTests : IClassFixture<AuthApiFactory>
         Assert.NotNull(channel);
 
         Assert.Equal(HttpStatusCode.NoContent, (await _client.PostAsync($"/api/v1/channels/{channel.Id}/subscribe", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.PostAsync($"/api/v1/channels/{channel.Id}/subscribe", null)).StatusCode);
+
+        var subscribedChannel = await _client.GetFromJsonAsync<ChannelResponse>($"/api/v1/channels/{channel.Id}");
+        Assert.Equal(1, subscribedChannel?.SubscriberCount);
+
         var subscriptions = await _client.GetFromJsonAsync<List<ChannelResponse>>("/api/v1/channels/subscriptions");
         Assert.Contains(subscriptions!, item => item.Id == channel.Id);
         Assert.Equal(HttpStatusCode.NoContent, (await _client.DeleteAsync($"/api/v1/channels/{channel.Id}/subscribe")).StatusCode);
+
+        var unsubscribedChannel = await _client.GetFromJsonAsync<ChannelResponse>($"/api/v1/channels/{channel.Id}");
+        Assert.Equal(0, unsubscribedChannel?.SubscriberCount);
+    }
+
+    [Fact]
+    public async Task Subscription_actions_require_an_authenticated_user()
+    {
+        var anonymous = _factory.CreateClient();
+
+        var response = await anonymous.PostAsync($"/api/v1/channels/{Guid.NewGuid()}/subscribe", null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     private async Task<AuthResponseDto> RegisterAsync()

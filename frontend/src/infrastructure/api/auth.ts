@@ -51,6 +51,10 @@ function authorizedConfig() {
   }
 }
 
+export function getAuthenticatedConfig() {
+  return authorizedConfig()
+}
+
 function optionalAuthorizedConfig() {
   return accessToken
     ? {
