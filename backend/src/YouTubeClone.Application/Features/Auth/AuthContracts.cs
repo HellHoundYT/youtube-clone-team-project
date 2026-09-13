@@ -5,7 +5,9 @@ public sealed record CurrentUserModel(
     string Email,
     string DisplayName,
     string Handle,
-    string Bio);
+    string Bio,
+    string? AvatarPath,
+    string? ThemeId);
 
 public sealed record AuthSession(
     CurrentUserModel User,
