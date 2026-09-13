@@ -5,7 +5,9 @@ public sealed record CurrentUserDto(
     string Email,
     string DisplayName,
     string Handle,
-    string Bio);
+    string Bio,
+    string? AvatarUrl,
+    string? ThemeId);
 
 public sealed record AuthResponseDto(
     CurrentUserDto User,
