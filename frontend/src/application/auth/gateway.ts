@@ -23,5 +23,9 @@ export interface AuthGateway {
     request: UpdateUserRequest,
   ): Promise<User>
 
+  uploadAvatar(
+    file: File,
+  ): Promise<User>
+
   signOut(): Promise<void>
 }
