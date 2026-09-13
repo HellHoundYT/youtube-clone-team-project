@@ -188,6 +188,30 @@ AuthGateway = {
     return response.data
   },
 
+  async uploadAvatar(
+    file: File,
+  ) {
+    const form = new FormData()
+    form.append('file', file)
+
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.post<User>(
+            '/api/v1/users/me/avatar',
+            form,
+            {
+              withCredentials:
+                true,
+
+              ...authorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
   async signOut() {
     try {
       await axios.post(
