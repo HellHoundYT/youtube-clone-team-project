@@ -102,8 +102,8 @@ public sealed class VideosController :
                     page,
                     pageSize,
                     category,
-                    channelId,
-                    cancellationToken);
+                    cancellationToken,
+                    channelId);
 
         return Ok(
             videos);
