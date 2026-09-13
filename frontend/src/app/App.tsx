@@ -37,6 +37,7 @@ import {
   videoService,
   streamService,
   libraryService,
+  playlistService,
   uploadService,
   liveChatClientFactory,
   liveChatSessionStore,
@@ -109,11 +110,6 @@ function App() {
         />
 
         <Route
-          path="playlists"
-          element={<PlaylistsPage />}
-        />
-
-        <Route
           path="streamers"
           element={
             <StreamsPage streamService={streamService} />
@@ -163,6 +159,13 @@ function App() {
           <Route
             path="profile"
             element={<ProfilePage />}
+          />
+
+          <Route
+            path="playlists"
+            element={
+              <PlaylistsPage playlistService={playlistService} />
+            }
           />
         </Route>
 
