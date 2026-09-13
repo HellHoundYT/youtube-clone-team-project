@@ -141,6 +141,38 @@ namespace YouTubeClone.Infrastructure.Persistence.Migrations
                     b.ToTable("CommentReactions", (string)null);
                 });
 
+            modelBuilder.Entity("YouTubeClone.Domain.Playlists.Playlist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Playlists", (string)null);
+                });
+
             modelBuilder.Entity("YouTubeClone.Domain.Users.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -259,6 +291,15 @@ namespace YouTubeClone.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Comment");
+                });
+
+            modelBuilder.Entity("YouTubeClone.Domain.Playlists.Playlist", b =>
+                {
+                    b.HasOne("YouTubeClone.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("YouTubeClone.Domain.Users.RefreshToken", b =>
