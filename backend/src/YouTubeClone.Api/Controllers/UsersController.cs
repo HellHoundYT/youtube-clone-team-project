@@ -2,10 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Api.DTOs.Auth;
-using YouTubeClone.Domain.Users;
-using YouTubeClone.Infrastructure.Persistence;
+using YouTubeClone.Application.Features.Auth;
+using YouTubeClone.Application.Features.Users;
 
 namespace YouTubeClone.Api.Controllers;
 
@@ -14,19 +13,27 @@ namespace YouTubeClone.Api.Controllers;
 [Route("api/v1/users")]
 public sealed class UsersController : ControllerBase
 {
-    private readonly AppDbContext _db;
+    private readonly IUserProfileService _userProfileService;
 
-    public UsersController(AppDbContext db) => _db = db;
+    public UsersController(IUserProfileService userProfileService)
+    {
+        _userProfileService = userProfileService;
+    }
 
     [HttpGet("me")]
-    public async Task<ActionResult<CurrentUserDto>> Me(CancellationToken cancellationToken)
+    public async Task<ActionResult<CurrentUserDto>> Me(
+        CancellationToken cancellationToken)
     {
-        var subject = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        if (!Guid.TryParse(subject, out var userId))
+        var userId = GetUserId();
+        if (userId is null)
+        {
             return Unauthorized();
+        }
 
-        var user = await _db.Users.FindAsync([userId], cancellationToken);
+        var user = await _userProfileService.GetCurrentUserAsync(
+            userId.Value,
+            cancellationToken);
+
         return user is null
             ? Unauthorized()
             : Ok(Map(user));
@@ -37,35 +44,59 @@ public sealed class UsersController : ControllerBase
         UpdateCurrentUserRequestDto request,
         CancellationToken cancellationToken)
     {
-        var subject = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        if (!Guid.TryParse(subject, out var userId))
+        var userId = GetUserId();
+        if (userId is null)
+        {
             return Unauthorized();
+        }
 
-        var user = await _db.Users.FindAsync([userId], cancellationToken);
-        if (user is null)
-            return Unauthorized();
+        var result = await _userProfileService.UpdateCurrentUserAsync(
+            userId.Value,
+            new UpdateUserProfileCommand(
+                request.Email,
+                request.DisplayName,
+                request.Handle,
+                request.Bio),
+            cancellationToken);
 
-        var email = request.Email.Trim().ToLowerInvariant();
-        var userName = request.Handle.Trim().TrimStart('@');
-        if (string.IsNullOrWhiteSpace(userName))
-            return BadRequest(new { message = "Handle is required." });
+        if (result.User is not null)
+        {
+            return Ok(Map(result.User));
+        }
 
-        var isEmailTaken = await _db.Users.AnyAsync(item => item.Id != user.Id && item.Email == email, cancellationToken);
-        var isUserNameTaken = await _db.Users.AnyAsync(item => item.Id != user.Id && item.UserName == userName, cancellationToken);
-        if (isEmailTaken)
-            return Conflict(new { message = "Email is already registered." });
-        if (isUserNameTaken)
-            return Conflict(new { message = "Username is already registered." });
-
-        user.Email = email;
-        user.UserName = userName;
-        user.DisplayName = request.DisplayName.Trim();
-        user.Bio = request.Bio.Trim();
-        await _db.SaveChangesAsync(cancellationToken);
-        return Ok(Map(user));
+        return result.Error switch
+        {
+            UserProfileError.UserNotFound =>
+                Unauthorized(),
+            UserProfileError.HandleRequired =>
+                BadRequest(new { message = "Handle is required." }),
+            UserProfileError.EmailTaken =>
+                Conflict(new { message = "Email is already registered." }),
+            UserProfileError.UserNameTaken =>
+                Conflict(new { message = "Username is already registered." }),
+            _ =>
+                StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "Profile update failed." })
+        };
     }
 
-    private static CurrentUserDto Map(User user) =>
-        new(user.Id, user.Email, user.DisplayName, $"@{user.UserName}", user.Bio);
+    private Guid? GetUserId()
+    {
+        var subject =
+            User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+        return Guid.TryParse(subject, out var userId)
+            ? userId
+            : null;
+    }
+
+    private static CurrentUserDto Map(CurrentUserModel user) =>
+        new(
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            user.Handle,
+            user.Bio);
 }
