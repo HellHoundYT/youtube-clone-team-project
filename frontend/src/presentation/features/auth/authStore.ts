@@ -80,7 +80,9 @@ function applyProfileTheme(
   if (user?.themeId) {
     useThemeStore
       .getState()
-      .setTheme(user.themeId)
+      .applyThemeFromProfile(
+        user.themeId,
+      )
   }
 }
 
