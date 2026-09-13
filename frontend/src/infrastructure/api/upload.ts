@@ -11,6 +11,10 @@ import type {
 import type {
   VideoDetails,
 } from '../../domain/video/types'
+import {
+  createAuthorizedConfig,
+  withAuthenticatedRequest,
+} from './authSession'
 
 export async function uploadVideo(
   request: UploadVideoRequest,
@@ -54,34 +58,42 @@ export async function uploadVideo(
   )
 
   const response =
-    await axios.post<VideoDetails>(
-      '/api/v1/videos/upload',
-      formData,
-      {
-        onUploadProgress: (
-          event:
-            AxiosProgressEvent,
-        ) => {
-          if (!event.total) {
-            return
-          }
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.post<VideoDetails>(
+          '/api/v1/videos/upload',
+          formData,
+          {
+            withCredentials:
+              true,
 
-          const progress =
-            Math.round(
-              (
-                event.loaded /
-                event.total
-              ) * 100,
-            )
+            ...createAuthorizedConfig(token),
 
-          onProgress?.(
-            Math.min(
-              progress,
-              100,
-            ),
-          )
-        },
-      },
+            onUploadProgress: (
+              event:
+                AxiosProgressEvent,
+            ) => {
+              if (!event.total) {
+                return
+              }
+
+              const progress =
+                Math.round(
+                  (
+                    event.loaded /
+                    event.total
+                  ) * 100,
+                )
+
+              onProgress?.(
+                Math.min(
+                  progress,
+                  100,
+                ),
+              )
+            },
+          },
+        ),
     )
 
   return response.data
