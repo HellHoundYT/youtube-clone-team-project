@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Domain.Channels;
 using YouTubeClone.Domain.Comments;
+using YouTubeClone.Domain.Playlists;
 using YouTubeClone.Domain.Users;
 
 namespace YouTubeClone.Infrastructure.Persistence;
@@ -23,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<Comment> Comments => Set<Comment>();
 
     public DbSet<CommentReaction> CommentReactions => Set<CommentReaction>();
+
+    public DbSet<Playlist> Playlists => Set<Playlist>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -112,6 +115,19 @@ public class AppDbContext : DbContext
                 .HasForeignKey(reaction => reaction.CommentId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(reaction => reaction.UserId);
+        });
+
+        modelBuilder.Entity<Playlist>(entity =>
+        {
+            entity.ToTable("Playlists");
+            entity.HasKey(playlist => playlist.Id);
+            entity.Property(playlist => playlist.Title).HasMaxLength(80).IsRequired();
+            entity.Property(playlist => playlist.Description).HasMaxLength(300).IsRequired();
+            entity.HasIndex(playlist => playlist.OwnerId);
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(playlist => playlist.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
