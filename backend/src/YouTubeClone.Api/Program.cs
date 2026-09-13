@@ -5,6 +5,7 @@ using System.Text;
 using YouTubeClone.Api.Hubs;
 using YouTubeClone.Application.Features.Auth;
 using YouTubeClone.Application.Features.Categories;
+using YouTubeClone.Application.Features.Channels;
 using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.LiveChat;
@@ -65,6 +66,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IUserProfileService,
     UserProfileService>();
+
+builder.Services.AddScoped<
+    IChannelService,
+    ChannelService>();
 
 builder.Services.AddSingleton<
     IVideoService,
