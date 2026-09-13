@@ -11,6 +11,9 @@ import type {
 import type {
   User,
 } from '../../../domain/user/types'
+import {
+  useThemeStore,
+} from '../../../shared/theme/useThemeStore'
 
 export type AccountProfile =
   User
@@ -43,6 +46,9 @@ interface AuthState {
         UpdateUserRequest,
     ) => Promise<void>
 
+  uploadAvatar:
+    (file: File) => Promise<void>
+
   signOut:
     () => Promise<void>
 }
@@ -68,6 +74,16 @@ AuthService {
   return configuredAuthService
 }
 
+function applyProfileTheme(
+  user: User | null,
+) {
+  if (user?.themeId) {
+    useThemeStore
+      .getState()
+      .setTheme(user.themeId)
+  }
+}
+
 export const useAuthStore =
   create<AuthState>(
     (set) => ({
@@ -86,6 +102,7 @@ export const useAuthStore =
               profile:
                 user,
             })
+            applyProfileTheme(user)
           } finally {
             set({
               isLoading:
@@ -112,6 +129,7 @@ export const useAuthStore =
             isLoading:
               false,
           })
+          applyProfileTheme(user)
         },
 
       register:
@@ -130,6 +148,7 @@ export const useAuthStore =
             isLoading:
               false,
           })
+          applyProfileTheme(user)
         },
 
       updateProfile:
@@ -141,6 +160,21 @@ export const useAuthStore =
               .updateCurrentUser(
                 request,
               )
+
+          set({
+            profile:
+              user,
+          })
+          applyProfileTheme(user)
+        },
+
+      uploadAvatar:
+        async (
+          file,
+        ) => {
+          const user =
+            await getAuthService()
+              .uploadAvatar(file)
 
           set({
             profile:
