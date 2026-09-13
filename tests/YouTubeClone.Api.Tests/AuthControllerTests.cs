@@ -1,13 +1,15 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using YouTubeClone.Api.Controllers;
 using YouTubeClone.Api.DTOs.Auth;
+using YouTubeClone.Application.Features.Auth;
 using YouTubeClone.Domain.Users;
+using YouTubeClone.Infrastructure.Auth;
 using YouTubeClone.Infrastructure.Persistence;
 
 namespace YouTubeClone.Api.Tests;
@@ -44,11 +46,26 @@ public sealed class AuthControllerTests
     {
         await using var db = CreateDb();
         var controller = CreateController(db);
-        var request = new RegisterRequestDto { Email = "tanya@example.com", UserName = "tanya", DisplayName = "Tanya", Password = "safe-password" };
-        await controller.Register(request, CancellationToken.None);
+        var request = new RegisterRequestDto
+        {
+            Email = "tanya@example.com",
+            UserName = "tanya",
+            DisplayName = "Tanya",
+            Password = "safe-password"
+        };
+
+        await controller.Register(
+            request,
+            CancellationToken.None);
 
         var result = await controller.Register(
-            new RegisterRequestDto { Email = "TANYA@example.com", UserName = "another", DisplayName = "Another", Password = "safe-password" },
+            new RegisterRequestDto
+            {
+                Email = "TANYA@example.com",
+                UserName = "another",
+                DisplayName = "Another",
+                Password = "safe-password"
+            },
             CancellationToken.None);
 
         Assert.IsType<ConflictObjectResult>(result.Result);
@@ -59,9 +76,24 @@ public sealed class AuthControllerTests
     {
         await using var db = CreateDb();
         var controller = CreateController(db);
-        await controller.Register(new RegisterRequestDto { Email = "tanya@example.com", UserName = "tanya", DisplayName = "Tanya", Password = "safe-password" }, CancellationToken.None);
 
-        var result = await controller.Login(new LoginRequestDto { Email = "tanya@example.com", Password = "wrong-password" }, CancellationToken.None);
+        await controller.Register(
+            new RegisterRequestDto
+            {
+                Email = "tanya@example.com",
+                UserName = "tanya",
+                DisplayName = "Tanya",
+                Password = "safe-password"
+            },
+            CancellationToken.None);
+
+        var result = await controller.Login(
+            new LoginRequestDto
+            {
+                Email = "tanya@example.com",
+                Password = "wrong-password"
+            },
+            CancellationToken.None);
 
         Assert.IsType<UnauthorizedObjectResult>(result.Result);
     }
@@ -71,21 +103,39 @@ public sealed class AuthControllerTests
     {
         await using var db = CreateDb();
         var controller = CreateController(db);
+
         var registration = await controller.Register(
-            new RegisterRequestDto { Email = "tanya@example.com", UserName = "tanya", DisplayName = "Tanya", Password = "safe-password" },
+            new RegisterRequestDto
+            {
+                Email = "tanya@example.com",
+                UserName = "tanya",
+                DisplayName = "Tanya",
+                Password = "safe-password"
+            },
             CancellationToken.None);
-        var first = Assert.IsType<AuthResponseDto>(Assert.IsType<OkObjectResult>(registration.Result).Value);
+
+        var first = Assert.IsType<AuthResponseDto>(
+            Assert.IsType<OkObjectResult>(registration.Result).Value);
 
         var refresh = await controller.Refresh(
-            new RefreshRequestDto { RefreshToken = first.RefreshToken },
+            new RefreshRequestDto
+            {
+                RefreshToken = first.RefreshToken
+            },
             CancellationToken.None);
 
-        var second = Assert.IsType<AuthResponseDto>(Assert.IsType<OkObjectResult>(refresh.Result).Value);
+        var second = Assert.IsType<AuthResponseDto>(
+            Assert.IsType<OkObjectResult>(refresh.Result).Value);
+
         Assert.NotEqual(first.RefreshToken, second.RefreshToken);
 
         var reused = await controller.Refresh(
-            new RefreshRequestDto { RefreshToken = first.RefreshToken },
+            new RefreshRequestDto
+            {
+                RefreshToken = first.RefreshToken
+            },
             CancellationToken.None);
+
         Assert.IsType<UnauthorizedObjectResult>(reused.Result);
     }
 
@@ -94,43 +144,84 @@ public sealed class AuthControllerTests
     {
         await using var db = CreateDb();
         var controller = CreateController(db);
+
         var registration = await controller.Register(
-            new RegisterRequestDto { Email = "tanya@example.com", UserName = "tanya", DisplayName = "Tanya", Password = "safe-password" },
+            new RegisterRequestDto
+            {
+                Email = "tanya@example.com",
+                UserName = "tanya",
+                DisplayName = "Tanya",
+                Password = "safe-password"
+            },
             CancellationToken.None);
-        var payload = Assert.IsType<AuthResponseDto>(Assert.IsType<OkObjectResult>(registration.Result).Value);
+
+        var payload = Assert.IsType<AuthResponseDto>(
+            Assert.IsType<OkObjectResult>(registration.Result).Value);
+
         SetUser(controller, payload.User.Id);
 
         var logout = await controller.Logout(
-            new RefreshRequestDto { RefreshToken = payload.RefreshToken },
+            new RefreshRequestDto
+            {
+                RefreshToken = payload.RefreshToken
+            },
             CancellationToken.None);
 
         Assert.IsType<NoContentResult>(logout);
         Assert.NotNull(db.RefreshTokens.Single().RevokedAt);
     }
 
-    private static AppDbContext CreateDb() => new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static AppDbContext CreateDb() =>
+        new(
+            new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options);
 
-    private static AuthController CreateController(AppDbContext db) => new(
-        db,
-        new PasswordHasher<User>(),
-        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            ["Jwt:Issuer"] = "tests",
-            ["Jwt:Audience"] = "tests",
-            ["Jwt:SigningKey"] = "a-test-signing-key-that-is-long-enough-for-hmac-sha256",
-            ["Jwt:AccessTokenMinutes"] = "15",
-            ["Jwt:RefreshTokenDays"] = "14"
-        }).Build());
+    private static AuthController CreateController(AppDbContext db)
+    {
+        var repository = new EfUserAccountRepository(db);
+        var passwordService = new AspNetPasswordService(
+            new PasswordHasher<User>());
+        var tokenService = new JwtAuthTokenService(
+            CreateConfiguration());
+        var authService = new AuthService(
+            repository,
+            passwordService,
+            tokenService);
 
-    private static void SetUser(ControllerBase controller, Guid userId)
+        return new AuthController(authService);
+    }
+
+    private static IConfiguration CreateConfiguration() =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["Jwt:Issuer"] = "tests",
+                    ["Jwt:Audience"] = "tests",
+                    ["Jwt:SigningKey"] =
+                        "a-test-signing-key-that-is-long-enough-for-hmac-sha256",
+                    ["Jwt:AccessTokenMinutes"] = "15",
+                    ["Jwt:RefreshTokenDays"] = "14"
+                })
+            .Build();
+
+    private static void SetUser(
+        ControllerBase controller,
+        Guid userId)
     {
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
             {
-                User = new ClaimsPrincipal(new ClaimsIdentity(
-                    [new Claim(JwtRegisteredClaimNames.Sub, userId.ToString())],
-                    "tests"))
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(
+                        [
+                            new Claim(
+                                JwtRegisteredClaimNames.Sub,
+                                userId.ToString())
+                        ],
+                        "tests"))
             }
         };
     }
