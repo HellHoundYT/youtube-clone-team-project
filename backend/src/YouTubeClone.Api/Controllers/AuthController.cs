@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.Auth;
+using YouTubeClone.Api.Mappers;
 using YouTubeClone.Application.Features.Auth;
 
 namespace YouTubeClone.Api.Controllers;
@@ -157,14 +158,6 @@ public sealed class AuthController : ControllerBase
 
     private static AuthResponseDto Map(AuthSession session) =>
         new(
-            Map(session.User),
+            UserDtoMapper.Map(session.User),
             session.AccessToken);
-
-    private static CurrentUserDto Map(CurrentUserModel user) =>
-        new(
-            user.Id,
-            user.Email,
-            user.DisplayName,
-            user.Handle,
-            user.Bio);
 }
