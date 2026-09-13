@@ -1,6 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.Auth;
 using YouTubeClone.Application.Features.Auth;
@@ -11,6 +8,9 @@ namespace YouTubeClone.Api.Controllers;
 [Route("api/v1/auth")]
 public sealed class AuthController : ControllerBase
 {
+    private const string RefreshTokenCookieName =
+        "amtlis.refresh_token";
+
     private readonly IAuthService _authService;
 
     public AuthController(IAuthService authService)
@@ -33,6 +33,7 @@ public sealed class AuthController : ControllerBase
 
         if (result.Session is not null)
         {
+            SetRefreshTokenCookie(result.Session);
             return Ok(Map(result.Session));
         }
 
@@ -62,6 +63,7 @@ public sealed class AuthController : ControllerBase
 
         if (result.Session is not null)
         {
+            SetRefreshTokenCookie(result.Session);
             return Ok(Map(result.Session));
         }
 
@@ -71,58 +73,92 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("refresh")]
     public async Task<ActionResult<AuthResponseDto>> Refresh(
-        RefreshRequestDto request,
         CancellationToken cancellationToken)
     {
+        if (!TryGetRefreshToken(out var refreshToken))
+        {
+            return Unauthorized(
+                new { message = "Refresh token is missing." });
+        }
+
         var result = await _authService.RefreshAsync(
-            request.RefreshToken,
+            refreshToken,
             cancellationToken);
 
         if (result.Session is not null)
         {
+            SetRefreshTokenCookie(result.Session);
             return Ok(Map(result.Session));
         }
+
+        DeleteRefreshTokenCookie();
 
         return Unauthorized(
             new { message = "Refresh token is invalid or expired." });
     }
 
-    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(
-        RefreshRequestDto request,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserId();
-        if (userId is null)
+        if (TryGetRefreshToken(out var refreshToken))
         {
-            return Unauthorized();
+            await _authService.LogoutAsync(
+                refreshToken,
+                cancellationToken);
         }
 
-        await _authService.LogoutAsync(
-            userId.Value,
-            request.RefreshToken,
-            cancellationToken);
-
+        DeleteRefreshTokenCookie();
         return NoContent();
     }
 
-    private Guid? GetUserId()
+    private bool TryGetRefreshToken(out string refreshToken)
     {
-        var subject =
-            User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        if (Request.Cookies.TryGetValue(
+                RefreshTokenCookieName,
+                out var token) &&
+            !string.IsNullOrWhiteSpace(token))
+        {
+            refreshToken = token;
+            return true;
+        }
 
-        return Guid.TryParse(subject, out var userId)
-            ? userId
-            : null;
+        refreshToken = string.Empty;
+        return false;
+    }
+
+    private void SetRefreshTokenCookie(AuthSession session)
+    {
+        Response.Cookies.Append(
+            RefreshTokenCookieName,
+            session.RefreshToken,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Expires = session.RefreshTokenExpiresAt,
+                Path = "/api/v1/auth"
+            });
+    }
+
+    private void DeleteRefreshTokenCookie()
+    {
+        Response.Cookies.Delete(
+            RefreshTokenCookieName,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Path = "/api/v1/auth"
+            });
     }
 
     private static AuthResponseDto Map(AuthSession session) =>
         new(
             Map(session.User),
-            session.AccessToken,
-            session.RefreshToken);
+            session.AccessToken);
 
     private static CurrentUserDto Map(CurrentUserModel user) =>
         new(
