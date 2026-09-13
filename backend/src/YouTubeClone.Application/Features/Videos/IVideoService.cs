@@ -8,6 +8,7 @@ public interface IVideoService
         int page,
         int pageSize,
         string? category,
+        Guid? channelId,
         CancellationToken cancellationToken = default);
 
     Task<VideoDetailsDto?> GetVideoByIdAsync(
