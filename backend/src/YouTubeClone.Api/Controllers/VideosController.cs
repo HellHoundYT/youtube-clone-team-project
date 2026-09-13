@@ -72,6 +72,7 @@ public sealed class VideosController :
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 12,
             [FromQuery] string? category = null,
+            [FromQuery] Guid? channelId = null,
             CancellationToken cancellationToken = default)
     {
         if (page < 1)
@@ -101,6 +102,7 @@ public sealed class VideosController :
                     page,
                     pageSize,
                     category,
+                    channelId,
                     cancellationToken);
 
         return Ok(
