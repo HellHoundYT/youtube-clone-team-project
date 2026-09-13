@@ -1,7 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.Videos;
 using YouTubeClone.Application.Features.Videos.Contracts;
 using YouTubeClone.Application.Abstractions.Media;
+using YouTubeClone.Application.Features.Channels;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Application.Abstractions.Storage;
 
@@ -30,11 +34,6 @@ public sealed class VideosController :
             "Mixes"
         };
 
-    private static readonly Guid
-        DevelopmentChannelId =
-            Guid.Parse(
-                "77777777-7777-7777-7777-777777777777");
-
     private readonly IVideoService
         _videoService;
 
@@ -44,10 +43,14 @@ public sealed class VideosController :
     private readonly IMediaProbeService
         _mediaProbeService;
 
+    private readonly IChannelService
+        _channelService;
+
     public VideosController(
         IVideoService videoService,
         IFileStorageService fileStorageService,
-        IMediaProbeService mediaProbeService)
+        IMediaProbeService mediaProbeService,
+        IChannelService channelService)
     {
         _videoService =
             videoService;
@@ -57,6 +60,9 @@ public sealed class VideosController :
 
         _mediaProbeService =
             mediaProbeService;
+
+        _channelService =
+            channelService;
     }
 
     [HttpGet]
@@ -208,6 +214,7 @@ public sealed class VideosController :
         return NoContent();
     }
 
+    [Authorize]
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxVideoFileSize)]
@@ -217,6 +224,14 @@ public sealed class VideosController :
             [FromForm] VideoUploadFormDto request,
             CancellationToken cancellationToken = default)
     {
+        var userId =
+            GetUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
         var validationResult =
             ValidateUpload(
                 request);
@@ -225,6 +240,26 @@ public sealed class VideosController :
         {
             return validationResult;
         }
+
+        var channelResult =
+            await _channelService
+                .EnsureOwnedAsync(
+                    userId.Value,
+                    cancellationToken);
+
+        if (channelResult.Channel is null)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new
+                {
+                    message =
+                        "The creator channel could not be prepared."
+                });
+        }
+
+        var channel =
+            channelResult.Channel;
 
         var videoId =
             Guid.NewGuid();
@@ -283,11 +318,14 @@ public sealed class VideosController :
                     Id =
                         videoId,
                     ChannelId =
-                        DevelopmentChannelId,
+                        channel.Id,
                     ChannelName =
-                        "AMTLIS Uploads",
+                        channel.Name,
                     ChannelAvatarPath =
-                        null,
+                        string.IsNullOrWhiteSpace(
+                            channel.AvatarPath)
+                            ? null
+                            : $"/api/v1/channels/{channel.Id}/avatar",
                     Category =
                         category,
                     CategorySlug =
@@ -340,6 +378,21 @@ public sealed class VideosController :
                     relativePath);
             }
         }
+    }
+
+    private Guid? GetUserId()
+    {
+        var subject =
+            User.FindFirstValue(
+                ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(
+                JwtRegisteredClaimNames.Sub);
+
+        return Guid.TryParse(
+            subject,
+            out var userId)
+                ? userId
+                : null;
     }
 
     private ActionResult?
