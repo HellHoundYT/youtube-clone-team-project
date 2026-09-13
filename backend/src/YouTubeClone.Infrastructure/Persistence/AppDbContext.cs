@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Domain.Channels;
+using YouTubeClone.Domain.Comments;
 using YouTubeClone.Domain.Users;
 
 namespace YouTubeClone.Infrastructure.Persistence;
@@ -18,6 +19,10 @@ public class AppDbContext : DbContext
     public DbSet<Channel> Channels => Set<Channel>();
 
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
+
+    public DbSet<Comment> Comments => Set<Comment>();
+
+    public DbSet<CommentReaction> CommentReactions => Set<CommentReaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -81,6 +86,32 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(subscription => subscription.ChannelId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.ToTable("Comments");
+            entity.HasKey(comment => comment.Id);
+            entity.Property(comment => comment.Text).HasMaxLength(500).IsRequired();
+            entity.HasIndex(comment => comment.VideoId);
+            entity.HasIndex(comment => comment.AuthorId);
+            entity.HasIndex(comment => comment.ParentCommentId);
+        });
+
+        modelBuilder.Entity<CommentReaction>(entity =>
+        {
+            entity.ToTable("CommentReactions");
+            entity.HasKey(reaction => new
+            {
+                reaction.CommentId,
+                reaction.UserId
+            });
+            entity.Property(reaction => reaction.Kind).IsRequired();
+            entity.HasOne(reaction => reaction.Comment)
+                .WithMany(comment => comment.Reactions)
+                .HasForeignKey(reaction => reaction.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(reaction => reaction.UserId);
         });
     }
 }
