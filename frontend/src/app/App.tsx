@@ -32,6 +32,7 @@ import {
   useAuthStore,
 } from '../presentation/features/auth/authStore'
 import {
+  channelService,
   discoveryService,
   videoService,
   streamService,
@@ -74,12 +75,16 @@ function App() {
 
         <Route
           path="subscriptions"
-          element={<SubscriptionsPage videoService={videoService} />}
+          element={
+            <SubscriptionsPage channelService={channelService} />
+          }
         />
 
         <Route
           path="channels/:channelId"
-          element={<ChannelPage />}
+          element={
+            <ChannelPage channelService={channelService} />
+          }
         />
 
         <Route
