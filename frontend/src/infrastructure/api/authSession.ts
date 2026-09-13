@@ -33,6 +33,22 @@ function authorizedConfig(
   }
 }
 
+export function createOptionalAuthorizedConfig() {
+  return accessToken
+    ? {
+        withCredentials:
+          true,
+
+        ...authorizedConfig(
+          accessToken,
+        ),
+      }
+    : {
+        withCredentials:
+          true,
+      }
+}
+
 async function refreshAccessToken() {
   if (refreshPromise) {
     return refreshPromise
