@@ -15,7 +15,6 @@ public interface IAuthService
         CancellationToken cancellationToken);
 
     Task LogoutAsync(
-        Guid userId,
         string refreshToken,
         CancellationToken cancellationToken);
 }
