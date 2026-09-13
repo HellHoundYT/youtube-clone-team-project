@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using YouTubeClone.Domain.Channels;
 using YouTubeClone.Domain.Users;
 
 namespace YouTubeClone.Infrastructure.Persistence;
@@ -13,6 +14,10 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    public DbSet<Channel> Channels => Set<Channel>();
+
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +45,41 @@ public class AppDbContext : DbContext
             entity.HasOne(token => token.User)
                 .WithMany(user => user.RefreshTokens)
                 .HasForeignKey(token => token.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Channel>(entity =>
+        {
+            entity.ToTable("Channels");
+            entity.HasKey(channel => channel.Id);
+            entity.Property(channel => channel.Name).HasMaxLength(100).IsRequired();
+            entity.Property(channel => channel.Handle).HasMaxLength(64).IsRequired();
+            entity.Property(channel => channel.Description).HasMaxLength(1000).IsRequired();
+            entity.Property(channel => channel.AvatarPath).HasMaxLength(512);
+            entity.Property(channel => channel.BannerPath).HasMaxLength(512);
+            entity.HasIndex(channel => channel.Handle).IsUnique();
+            entity.HasIndex(channel => channel.OwnerId).IsUnique();
+            entity.HasOne<User>()
+                .WithOne()
+                .HasForeignKey<Channel>(channel => channel.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Subscription>(entity =>
+        {
+            entity.ToTable("Subscriptions");
+            entity.HasKey(subscription => new
+            {
+                subscription.SubscriberId,
+                subscription.ChannelId
+            });
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(subscription => subscription.SubscriberId)
+                .OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(subscription => subscription.Channel)
+                .WithMany()
+                .HasForeignKey(subscription => subscription.ChannelId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
