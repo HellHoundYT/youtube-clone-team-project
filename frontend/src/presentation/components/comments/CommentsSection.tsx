@@ -8,15 +8,15 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import type {
-  CommentService,
-} from '../../../application/comment/service'
-import type {
   CommentItem,
   CommentReaction,
 } from '../../../domain/comment/types'
 import {
   useAuthStore,
 } from '../../features/auth/authStore'
+import {
+  getCommentService,
+} from '../../features/comments/commentServiceProvider'
 import {
   useAppTranslation,
 } from '../../../shared/i18n'
@@ -207,16 +207,16 @@ function CommentCard({
 
 function CommentsSection({
   videoId,
-  commentService,
 }: {
   videoId: string
-  commentService: CommentService
 }) {
   const {
     t,
   } = useAppTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const commentService =
+    getCommentService()
   const profile = useAuthStore(
     (state) => state.profile,
   )
