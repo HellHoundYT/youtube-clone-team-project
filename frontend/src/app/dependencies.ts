@@ -2,6 +2,9 @@ import {
   createAuthService,
 } from '../application/auth/service'
 import {
+  createChannelService,
+} from '../application/channel/service'
+import {
   createDiscoveryService,
 } from '../application/discovery/service'
 import {
@@ -19,6 +22,9 @@ import {
 import {
   authGateway,
 } from '../infrastructure/api/auth'
+import {
+  channelGateway,
+} from '../infrastructure/api/channels'
 import {
   discoveryGateway,
 } from '../infrastructure/api/discovery'
@@ -50,6 +56,11 @@ import {
 export const authService =
   createAuthService(
     authGateway,
+  )
+
+export const channelService =
+  createChannelService(
+    channelGateway,
   )
 
 export const discoveryService =
