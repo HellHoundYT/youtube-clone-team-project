@@ -117,13 +117,11 @@ public sealed class AuthService : IAuthService
     }
 
     public async Task LogoutAsync(
-        Guid userId,
         string refreshToken,
         CancellationToken cancellationToken)
     {
         var tokenHash = _tokenService.HashRefreshToken(refreshToken);
-        var storedToken = await _repository.GetRefreshTokenForUserAsync(
-            userId,
+        var storedToken = await _repository.GetRefreshTokenWithUserAsync(
             tokenHash,
             cancellationToken);
 
@@ -140,6 +138,8 @@ public sealed class AuthService : IAuthService
     private AuthSession CreateSession(User user)
     {
         var rawRefreshToken = _tokenService.CreateRefreshToken();
+        var refreshTokenExpiresAt =
+            _tokenService.GetRefreshTokenExpiration();
 
         _repository.AddRefreshToken(
             new RefreshToken
@@ -147,13 +147,14 @@ public sealed class AuthService : IAuthService
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
                 TokenHash = _tokenService.HashRefreshToken(rawRefreshToken),
-                ExpiresAt = _tokenService.GetRefreshTokenExpiration()
+                ExpiresAt = refreshTokenExpiresAt
             });
 
         return new AuthSession(
             MapUser(user),
             _tokenService.CreateAccessToken(user),
-            rawRefreshToken);
+            rawRefreshToken,
+            refreshTokenExpiresAt);
     }
 
     private static CurrentUserModel MapUser(User user) =>
