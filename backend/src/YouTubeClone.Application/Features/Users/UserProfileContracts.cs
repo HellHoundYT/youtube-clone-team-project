@@ -6,7 +6,8 @@ public sealed record UpdateUserProfileCommand(
     string Email,
     string DisplayName,
     string Handle,
-    string Bio);
+    string Bio,
+    string? ThemeId);
 
 public enum UserProfileError
 {
