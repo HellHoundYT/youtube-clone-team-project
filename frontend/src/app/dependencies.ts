@@ -14,6 +14,9 @@ import {
   createLibraryService,
 } from '../application/library/service'
 import {
+  createPlaylistService,
+} from '../application/playlist/service'
+import {
   createStreamService,
 } from '../application/stream/service'
 import {
@@ -37,6 +40,9 @@ import {
 import {
   libraryGateway,
 } from '../infrastructure/api/library'
+import {
+  playlistGateway,
+} from '../infrastructure/api/playlists'
 import {
   streamGateway,
 } from '../infrastructure/api/streams'
@@ -82,6 +88,11 @@ export const discoveryService =
 export const libraryService =
   createLibraryService(
     libraryGateway,
+  )
+
+export const playlistService =
+  createPlaylistService(
+    playlistGateway,
   )
 
 export const streamService =
