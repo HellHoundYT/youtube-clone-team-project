@@ -3,7 +3,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.Auth;
-using YouTubeClone.Application.Features.Auth;
+using YouTubeClone.Api.Mappers;
+using YouTubeClone.Application.Abstractions.Storage;
 using YouTubeClone.Application.Features.Users;
 
 namespace YouTubeClone.Api.Controllers;
@@ -13,11 +14,28 @@ namespace YouTubeClone.Api.Controllers;
 [Route("api/v1/users")]
 public sealed class UsersController : ControllerBase
 {
-    private readonly IUserProfileService _userProfileService;
+    private const long MaxAvatarFileSize =
+        5L * 1024L * 1024L;
 
-    public UsersController(IUserProfileService userProfileService)
+    private static readonly HashSet<string>
+        AllowedAvatarExtensions =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp"
+        };
+
+    private readonly IUserProfileService _userProfileService;
+    private readonly IFileStorageService _fileStorageService;
+
+    public UsersController(
+        IUserProfileService userProfileService,
+        IFileStorageService fileStorageService)
     {
         _userProfileService = userProfileService;
+        _fileStorageService = fileStorageService;
     }
 
     [HttpGet("me")]
@@ -36,7 +54,7 @@ public sealed class UsersController : ControllerBase
 
         return user is null
             ? Unauthorized()
-            : Ok(Map(user));
+            : Ok(UserDtoMapper.Map(user));
     }
 
     [HttpPut("me")]
@@ -56,12 +74,13 @@ public sealed class UsersController : ControllerBase
                 request.Email,
                 request.DisplayName,
                 request.Handle,
-                request.Bio),
+                request.Bio,
+                request.ThemeId),
             cancellationToken);
 
         if (result.User is not null)
         {
-            return Ok(Map(result.User));
+            return Ok(UserDtoMapper.Map(result.User));
         }
 
         return result.Error switch
@@ -81,6 +100,88 @@ public sealed class UsersController : ControllerBase
         };
     }
 
+    [HttpPost("me/avatar")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(MaxAvatarFileSize)]
+    public async Task<ActionResult<CurrentUserDto>> UpdateAvatar(
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(
+                new { message = "Avatar image is required." });
+        }
+
+        if (file.Length > MaxAvatarFileSize)
+        {
+            return BadRequest(
+                new { message = "Avatar image must not exceed 5 MB." });
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (!AllowedAvatarExtensions.Contains(extension))
+        {
+            return BadRequest(
+                new { message = "Avatar must be PNG, JPEG, or WebP." });
+        }
+
+        await using var source = file.OpenReadStream();
+        using var bufferedImage = new MemoryStream();
+        await source.CopyToAsync(
+            bufferedImage,
+            cancellationToken);
+
+        bufferedImage.Position = 0;
+
+        if (!HasValidImageSignature(
+                bufferedImage,
+                extension))
+        {
+            return BadRequest(
+                new { message = "Avatar file content is not a valid supported image." });
+        }
+
+        bufferedImage.Position = 0;
+
+        var result = await _userProfileService.UpdateAvatarAsync(
+            userId.Value,
+            bufferedImage,
+            extension,
+            cancellationToken);
+
+        return result.User is null
+            ? Unauthorized()
+            : Ok(UserDtoMapper.Map(result.User));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("{userId:guid}/avatar")]
+    public async Task<IActionResult> GetAvatar(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var avatarPath = await _userProfileService.GetAvatarPathAsync(
+            userId,
+            cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(avatarPath) ||
+            !_fileStorageService.Exists(avatarPath))
+        {
+            return NotFound();
+        }
+
+        return File(
+            _fileStorageService.OpenRead(avatarPath),
+            _fileStorageService.GetContentType(avatarPath));
+    }
+
     private Guid? GetUserId()
     {
         var subject =
@@ -92,11 +193,48 @@ public sealed class UsersController : ControllerBase
             : null;
     }
 
-    private static CurrentUserDto Map(CurrentUserModel user) =>
-        new(
-            user.Id,
-            user.Email,
-            user.DisplayName,
-            user.Handle,
-            user.Bio);
+    private static bool HasValidImageSignature(
+        Stream stream,
+        string extension)
+    {
+        Span<byte> header = stackalloc byte[12];
+        var read = stream.Read(header);
+        stream.Position = 0;
+
+        if (extension.Equals(
+                ".png",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            ReadOnlySpan<byte> pngSignature =
+                [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+            return read >= pngSignature.Length &&
+                header[..pngSignature.Length]
+                    .SequenceEqual(pngSignature);
+        }
+
+        if (extension.Equals(
+                ".jpg",
+                StringComparison.OrdinalIgnoreCase) ||
+            extension.Equals(
+                ".jpeg",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return read >= 3 &&
+                header[0] == 0xFF &&
+                header[1] == 0xD8 &&
+                header[2] == 0xFF;
+        }
+
+        if (extension.Equals(
+                ".webp",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return read >= 12 &&
+                header[..4].SequenceEqual("RIFF"u8) &&
+                header[8..12].SequenceEqual("WEBP"u8);
+        }
+
+        return false;
+    }
 }
