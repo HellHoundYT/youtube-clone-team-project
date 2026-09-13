@@ -21,6 +21,7 @@ public sealed class VideoService :
             int page,
             int pageSize,
             string? category,
+            Guid? channelId,
             CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -46,6 +47,14 @@ public sealed class VideoService :
                             video.CategorySlug,
                             category,
                             StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (channelId.HasValue)
+        {
+            query =
+                query.Where(
+                    video =>
+                        video.ChannelId == channelId.Value);
         }
 
         return query
