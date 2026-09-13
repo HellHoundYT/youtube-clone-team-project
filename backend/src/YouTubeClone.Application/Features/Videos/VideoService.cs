@@ -21,8 +21,8 @@ public sealed class VideoService :
             int page,
             int pageSize,
             string? category,
-            Guid? channelId,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            Guid? channelId = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
