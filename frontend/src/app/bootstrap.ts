@@ -3,14 +3,8 @@ import {
   useAuthStore,
 } from '../presentation/features/auth/authStore'
 import {
-  configureChannelStoreStorage,
-} from '../presentation/features/channels/channelStore'
-import {
   configureCommentService,
 } from '../presentation/features/comments/commentServiceProvider'
-import {
-  configurePlaylistStoreStorage,
-} from '../presentation/features/playlists/playlistStore'
 import {
   browserKeyValueStore,
 } from '../infrastructure/storage/browserKeyValueStore'
@@ -59,14 +53,6 @@ export async function initializeApplication() {
         themeId,
       })
     },
-  )
-
-  configureChannelStoreStorage(
-    browserKeyValueStore,
-  )
-
-  configurePlaylistStoreStorage(
-    browserKeyValueStore,
   )
 
   await initializeAppI18n(
