@@ -1,6 +1,4 @@
-import axios, {
-  type AxiosResponse,
-} from 'axios'
+import axios from 'axios'
 import type {
   AuthGateway,
 } from '../../application/auth/gateway'
@@ -12,91 +10,16 @@ import type {
 import type {
   User,
 } from '../../domain/user/types'
+import {
+  clearAccessToken,
+  createAuthorizedConfig,
+  setAccessToken,
+  withAuthenticatedRequest,
+} from './authSession'
 
 interface AuthResponse {
   user: User
   accessToken: string
-}
-
-let accessToken:
-string | null = null
-
-let refreshPromise:
-Promise<string> | null = null
-
-function setAccessToken(
-  token: string | null,
-) {
-  accessToken = token
-}
-
-function authorizedConfig(
-  token: string,
-) {
-  return {
-    headers: {
-      Authorization:
-        `Bearer ${token}`,
-    },
-  }
-}
-
-async function refreshAccessToken() {
-  if (refreshPromise) {
-    return refreshPromise
-  }
-
-  refreshPromise =
-    (async () => {
-      const response =
-        await axios.post<AuthResponse>(
-          '/api/v1/auth/refresh',
-          undefined,
-          {
-            withCredentials:
-              true,
-          },
-        )
-
-      setAccessToken(
-        response.data.accessToken,
-      )
-
-      return response.data.accessToken
-    })()
-
-  try {
-    return await refreshPromise
-  } finally {
-    refreshPromise = null
-  }
-}
-
-async function withAuthenticatedRequest<T>(
-  request: (
-    token: string,
-  ) => Promise<AxiosResponse<T>>,
-) {
-  const token =
-    accessToken ??
-    await refreshAccessToken()
-
-  try {
-    return await request(token)
-  } catch (error) {
-    if (
-      !axios.isAxiosError(error) ||
-      error.response?.status !== 401
-    ) {
-      throw error
-    }
-
-    setAccessToken(null)
-
-    return request(
-      await refreshAccessToken(),
-    )
-  }
 }
 
 export const authGateway:
@@ -112,14 +35,14 @@ AuthGateway = {
                 withCredentials:
                   true,
 
-                ...authorizedConfig(token),
+                ...createAuthorizedConfig(token),
               },
             ),
         )
 
       return response.data
     } catch {
-      setAccessToken(null)
+      clearAccessToken()
       return null
     }
   },
@@ -180,7 +103,7 @@ AuthGateway = {
               withCredentials:
                 true,
 
-              ...authorizedConfig(token),
+              ...createAuthorizedConfig(token),
             },
           ),
       )
@@ -204,7 +127,7 @@ AuthGateway = {
               withCredentials:
                 true,
 
-              ...authorizedConfig(token),
+              ...createAuthorizedConfig(token),
             },
           ),
       )
@@ -223,7 +146,7 @@ AuthGateway = {
         },
       )
     } finally {
-      setAccessToken(null)
+      clearAccessToken()
     }
   },
 }
