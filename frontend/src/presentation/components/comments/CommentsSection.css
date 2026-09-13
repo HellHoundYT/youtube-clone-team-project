@@ -3,7 +3,8 @@
 .comments-heading h2 { margin: 0; color: #fff; font-size: 20px; }
 .comments-heading span { color: #858997; font-size: 13px; }
 .comment-compose, .comment-card, .comment-reply { display: flex; align-items: flex-start; gap: 12px; }
-.comment-avatar { width: 36px; height: 36px; display: grid; place-items: center; flex: 0 0 auto; color: #fff; background: linear-gradient(135deg, #755ef3, #423092); border-radius: 50%; font-size: 13px; font-weight: 800; }
+.comment-avatar { width: 36px; height: 36px; display: grid; place-items: center; flex: 0 0 auto; color: #fff; background: linear-gradient(135deg, #755ef3, #423092); border-radius: 50%; font-size: 13px; font-weight: 800; overflow: hidden; }
+.comment-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .comment-compose > div:last-child { flex: 1; }
 .comment-compose textarea, .comment-reply-form input { width: 100%; padding: 10px 0; color: #f5f5fa; background: transparent; border: 0; border-bottom: 1px solid #444754; outline: none; font: inherit; resize: vertical; }
 .comment-compose textarea:focus, .comment-reply-form input:focus { border-color: #8067f7; }
