@@ -10,6 +10,7 @@ using YouTubeClone.Application.Features.Comments;
 using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.LiveChat;
+using YouTubeClone.Application.Features.Playlists;
 using YouTubeClone.Application.Features.Streams;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Application.Features.WatchParty;
@@ -22,6 +23,7 @@ using YouTubeClone.Infrastructure.History;
 using YouTubeClone.Infrastructure.LiveChat;
 using YouTubeClone.Infrastructure.Media;
 using YouTubeClone.Infrastructure.Persistence;
+using YouTubeClone.Infrastructure.Playlists;
 using YouTubeClone.Infrastructure.Storage;
 using YouTubeClone.Infrastructure.Streams;
 using YouTubeClone.Infrastructure.Videos;
@@ -74,6 +76,10 @@ public static class DependencyInjection
         services.AddScoped<
             ICommentRepository,
             EfCommentRepository>();
+
+        services.AddScoped<
+            IPlaylistRepository,
+            EfPlaylistRepository>();
 
         services.Configure<StorageOptions>(
             configuration.GetSection(
