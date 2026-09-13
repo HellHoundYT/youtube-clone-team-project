@@ -1,13 +1,13 @@
 import {
-  configureCommentsStorage,
-} from '../presentation/features/comments/commentsStorage'
-import {
   configureAuthStore,
   useAuthStore,
 } from '../presentation/features/auth/authStore'
 import {
   configureChannelStoreStorage,
 } from '../presentation/features/channels/channelStore'
+import {
+  configureCommentService,
+} from '../presentation/features/comments/commentServiceProvider'
 import {
   configurePlaylistStoreStorage,
 } from '../presentation/features/playlists/playlistStore'
@@ -22,11 +22,16 @@ import {
 } from '../shared/theme/useThemeStore'
 import {
   authService,
+  commentService,
 } from './dependencies'
 
 export async function initializeApplication() {
   configureAuthStore(
     authService,
+  )
+
+  configureCommentService(
+    commentService,
   )
 
   configureThemeProfileSync(
@@ -61,10 +66,6 @@ export async function initializeApplication() {
   )
 
   configurePlaylistStoreStorage(
-    browserKeyValueStore,
-  )
-
-  configureCommentsStorage(
     browserKeyValueStore,
   )
 
