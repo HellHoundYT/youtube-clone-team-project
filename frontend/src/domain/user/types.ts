@@ -4,4 +4,6 @@ export interface User {
   displayName: string
   handle: string
   bio: string
+  avatarUrl: string | null
+  themeId: string | null
 }
