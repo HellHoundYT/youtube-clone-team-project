@@ -233,15 +233,13 @@ function CommentsSection({
     const controller =
       new AbortController()
 
-    setIsLoading(true)
-    setError('')
-
     void commentService
       .list(
         videoId,
         controller.signal,
       )
       .then((items) => {
+        setError('')
         setComments(items)
       })
       .catch(() => {
