@@ -5,6 +5,9 @@ import {
   createChannelService,
 } from '../application/channel/service'
 import {
+  createCommentService,
+} from '../application/comment/service'
+import {
   createDiscoveryService,
 } from '../application/discovery/service'
 import {
@@ -25,6 +28,9 @@ import {
 import {
   channelGateway,
 } from '../infrastructure/api/channels'
+import {
+  commentGateway,
+} from '../infrastructure/api/comments'
 import {
   discoveryGateway,
 } from '../infrastructure/api/discovery'
@@ -61,6 +67,11 @@ export const authService =
 export const channelService =
   createChannelService(
     channelGateway,
+  )
+
+export const commentService =
+  createCommentService(
+    commentGateway,
   )
 
 export const discoveryService =
