@@ -12,8 +12,14 @@ import type {
   ChannelService,
 } from '../../application/channel/service'
 import type {
+  VideoService,
+} from '../../application/video/service'
+import type {
   Channel,
 } from '../../domain/channel/types'
+import type {
+  VideoListItem,
+} from '../../domain/video/types'
 import {
   useAppTranslation,
 } from '../../shared/i18n'
@@ -22,10 +28,35 @@ import {
 } from '../features/auth/authStore'
 import './ChannelsPages.css'
 
+function formatDuration(
+  seconds: number,
+) {
+  const safeSeconds =
+    Math.max(
+      0,
+      Math.floor(seconds),
+    )
+  const minutes =
+    Math.floor(
+      safeSeconds / 60,
+    )
+  const remainingSeconds =
+    safeSeconds % 60
+
+  return [
+    minutes,
+    remainingSeconds
+      .toString()
+      .padStart(2, '0'),
+  ].join(':')
+}
+
 function ChannelPage({
   channelService,
+  videoService,
 }: {
   channelService: ChannelService
+  videoService: VideoService
 }) {
   const { channelId = '' } =
     useParams()
@@ -33,12 +64,16 @@ function ChannelPage({
     useNavigate()
   const location =
     useLocation()
-  const { t } =
-    useAppTranslation()
+  const {
+    t,
+    i18n,
+  } = useAppTranslation()
   const profile =
     useAuthStore((state) => state.profile)
   const [channel, setChannel] =
     useState<Channel | null>(null)
+  const [videos, setVideos] =
+    useState<VideoListItem[]>([])
   const [isSubscribed, setIsSubscribed] =
     useState(false)
   const [isOwner, setIsOwner] =
@@ -60,6 +95,15 @@ function ChannelPage({
       try {
         const loadedChannel =
           await channelService.getChannel(channelId)
+
+        const loadedVideos =
+          await videoService
+            .getVideos({
+              page: 1,
+              pageSize: 50,
+              channelId,
+            })
+            .catch(() => [])
 
         let subscriptions: Channel[] = []
         let ownChannel: Channel | null = null
@@ -84,6 +128,7 @@ function ChannelPage({
         }
 
         setChannel(loadedChannel)
+        setVideos(loadedVideos)
         setIsSubscribed(
           subscriptions.some(
             (item) => item.id === loadedChannel.id,
@@ -112,6 +157,7 @@ function ChannelPage({
     channelId,
     channelService,
     profile,
+    videoService,
   ])
 
   const toggleSubscription = async () => {
@@ -187,6 +233,11 @@ function ChannelPage({
     )
   }
 
+  const locale =
+    i18n.resolvedLanguage?.startsWith('uk')
+      ? 'uk-UA'
+      : 'en-US'
+
   return (
     <section className="channels-page">
       <Link
@@ -216,7 +267,7 @@ function ChannelPage({
             : channel.name.charAt(0).toUpperCase()}
         </div>
         <div>
-          <p className="channel-eyebrow">CHANNEL</p>
+          <p className="channel-eyebrow">AMTLIS CHANNEL</p>
           <h1>{channel.name}</h1>
           <p>
             {channel.handle} · {channel.subscriberCount}{' '}
@@ -247,10 +298,79 @@ function ChannelPage({
         )}
       </div>
 
-      <div className="channel-videos-empty">
-        <h2>{t('system.channels.videosTitle')}</h2>
-        <p>{t('system.channels.videosLead')}</p>
-      </div>
+      <section className="channel-videos-section">
+        <div className="channel-videos-heading">
+          <div>
+            <h2>{t('system.channels.videosTitle')}</h2>
+            <p>{t('system.channels.videosLead')}</p>
+          </div>
+          <span className="channel-count">
+            {t(
+              'system.channels.videoCount',
+              {
+                count: videos.length,
+              },
+            )}
+          </span>
+        </div>
+
+        {videos.length === 0 ? (
+          <div className="channel-videos-empty">
+            <p>{t('system.channels.noVideos')}</p>
+          </div>
+        ) : (
+          <div className="channel-video-grid">
+            {videos.map((video) => {
+              const formattedViews =
+                new Intl.NumberFormat(
+                  locale,
+                  {
+                    notation: 'compact',
+                    maximumFractionDigits: 1,
+                  },
+                ).format(video.viewCount)
+
+              return (
+                <button
+                  className="channel-video-card"
+                  key={video.id}
+                  type="button"
+                  onClick={() =>
+                    navigate(`/watch/${video.id}`)}
+                >
+                  <div className="channel-video-thumbnail">
+                    {video.thumbnailPath ? (
+                      <img
+                        src={video.thumbnailPath}
+                        alt=""
+                      />
+                    ) : (
+                      <span>A</span>
+                    )}
+                    <small>
+                      {formatDuration(
+                        video.durationSeconds,
+                      )}
+                    </small>
+                  </div>
+                  <div className="channel-video-copy">
+                    <strong>{video.title}</strong>
+                    <span>
+                      {t(
+                        'home.views',
+                        {
+                          count: video.viewCount,
+                          formatted: formattedViews,
+                        },
+                      )}
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </section>
     </section>
   )
 }
