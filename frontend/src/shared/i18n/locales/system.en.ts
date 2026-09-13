@@ -70,7 +70,7 @@ const systemEn = {
       unsubscribe: 'Unsubscribe',
       back: 'Back to subscriptions',
       videosTitle: 'Channel videos',
-      videosLead: 'Videos from this channel will be connected here when the channel API is available.',
+      videosLead: 'Published videos from this channel appear in the AMTLIS catalogue.',
     },
 
     comments: {
@@ -78,11 +78,14 @@ const systemEn = {
       count_one: '{{count}} comment',
       count_other: '{{count}} comments',
       placeholder: 'Add a comment…',
+      signInToComment: 'Sign in to add a comment…',
       replyPlaceholder: 'Write a reply…',
       send: 'Send',
       reply: 'Reply',
       guest: 'Guest',
       justNow: 'just now',
+      loading: 'Loading comments…',
+      requestFailed: 'Comments could not be loaded or saved. Please try again.',
       empty: 'Be the first to leave a comment.',
     },
 
