@@ -10,6 +10,7 @@ using YouTubeClone.Application.Features.Comments;
 using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.LiveChat;
+using YouTubeClone.Application.Features.Playlists;
 using YouTubeClone.Application.Features.Search;
 using YouTubeClone.Application.Features.Streams;
 using YouTubeClone.Application.Features.Users;
@@ -75,6 +76,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     ICommentService,
     CommentService>();
+
+builder.Services.AddScoped<
+    IPlaylistService,
+    PlaylistService>();
 
 builder.Services.AddSingleton<
     IVideoService,
