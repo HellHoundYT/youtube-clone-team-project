@@ -28,6 +28,8 @@ const user = {
   displayName: 'User',
   handle: '@user',
   bio: '',
+  avatarUrl: null,
+  themeId: null,
 }
 
 describe(
