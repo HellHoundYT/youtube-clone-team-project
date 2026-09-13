@@ -163,5 +163,7 @@ public sealed class AuthService : IAuthService
             user.Email,
             user.DisplayName,
             $"@{user.UserName}",
-            user.Bio);
+            user.Bio,
+            user.AvatarPath,
+            user.ThemeId);
 }
