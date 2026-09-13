@@ -12,4 +12,14 @@ public interface IUserProfileService
         Guid userId,
         UpdateUserProfileCommand command,
         CancellationToken cancellationToken);
+
+    Task<UserProfileResult> UpdateAvatarAsync(
+        Guid userId,
+        Stream source,
+        string extension,
+        CancellationToken cancellationToken);
+
+    Task<string?> GetAvatarPathAsync(
+        Guid userId,
+        CancellationToken cancellationToken);
 }
