@@ -70,7 +70,7 @@ const systemUk = {
       unsubscribe: 'Відписатися',
       back: 'До підписок',
       videosTitle: 'Відео каналу',
-      videosLead: 'Відео цього каналу з’являться тут після підключення API каналів.',
+      videosLead: 'Опубліковані відео цього каналу відображаються в каталозі AMTLIS.',
     },
 
     comments: {
@@ -80,11 +80,14 @@ const systemUk = {
       count_many: '{{count}} коментарів',
       count_other: '{{count}} коментаря',
       placeholder: 'Додайте коментар…',
+      signInToComment: 'Увійдіть, щоб додати коментар…',
       replyPlaceholder: 'Напишіть відповідь…',
       send: 'Надіслати',
       reply: 'Відповісти',
       guest: 'Гість',
       justNow: 'щойно',
+      loading: 'Завантаження коментарів…',
+      requestFailed: 'Не вдалося завантажити або зберегти коментарі. Спробуйте ще раз.',
       empty: 'Залиште перший коментар.',
     },
 
