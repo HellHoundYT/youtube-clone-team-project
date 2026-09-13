@@ -10,7 +10,8 @@ public sealed record CurrentUserModel(
 public sealed record AuthSession(
     CurrentUserModel User,
     string AccessToken,
-    string RefreshToken);
+    string RefreshToken,
+    DateTimeOffset RefreshTokenExpiresAt);
 
 public sealed record RegisterUserCommand(
     string Email,
