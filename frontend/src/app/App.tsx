@@ -84,7 +84,10 @@ function App() {
         <Route
           path="channels/:channelId"
           element={
-            <ChannelPage channelService={channelService} />
+            <ChannelPage
+              channelService={channelService}
+              videoService={videoService}
+            />
           }
         />
 
