@@ -108,6 +108,60 @@ public sealed class PlaylistsController : ControllerBase
             : NotFound();
     }
 
+    [HttpPost("{playlistId:guid}/videos/{videoId:guid}")]
+    public async Task<IActionResult> AddVideo(
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var error = await _playlistService.AddVideoAsync(
+            userId.Value,
+            playlistId,
+            videoId,
+            cancellationToken);
+
+        return error switch
+        {
+            PlaylistError.None => NoContent(),
+            PlaylistError.NotFound => NotFound(),
+            PlaylistError.VideoNotFound =>
+                BadRequest(new { message = "Video was not found." }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
+    }
+
+    [HttpDelete("{playlistId:guid}/videos/{videoId:guid}")]
+    public async Task<IActionResult> RemoveVideo(
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var error = await _playlistService.RemoveVideoAsync(
+            userId.Value,
+            playlistId,
+            videoId,
+            cancellationToken);
+
+        return error switch
+        {
+            PlaylistError.None => NoContent(),
+            PlaylistError.NotFound => NotFound(),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
+    }
+
     private ActionResult<PlaylistResponseDto> MapError(
         PlaylistError error) =>
         error switch
@@ -119,6 +173,8 @@ public sealed class PlaylistsController : ControllerBase
                 BadRequest(new { message = "Playlist title must not exceed 80 characters." }),
             PlaylistError.DescriptionTooLong =>
                 BadRequest(new { message = "Playlist description must not exceed 300 characters." }),
+            PlaylistError.VideoNotFound =>
+                BadRequest(new { message = "Video was not found." }),
             _ => StatusCode(StatusCodes.Status500InternalServerError)
         };
 
@@ -140,5 +196,6 @@ public sealed class PlaylistsController : ControllerBase
             playlist.Title,
             playlist.Description,
             playlist.CreatedAt,
-            playlist.UpdatedAt);
+            playlist.UpdatedAt,
+            playlist.VideoIds);
 }
