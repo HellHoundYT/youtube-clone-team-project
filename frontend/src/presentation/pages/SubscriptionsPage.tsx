@@ -11,8 +11,14 @@ import type {
   ChannelService,
 } from '../../application/channel/service'
 import type {
+  VideoService,
+} from '../../application/video/service'
+import type {
   Channel,
 } from '../../domain/channel/types'
+import type {
+  VideoListItem,
+} from '../../domain/video/types'
 import {
   useAppTranslation,
 } from '../../shared/i18n'
@@ -40,25 +46,70 @@ function ChannelAvatar({
   )
 }
 
+function formatDuration(
+  seconds: number,
+) {
+  const safeSeconds =
+    Math.max(
+      0,
+      Math.floor(seconds),
+    )
+  const minutes =
+    Math.floor(
+      safeSeconds / 60,
+    )
+  const remainingSeconds =
+    safeSeconds % 60
+
+  return [
+    minutes,
+    remainingSeconds
+      .toString()
+      .padStart(2, '0'),
+  ].join(':')
+}
+
+function sortVideos(
+  videos: VideoListItem[],
+) {
+  return [...videos]
+    .sort(
+      (left, right) =>
+        new Date(
+          right.publishedAt ?? 0,
+        ).getTime() -
+        new Date(
+          left.publishedAt ?? 0,
+        ).getTime(),
+    )
+    .slice(0, 24)
+}
+
 interface SubscriptionsPageProps {
   channelService: ChannelService
+  videoService: VideoService
 }
 
 function SubscriptionsPage({
   channelService,
+  videoService,
 }: SubscriptionsPageProps) {
   const navigate =
     useNavigate()
   const location =
     useLocation()
-  const { t } =
-    useAppTranslation()
+  const {
+    t,
+    i18n,
+  } = useAppTranslation()
   const profile =
     useAuthStore((state) => state.profile)
   const [channels, setChannels] =
     useState<Channel[]>([])
   const [subscriptions, setSubscriptions] =
     useState<Channel[]>([])
+  const [subscriptionVideos, setSubscriptionVideos] =
+    useState<VideoListItem[]>([])
   const [ownChannelId, setOwnChannelId] =
     useState<string | null>(null)
   const [isLoading, setIsLoading] =
@@ -78,6 +129,7 @@ function SubscriptionsPage({
 
         let loadedSubscriptions: Channel[] = []
         let loadedOwnChannel: Channel | null = null
+        let loadedVideos: VideoListItem[] = []
 
         if (profile) {
           const [subscriptionsResult, ownChannelResult] =
@@ -92,6 +144,25 @@ function SubscriptionsPage({
 
           loadedSubscriptions = subscriptionsResult
           loadedOwnChannel = ownChannelResult
+
+          const videoGroups =
+            await Promise.all(
+              loadedSubscriptions.map(
+                (channel) =>
+                  videoService
+                    .getVideos({
+                      page: 1,
+                      pageSize: 12,
+                      channelId: channel.id,
+                    })
+                    .catch(() => []),
+              ),
+            )
+
+          loadedVideos =
+            sortVideos(
+              videoGroups.flat(),
+            )
         }
 
         if (cancelled) {
@@ -100,6 +171,7 @@ function SubscriptionsPage({
 
         setChannels(publicChannels)
         setSubscriptions(loadedSubscriptions)
+        setSubscriptionVideos(loadedVideos)
         setOwnChannelId(loadedOwnChannel?.id ?? null)
       } finally {
         if (!cancelled) {
@@ -116,6 +188,7 @@ function SubscriptionsPage({
   }, [
     channelService,
     profile,
+    videoService,
   ])
 
   const subscribedIds =
@@ -204,6 +277,24 @@ function SubscriptionsPage({
               : item,
           ),
         )
+
+        const videos =
+          await videoService
+            .getVideos({
+              page: 1,
+              pageSize: 12,
+              channelId: channel.id,
+            })
+            .catch(() => [])
+
+        setSubscriptionVideos((current) =>
+          sortVideos([
+            ...current.filter(
+              (item) => item.channelId !== channel.id,
+            ),
+            ...videos,
+          ]),
+        )
       } else {
         await channelService.unsubscribe(channel.id)
         setSubscriptions((current) =>
@@ -225,11 +316,21 @@ function SubscriptionsPage({
               : item,
           ),
         )
+        setSubscriptionVideos((current) =>
+          current.filter(
+            (item) => item.channelId !== channel.id,
+          ),
+        )
       }
     } finally {
       setBusyChannelId(null)
     }
   }
+
+  const locale =
+    i18n.resolvedLanguage?.startsWith('uk')
+      ? 'uk-UA'
+      : 'en-US'
 
   return (
     <section className="channels-page">
@@ -263,47 +364,131 @@ function SubscriptionsPage({
               </div>
             )
           : (
-              <div className="channel-grid">
-                {subscribedChannels.map((channel) => (
-                  <article
-                    className="channel-card"
-                    key={channel.id}
-                  >
-                    <button
-                      className="channel-card-main"
-                      type="button"
-                      onClick={() =>
-                        navigate(`/channels/${channel.id}`)}
-                    >
-                      <ChannelAvatar channel={channel} />
-                      <h2>{channel.name}</h2>
-                      <p>{channel.description}</p>
-                      <span>
-                        {channel.subscriberCount}{' '}
-                        {t('system.channels.subscribers')}
-                      </span>
-                    </button>
-                    <div className="subscription-card-actions">
-                      <span className="subscribe-button is-subscribed">
-                        {t('system.channels.subscribed')}
-                      </span>
-                      <button
-                        className="unsubscribe-button"
-                        type="button"
-                        disabled={busyChannelId === channel.id}
-                        onClick={() => {
-                          void changeSubscription(
-                            channel,
-                            false,
-                          )
-                        }}
-                      >
-                        {t('system.channels.unsubscribe')}
-                      </button>
+              <>
+                <section className="subscription-feed">
+                  <div className="channel-videos-heading">
+                    <div>
+                      <h2>{t('system.channels.feedTitle')}</h2>
+                      <p>{t('system.channels.feedLead')}</p>
                     </div>
-                  </article>
-                ))}
-              </div>
+                    <span className="channel-count">
+                      {t(
+                        'system.channels.videoCount',
+                        {
+                          count: subscriptionVideos.length,
+                        },
+                      )}
+                    </span>
+                  </div>
+
+                  {subscriptionVideos.length === 0
+                    ? (
+                        <div className="channel-videos-empty">
+                          <p>{t('system.channels.feedEmpty')}</p>
+                        </div>
+                      )
+                    : (
+                        <div className="channel-video-grid">
+                          {subscriptionVideos.map((video) => {
+                            const formattedViews =
+                              new Intl.NumberFormat(
+                                locale,
+                                {
+                                  notation: 'compact',
+                                  maximumFractionDigits: 1,
+                                },
+                              ).format(video.viewCount)
+
+                            return (
+                              <button
+                                className="channel-video-card"
+                                key={video.id}
+                                type="button"
+                                onClick={() =>
+                                  navigate(`/watch/${video.id}`)}
+                              >
+                                <div className="channel-video-thumbnail">
+                                  {video.thumbnailPath
+                                    ? (
+                                        <img
+                                          src={video.thumbnailPath}
+                                          alt=""
+                                        />
+                                      )
+                                    : (
+                                        <span>A</span>
+                                      )}
+                                  <small>
+                                    {formatDuration(
+                                      video.durationSeconds,
+                                    )}
+                                  </small>
+                                </div>
+                                <div className="channel-video-copy">
+                                  <strong>{video.title}</strong>
+                                  <span>{video.channelName}</span>
+                                  <span>
+                                    {t(
+                                      'home.views',
+                                      {
+                                        count: video.viewCount,
+                                        formatted: formattedViews,
+                                      },
+                                    )}
+                                  </span>
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                </section>
+
+                <section className="subscribed-channels-section">
+                  <h2>{t('system.channels.followingTitle')}</h2>
+                  <div className="channel-grid">
+                    {subscribedChannels.map((channel) => (
+                      <article
+                        className="channel-card"
+                        key={channel.id}
+                      >
+                        <button
+                          className="channel-card-main"
+                          type="button"
+                          onClick={() =>
+                            navigate(`/channels/${channel.id}`)}
+                        >
+                          <ChannelAvatar channel={channel} />
+                          <h2>{channel.name}</h2>
+                          <p>{channel.description}</p>
+                          <span>
+                            {channel.subscriberCount}{' '}
+                            {t('system.channels.subscribers')}
+                          </span>
+                        </button>
+                        <div className="subscription-card-actions">
+                          <span className="subscribe-button is-subscribed">
+                            {t('system.channels.subscribed')}
+                          </span>
+                          <button
+                            className="unsubscribe-button"
+                            type="button"
+                            disabled={busyChannelId === channel.id}
+                            onClick={() => {
+                              void changeSubscription(
+                                channel,
+                                false,
+                              )
+                            }}
+                          >
+                            {t('system.channels.unsubscribe')}
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              </>
             )}
 
       <section className="channel-discover">
