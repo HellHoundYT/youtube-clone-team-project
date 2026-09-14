@@ -173,6 +173,24 @@ namespace YouTubeClone.Infrastructure.Persistence.Migrations
                     b.ToTable("Playlists", (string)null);
                 });
 
+            modelBuilder.Entity("YouTubeClone.Domain.Playlists.PlaylistVideo", b =>
+                {
+                    b.Property<Guid>("PlaylistId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("PlaylistId", "VideoId");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("PlaylistVideos", (string)null);
+                });
+
             modelBuilder.Entity("YouTubeClone.Domain.Users.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -302,6 +320,17 @@ namespace YouTubeClone.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("YouTubeClone.Domain.Playlists.PlaylistVideo", b =>
+                {
+                    b.HasOne("YouTubeClone.Domain.Playlists.Playlist", "Playlist")
+                        .WithMany("Videos")
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Playlist");
+                });
+
             modelBuilder.Entity("YouTubeClone.Domain.Users.RefreshToken", b =>
                 {
                     b.HasOne("YouTubeClone.Domain.Users.User", "User")
@@ -316,6 +345,11 @@ namespace YouTubeClone.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("YouTubeClone.Domain.Comments.Comment", b =>
                 {
                     b.Navigation("Reactions");
+                });
+
+            modelBuilder.Entity("YouTubeClone.Domain.Playlists.Playlist", b =>
+                {
+                    b.Navigation("Videos");
                 });
 
             modelBuilder.Entity("YouTubeClone.Domain.Users.User", b =>
