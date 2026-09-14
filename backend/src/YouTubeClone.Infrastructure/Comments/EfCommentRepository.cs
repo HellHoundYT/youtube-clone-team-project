@@ -94,6 +94,25 @@ public sealed class EfCommentRepository : ICommentRepository
         _db.Comments.Add(comment);
     }
 
+    public async Task RemoveCommentTreeAsync(
+        Comment comment,
+        CancellationToken cancellationToken)
+    {
+        if (!comment.ParentCommentId.HasValue)
+        {
+            var replies = await _db.Comments
+                .Where(item => item.ParentCommentId == comment.Id)
+                .ToListAsync(cancellationToken);
+
+            if (replies.Count > 0)
+            {
+                _db.Comments.RemoveRange(replies);
+            }
+        }
+
+        _db.Comments.Remove(comment);
+    }
+
     public void AddReaction(CommentReaction reaction)
     {
         _db.CommentReactions.Add(reaction);
