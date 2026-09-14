@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using YouTubeClone.Api.Auth;
 using YouTubeClone.Api.Hubs;
+using YouTubeClone.Application.Abstractions.Auth;
 using YouTubeClone.Application.Features.Auth;
 using YouTubeClone.Application.Features.Categories;
 using YouTubeClone.Application.Features.Channels;
@@ -22,6 +24,7 @@ var builder =
     WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -43,7 +46,11 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddSignalR();
 
-builder.Services.AddSingleton<
+builder.Services.AddScoped<
+    ICurrentUserContext,
+    HttpCurrentUserContext>();
+
+builder.Services.AddScoped<
     IWatchPartyService,
     WatchPartyService>();
 
@@ -81,15 +88,15 @@ builder.Services.AddScoped<
     IPlaylistService,
     PlaylistService>();
 
-builder.Services.AddSingleton<
+builder.Services.AddScoped<
     IVideoService,
     VideoService>();
 
-builder.Services.AddSingleton<
+builder.Services.AddScoped<
     IWatchHistoryService,
     WatchHistoryService>();
 
-builder.Services.AddSingleton<
+builder.Services.AddScoped<
     IFavoritesService,
     FavoritesService>();
 
@@ -97,11 +104,11 @@ builder.Services.AddSingleton<
     ILiveStreamService,
     LiveStreamService>();
 
-builder.Services.AddSingleton<
+builder.Services.AddScoped<
     ICategoryService,
     CategoryService>();
 
-builder.Services.AddSingleton<
+builder.Services.AddScoped<
     ISearchService,
     SearchService>();
 

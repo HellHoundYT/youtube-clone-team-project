@@ -1,8 +1,8 @@
-﻿using System.Net;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
-using YouTubeClone.Api.Controllers;
+using YouTubeClone.Api.DTOs.Auth;
 using Xunit;
 
 namespace YouTubeClone.Api.Tests.Integration;
@@ -116,7 +116,7 @@ public sealed class ApiIntegrationTests
             CreateFactory();
 
         using var client =
-            factory.CreateClient();
+            await CreateAuthenticatedClientAsync(factory);
 
         var updateResponse =
             await client.PutAsJsonAsync(
@@ -202,7 +202,7 @@ public sealed class ApiIntegrationTests
             CreateFactory();
 
         using var client =
-            factory.CreateClient();
+            await CreateAuthenticatedClientAsync(factory);
 
         var addResponse =
             await client.PostAsync(
@@ -351,10 +351,37 @@ public sealed class ApiIntegrationTests
                 .GetBoolean());
     }
 
-    private static WebApplicationFactory<HealthController>
-        CreateFactory()
+    private static AuthApiFactory CreateFactory()
     {
-        return new WebApplicationFactory<
-            HealthController>();
+        return new AuthApiFactory();
+    }
+
+    private static async Task<HttpClient> CreateAuthenticatedClientAsync(
+        AuthApiFactory factory)
+    {
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new
+            {
+                email = $"library-{Guid.NewGuid():N}@example.com",
+                password = "safe-password",
+                displayName = "Library User"
+            });
+
+        response.EnsureSuccessStatusCode();
+
+        var auth = await response.Content
+            .ReadFromJsonAsync<AuthResponseDto>();
+
+        Assert.NotNull(auth);
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                auth.AccessToken);
+
+        return client;
     }
 }

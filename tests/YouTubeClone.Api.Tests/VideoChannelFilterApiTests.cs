@@ -1,7 +1,5 @@
 using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
-using YouTubeClone.Api.Controllers;
 using Xunit;
 
 namespace YouTubeClone.Api.Tests.Integration;
@@ -16,7 +14,7 @@ public sealed class VideoChannelFilterApiTests
     public async Task VideosApi_FiltersCatalogByChannel()
     {
         using var factory =
-            new WebApplicationFactory<HealthController>();
+            new AuthApiFactory();
 
         using var client =
             factory.CreateClient();

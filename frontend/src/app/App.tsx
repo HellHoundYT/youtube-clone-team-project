@@ -72,16 +72,6 @@ function App() {
         />
 
         <Route
-          path="subscriptions"
-          element={
-            <SubscriptionsPage
-              channelService={channelService}
-              videoService={videoService}
-            />
-          }
-        />
-
-        <Route
           path="channels/:channelId"
           element={
             <ChannelPage
@@ -89,26 +79,6 @@ function App() {
               videoService={videoService}
             />
           }
-        />
-
-        <Route
-          path="library"
-          element={
-            <LibraryPage
-              libraryService={libraryService}
-              playlistService={playlistService}
-            />
-          }
-        />
-
-        <Route
-          path="history"
-          element={<HistoryPage libraryService={libraryService} />}
-        />
-
-        <Route
-          path="favorites"
-          element={<FavoritesPage libraryService={libraryService} />}
         />
 
         <Route
@@ -140,6 +110,36 @@ function App() {
         />
 
         <Route element={<RequireAuth />}>
+          <Route
+            path="subscriptions"
+            element={
+              <SubscriptionsPage
+                channelService={channelService}
+                videoService={videoService}
+              />
+            }
+          />
+
+          <Route
+            path="library"
+            element={
+              <LibraryPage
+                libraryService={libraryService}
+                playlistService={playlistService}
+              />
+            }
+          />
+
+          <Route
+            path="history"
+            element={<HistoryPage libraryService={libraryService} />}
+          />
+
+          <Route
+            path="favorites"
+            element={<FavoritesPage libraryService={libraryService} />}
+          />
+
           <Route
             path="upload"
             element={<UploadPage uploadService={uploadService} />}

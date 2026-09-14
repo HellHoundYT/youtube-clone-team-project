@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using YouTubeClone.Domain.Channels;
 using YouTubeClone.Domain.Comments;
+using YouTubeClone.Domain.Favorites;
+using YouTubeClone.Domain.History;
 using YouTubeClone.Domain.Playlists;
 using YouTubeClone.Domain.Users;
+using YouTubeClone.Domain.Videos;
 
 namespace YouTubeClone.Infrastructure.Persistence;
 
@@ -28,6 +31,14 @@ public class AppDbContext : DbContext
     public DbSet<Playlist> Playlists => Set<Playlist>();
 
     public DbSet<PlaylistVideo> PlaylistVideos => Set<PlaylistVideo>();
+
+    public DbSet<Video> Videos => Set<Video>();
+
+    public DbSet<WatchHistoryEntry> WatchHistoryEntries => Set<WatchHistoryEntry>();
+
+    public DbSet<WatchHistoryPreference> WatchHistoryPreferences => Set<WatchHistoryPreference>();
+
+    public DbSet<FavoriteEntry> FavoriteEntries => Set<FavoriteEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -145,6 +156,72 @@ public class AppDbContext : DbContext
                 .HasForeignKey(item => item.PlaylistId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(item => item.VideoId);
+        });
+
+        modelBuilder.Entity<Video>(entity =>
+        {
+            entity.ToTable("Videos");
+            entity.HasKey(video => video.Id);
+            entity.Property(video => video.ChannelName).HasMaxLength(100).IsRequired();
+            entity.Property(video => video.ChannelAvatarPath).HasMaxLength(512);
+            entity.Property(video => video.Category).HasMaxLength(100);
+            entity.Property(video => video.CategorySlug).HasMaxLength(100);
+            entity.Property(video => video.Title).HasMaxLength(200).IsRequired();
+            entity.Property(video => video.Description).HasMaxLength(5000);
+            entity.Property(video => video.VideoPath).HasMaxLength(512).IsRequired();
+            entity.Property(video => video.ThumbnailPath).HasMaxLength(512);
+            entity.Property(video => video.Visibility).HasMaxLength(32).IsRequired();
+            entity.HasIndex(video => video.ChannelId);
+            entity.HasIndex(video => video.CategorySlug);
+            entity.HasIndex(video => video.PublishedAt);
+        });
+
+        modelBuilder.Entity<WatchHistoryEntry>(entity =>
+        {
+            entity.ToTable("WatchHistoryEntries");
+            entity.HasKey(entry => new
+            {
+                entry.UserId,
+                entry.VideoId
+            });
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(entry => entry.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(entry => new
+            {
+                entry.UserId,
+                entry.LastWatchedAt
+            });
+        });
+
+        modelBuilder.Entity<WatchHistoryPreference>(entity =>
+        {
+            entity.ToTable("WatchHistoryPreferences");
+            entity.HasKey(preference => preference.UserId);
+            entity.HasOne<User>()
+                .WithOne()
+                .HasForeignKey<WatchHistoryPreference>(preference => preference.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<FavoriteEntry>(entity =>
+        {
+            entity.ToTable("FavoriteEntries");
+            entity.HasKey(entry => new
+            {
+                entry.UserId,
+                entry.VideoId
+            });
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(entry => entry.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(entry => new
+            {
+                entry.UserId,
+                entry.CreatedAt
+            });
         });
     }
 }
