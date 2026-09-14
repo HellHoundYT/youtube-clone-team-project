@@ -21,4 +21,16 @@ public interface IPlaylistService
         Guid ownerId,
         Guid playlistId,
         CancellationToken cancellationToken);
+
+    Task<PlaylistError> AddVideoAsync(
+        Guid ownerId,
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken);
+
+    Task<PlaylistError> RemoveVideoAsync(
+        Guid ownerId,
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken);
 }

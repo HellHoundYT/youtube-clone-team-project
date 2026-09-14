@@ -1,0 +1,72 @@
+.library-playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.library-playlist-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 12px;
+  align-items: center;
+  padding: 16px;
+  color: #d9d9e2;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(117, 87, 239, .16), transparent 42%),
+    linear-gradient(145deg, #15161d, #111218);
+  border: 1px solid #262934;
+  border-radius: 13px;
+  text-align: left;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.library-playlist-card:hover {
+  transform: translateY(-2px);
+  border-color: #40375f;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(117, 87, 239, .22), transparent 44%),
+    linear-gradient(145deg, #181922, #12131a);
+}
+
+.library-playlist-icon {
+  grid-row: 1 / span 3;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #c9bcff;
+  background: #242039;
+  border-radius: 11px;
+  font-size: 22px;
+}
+
+.library-playlist-card strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #f4f3f8;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-playlist-card > span:not(.library-playlist-icon) {
+  min-width: 0;
+  overflow: hidden;
+  color: #838795;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-playlist-card small {
+  color: #a996ff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .library-playlist-grid {
+    grid-template-columns: 1fr;
+  }
+}

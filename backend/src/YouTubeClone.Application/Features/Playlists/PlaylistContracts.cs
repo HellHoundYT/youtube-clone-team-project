@@ -6,7 +6,8 @@ public sealed record PlaylistModel(
     string Title,
     string Description,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    IReadOnlyList<Guid> VideoIds);
 
 public sealed record SavePlaylistCommand(
     string Title,
@@ -18,7 +19,8 @@ public enum PlaylistError
     NotFound,
     TitleRequired,
     TitleTooLong,
-    DescriptionTooLong
+    DescriptionTooLong,
+    VideoNotFound
 }
 
 public sealed record PlaylistResult(

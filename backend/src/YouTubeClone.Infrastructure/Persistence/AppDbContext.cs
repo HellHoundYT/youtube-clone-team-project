@@ -27,6 +27,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Playlist> Playlists => Set<Playlist>();
 
+    public DbSet<PlaylistVideo> PlaylistVideos => Set<PlaylistVideo>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(entity =>
@@ -128,6 +130,21 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(playlist => playlist.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PlaylistVideo>(entity =>
+        {
+            entity.ToTable("PlaylistVideos");
+            entity.HasKey(item => new
+            {
+                item.PlaylistId,
+                item.VideoId
+            });
+            entity.HasOne(item => item.Playlist)
+                .WithMany(playlist => playlist.Videos)
+                .HasForeignKey(item => item.PlaylistId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(item => item.VideoId);
         });
     }
 }

@@ -13,4 +13,7 @@ public sealed class Playlist
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+
+    public ICollection<PlaylistVideo> Videos { get; set; } =
+        new List<PlaylistVideo>();
 }

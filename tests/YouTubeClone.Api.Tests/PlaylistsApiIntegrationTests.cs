@@ -8,6 +8,9 @@ namespace YouTubeClone.Api.Tests;
 
 public sealed class PlaylistsApiIntegrationTests : IClassFixture<AuthApiFactory>
 {
+    private static readonly Guid VideoId =
+        Guid.Parse("11111111-1111-1111-1111-111111111111");
+
     private readonly AuthApiFactory _factory;
 
     public PlaylistsApiIntegrationTests(AuthApiFactory factory)
@@ -34,6 +37,7 @@ public sealed class PlaylistsApiIntegrationTests : IClassFixture<AuthApiFactory>
         var created = await createResponse.Content.ReadFromJsonAsync<PlaylistResponseDto>();
         Assert.NotNull(created);
         Assert.Equal("Frontend", created.Title);
+        Assert.Empty(created.VideoIds);
 
         var list = await ownerClient.GetFromJsonAsync<List<PlaylistResponseDto>>(
             "/api/v1/playlists");
@@ -76,6 +80,72 @@ public sealed class PlaylistsApiIntegrationTests : IClassFixture<AuthApiFactory>
         var afterDelete = await ownerClient.GetFromJsonAsync<List<PlaylistResponseDto>>(
             "/api/v1/playlists");
         Assert.Empty(afterDelete!);
+    }
+
+    [Fact]
+    public async Task Playlist_video_membership_is_idempotent_and_owner_scoped()
+    {
+        using var ownerClient = _factory.CreateClient();
+        var ownerAuth = await RegisterAsync(ownerClient, "Playlist Owner");
+        Authorize(ownerClient, ownerAuth.AccessToken);
+
+        var createResponse = await ownerClient.PostAsJsonAsync(
+            "/api/v1/playlists",
+            new
+            {
+                title = "Night coding",
+                description = "Videos for focused work"
+            });
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<PlaylistResponseDto>();
+        Assert.NotNull(created);
+
+        var addResponse = await ownerClient.PostAsync(
+            $"/api/v1/playlists/{created.Id}/videos/{VideoId}",
+            null);
+        Assert.Equal(HttpStatusCode.NoContent, addResponse.StatusCode);
+
+        var duplicateAddResponse = await ownerClient.PostAsync(
+            $"/api/v1/playlists/{created.Id}/videos/{VideoId}",
+            null);
+        Assert.Equal(HttpStatusCode.NoContent, duplicateAddResponse.StatusCode);
+
+        var afterAdd = await ownerClient.GetFromJsonAsync<List<PlaylistResponseDto>>(
+            "/api/v1/playlists");
+        var ownerPlaylist = Assert.Single(afterAdd!);
+        Assert.Equal(created.Id, ownerPlaylist.Id);
+        Assert.Equal(new[] { VideoId }, ownerPlaylist.VideoIds);
+
+        using var otherClient = _factory.CreateClient();
+        var otherAuth = await RegisterAsync(otherClient, "Playlist Stranger");
+        Authorize(otherClient, otherAuth.AccessToken);
+
+        var forbiddenAdd = await otherClient.PostAsync(
+            $"/api/v1/playlists/{created.Id}/videos/{VideoId}",
+            null);
+        Assert.Equal(HttpStatusCode.NotFound, forbiddenAdd.StatusCode);
+
+        var forbiddenRemove = await otherClient.DeleteAsync(
+            $"/api/v1/playlists/{created.Id}/videos/{VideoId}");
+        Assert.Equal(HttpStatusCode.NotFound, forbiddenRemove.StatusCode);
+
+        var removeResponse = await ownerClient.DeleteAsync(
+            $"/api/v1/playlists/{created.Id}/videos/{VideoId}");
+        Assert.Equal(HttpStatusCode.NoContent, removeResponse.StatusCode);
+
+        var duplicateRemoveResponse = await ownerClient.DeleteAsync(
+            $"/api/v1/playlists/{created.Id}/videos/{VideoId}");
+        Assert.Equal(HttpStatusCode.NoContent, duplicateRemoveResponse.StatusCode);
+
+        var afterRemove = await ownerClient.GetFromJsonAsync<List<PlaylistResponseDto>>(
+            "/api/v1/playlists");
+        Assert.Empty(Assert.Single(afterRemove!).VideoIds);
+
+        var missingVideoResponse = await ownerClient.PostAsync(
+            $"/api/v1/playlists/{created.Id}/videos/{Guid.NewGuid()}",
+            null);
+        Assert.Equal(HttpStatusCode.BadRequest, missingVideoResponse.StatusCode);
     }
 
     [Fact]
