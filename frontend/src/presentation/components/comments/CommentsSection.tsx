@@ -83,8 +83,8 @@ function CommentOwnerActions({
     const text = draft.trim()
 
     if (!text || text === comment.text || isBusy) {
-      setIsEditing(false)
       setDraft(comment.text)
+      setIsEditing(false)
       return
     }
 
@@ -98,9 +98,10 @@ function CommentOwnerActions({
   }
 
   const remove = async () => {
-    if (isBusy || !window.confirm(
-      t('system.comments.deleteConfirm'),
-    )) {
+    if (
+      isBusy ||
+      !window.confirm(t('system.comments.deleteConfirm'))
+    ) {
       return
     }
 
@@ -168,6 +169,48 @@ function CommentOwnerActions({
   )
 }
 
+function ReactionButtons({
+  comment,
+  onReaction,
+}: {
+  comment: CommentItem
+  onReaction: (
+    commentId: string,
+    reaction: Exclude<CommentReaction, null>,
+  ) => Promise<void>
+}) {
+  return (
+    <>
+      <button
+        className={
+          comment.reaction === 'like'
+            ? 'is-active'
+            : ''
+        }
+        type="button"
+        onClick={() => {
+          void onReaction(comment.id, 'like')
+        }}
+      >
+        ♡ {comment.likes || ''}
+      </button>
+      <button
+        className={
+          comment.reaction === 'dislike'
+            ? 'is-active'
+            : ''
+        }
+        type="button"
+        onClick={() => {
+          void onReaction(comment.id, 'dislike')
+        }}
+      >
+        ♢ {comment.dislikes || ''}
+      </button>
+    </>
+  )
+}
+
 function CommentCard({
   comment,
   viewerId,
@@ -195,10 +238,8 @@ function CommentCard({
   ) => Promise<void>
 }) {
   const { t } = useAppTranslation()
-  const [isReplying, setIsReplying] =
-    useState(false)
-  const [reply, setReply] =
-    useState('')
+  const [isReplying, setIsReplying] = useState(false)
+  const [reply, setReply] = useState('')
 
   const submitReply = async (
     event: FormEvent<HTMLFormElement>,
@@ -210,10 +251,7 @@ function CommentCard({
       return
     }
 
-    await onReply(
-      comment.id,
-      text,
-    )
+    await onReply(comment.id, text)
     setReply('')
     setIsReplying(false)
   }
@@ -231,47 +269,14 @@ function CommentCard({
         <p>{comment.text}</p>
 
         <div className="comment-actions">
-          <button
-            className={
-              comment.reaction === 'like'
-                ? 'is-active'
-                : ''
-            }
-            type="button"
-            onClick={() => {
-              void onReaction(
-                comment.id,
-                'like',
-              )
-            }}
-          >
-            ♡ {comment.likes || ''}
-          </button>
-
-          <button
-            className={
-              comment.reaction === 'dislike'
-                ? 'is-active'
-                : ''
-            }
-            type="button"
-            onClick={() => {
-              void onReaction(
-                comment.id,
-                'dislike',
-              )
-            }}
-          >
-            ♢ {comment.dislikes || ''}
-          </button>
-
+          <ReactionButtons
+            comment={comment}
+            onReaction={onReaction}
+          />
           <button
             type="button"
             onClick={() =>
-              setIsReplying(
-                (value) => !value,
-              )
-            }
+              setIsReplying((value) => !value)}
           >
             {t('system.comments.reply')}
           </button>
@@ -299,10 +304,7 @@ function CommentCard({
                 'system.comments.replyPlaceholder',
               )}
               onChange={(event) =>
-                setReply(
-                  event.target.value,
-                )
-              }
+                setReply(event.target.value)}
             />
             <button type="submit">
               {t('system.comments.send')}
@@ -312,65 +314,33 @@ function CommentCard({
 
         {comment.replies.length > 0 && (
           <div className="comment-replies">
-            {comment.replies.map(
-              (replyItem) => (
-                <div
-                  className="comment-reply"
-                  key={replyItem.id}
-                >
-                  <CommentAvatar
-                    comment={replyItem}
-                    small
-                  />
-                  <div className="comment-reply-content">
-                    <strong>
-                      {replyItem.author}
-                    </strong>
-                    <p>{replyItem.text}</p>
-                    <div className="comment-actions">
-                      <button
-                        className={
-                          replyItem.reaction === 'like'
-                            ? 'is-active'
-                            : ''
-                        }
-                        type="button"
-                        onClick={() => {
-                          void onReaction(
-                            replyItem.id,
-                            'like',
-                          )
-                        }}
-                      >
-                        ♡ {replyItem.likes || ''}
-                      </button>
-                      <button
-                        className={
-                          replyItem.reaction === 'dislike'
-                            ? 'is-active'
-                            : ''
-                        }
-                        type="button"
-                        onClick={() => {
-                          void onReaction(
-                            replyItem.id,
-                            'dislike',
-                          )
-                        }}
-                      >
-                        ♢ {replyItem.dislikes || ''}
-                      </button>
-                    </div>
-                    <CommentOwnerActions
+            {comment.replies.map((replyItem) => (
+              <div
+                className="comment-reply"
+                key={replyItem.id}
+              >
+                <CommentAvatar
+                  comment={replyItem}
+                  small
+                />
+                <div className="comment-reply-content">
+                  <strong>{replyItem.author}</strong>
+                  <p>{replyItem.text}</p>
+                  <div className="comment-actions">
+                    <ReactionButtons
                       comment={replyItem}
-                      viewerId={viewerId}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
+                      onReaction={onReaction}
                     />
                   </div>
+                  <CommentOwnerActions
+                    comment={replyItem}
+                    viewerId={viewerId}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
                 </div>
-              ),
-            )}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -389,31 +359,19 @@ function CommentsSection({
   const navigate = useNavigate()
   const location = useLocation()
   const commentService = getCommentService()
-  const profile = useAuthStore(
-    (state) => state.profile,
-  )
-  const [comments, setComments] =
-    useState<CommentItem[]>([])
-  const [text, setText] =
-    useState('')
-  const [sort, setSort] =
-    useState<CommentSort>('newest')
-  const [page, setPage] =
-    useState(1)
-  const [hasMore, setHasMore] =
-    useState(false)
-  const [isLoading, setIsLoading] =
-    useState(true)
-  const [isLoadingMore, setIsLoadingMore] =
-    useState(false)
-  const [error, setError] =
-    useState('')
+  const profile = useAuthStore((state) => state.profile)
+
+  const [comments, setComments] = useState<CommentItem[]>([])
+  const [text, setText] = useState('')
+  const [sort, setSort] = useState<CommentSort>('newest')
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
-
-    setIsLoading(true)
-    setPage(1)
 
     void commentService
       .list(
@@ -432,9 +390,7 @@ function CommentsSection({
       })
       .catch(() => {
         if (!controller.signal.aborted) {
-          setError(
-            t('system.comments.requestFailed'),
-          )
+          setError(t('system.comments.requestFailed'))
         }
       })
       .finally(() => {
@@ -457,28 +413,27 @@ function CommentsSection({
       return true
     }
 
-    navigate(
-      '/auth',
-      {
-        state: {
-          from: location.pathname,
-        },
+    navigate('/auth', {
+      state: {
+        from: location.pathname,
       },
-    )
+    })
     return false
   }
 
-  const reload = async () => {
+  const reloadFirstPage = async () => {
     const items = await commentService.list(
       videoId,
       {
         page: 1,
-        pageSize: page * pageSize,
+        pageSize,
         sort,
       },
     )
+
     setComments(items)
-    setHasMore(items.length === page * pageSize)
+    setPage(1)
+    setHasMore(items.length === pageSize)
   }
 
   const addComment = async (
@@ -493,16 +448,11 @@ function CommentsSection({
 
     try {
       setError('')
-      await commentService.add(
-        videoId,
-        content,
-      )
+      await commentService.add(videoId, content)
       setText('')
-      await reload()
+      await reloadFirstPage()
     } catch {
-      setError(
-        t('system.comments.requestFailed'),
-      )
+      setError(t('system.comments.requestFailed'))
     }
   }
 
@@ -516,15 +466,10 @@ function CommentsSection({
 
     try {
       setError('')
-      await commentService.toggleReaction(
-        commentId,
-        reaction,
-      )
-      await reload()
+      await commentService.toggleReaction(commentId, reaction)
+      await reloadFirstPage()
     } catch {
-      setError(
-        t('system.comments.requestFailed'),
-      )
+      setError(t('system.comments.requestFailed'))
     }
   }
 
@@ -543,11 +488,9 @@ function CommentsSection({
         replyText,
         commentId,
       )
-      await reload()
+      await reloadFirstPage()
     } catch {
-      setError(
-        t('system.comments.requestFailed'),
-      )
+      setError(t('system.comments.requestFailed'))
     }
   }
 
@@ -557,29 +500,20 @@ function CommentsSection({
   ) => {
     try {
       setError('')
-      await commentService.update(
-        commentId,
-        updatedText,
-      )
-      await reload()
+      await commentService.update(commentId, updatedText)
+      await reloadFirstPage()
     } catch {
-      setError(
-        t('system.comments.requestFailed'),
-      )
+      setError(t('system.comments.requestFailed'))
     }
   }
 
-  const deleteComment = async (
-    commentId: string,
-  ) => {
+  const deleteComment = async (commentId: string) => {
     try {
       setError('')
       await commentService.remove(commentId)
-      await reload()
+      await reloadFirstPage()
     } catch {
-      setError(
-        t('system.comments.requestFailed'),
-      )
+      setError(t('system.comments.requestFailed'))
     }
   }
 
@@ -600,6 +534,7 @@ function CommentsSection({
           sort,
         },
       )
+
       setComments((current) => [
         ...current,
         ...items,
@@ -607,9 +542,7 @@ function CommentsSection({
       setPage(nextPage)
       setHasMore(items.length === pageSize)
     } catch {
-      setError(
-        t('system.comments.requestFailed'),
-      )
+      setError(t('system.comments.requestFailed'))
     } finally {
       setIsLoadingMore(false)
     }
@@ -631,20 +564,21 @@ function CommentsSection({
         <div className="comments-heading-copy">
           <h2>{t('system.comments.title')}</h2>
           <span>
-            {t(
-              'system.comments.count',
-              {
-                count: comments.length,
-              },
-            )}
+            {t('system.comments.count', {
+              count: comments.length,
+            })}
           </span>
         </div>
+
         <select
           className="comments-sort"
           value={sort}
           aria-label={t('system.comments.sortLabel')}
-          onChange={(event) =>
-            setSort(event.target.value as CommentSort)}
+          onChange={(event) => {
+            setIsLoading(true)
+            setPage(1)
+            setSort(event.target.value as CommentSort)
+          }}
         >
           <option value="newest">
             {t('system.comments.sortNewest')}
@@ -665,9 +599,7 @@ function CommentsSection({
         }}
       >
         <div className="comment-avatar">
-          {composerName
-            .charAt(0)
-            .toUpperCase()}
+          {composerName.charAt(0).toUpperCase()}
         </div>
         <div>
           <textarea
@@ -680,10 +612,7 @@ function CommentsSection({
                 : 'system.comments.signInToComment',
             )}
             onChange={(event) =>
-              setText(
-                event.target.value,
-              )
-            }
+              setText(event.target.value)}
           />
           <button
             type="submit"
@@ -711,19 +640,17 @@ function CommentsSection({
       ) : (
         <>
           <div className="comments-list">
-            {comments.map(
-              (comment) => (
-                <CommentCard
-                  key={comment.id}
-                  comment={comment}
-                  viewerId={profile?.id}
-                  onReaction={reactToComment}
-                  onReply={replyToComment}
-                  onEdit={editComment}
-                  onDelete={deleteComment}
-                />
-              ),
-            )}
+            {comments.map((comment) => (
+              <CommentCard
+                key={comment.id}
+                comment={comment}
+                viewerId={profile?.id}
+                onReaction={reactToComment}
+                onReply={replyToComment}
+                onEdit={editComment}
+                onDelete={deleteComment}
+              />
+            ))}
           </div>
 
           {hasMore && (
