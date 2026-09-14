@@ -10,6 +10,12 @@ public sealed class AddCommentRequestDto
     public Guid? ParentCommentId { get; init; }
 }
 
+public sealed class UpdateCommentRequestDto
+{
+    [Required, MaxLength(500)]
+    public string Text { get; init; } = string.Empty;
+}
+
 public sealed class ToggleCommentReactionRequestDto
 {
     [Required]
