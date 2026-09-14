@@ -1,468 +1,348 @@
-# YouTube Clone API Contract v1
+# AMTLIS API Contract v1
 
-## Загальна мета
+## Призначення
 
-Цей документ визначає першу версію HTTP API для командного проєкту FrameSync.
+Цей документ описує фактичний HTTP та realtime контракт поточної версії AMTLIS. Основний HTTP префікс:
 
-Backend реалізується на ASP.NET Core Web API.
-
-Основний префікс API:
-
+```text
 /api/v1
+```
 
-Формат обміну даними:
+JSON використовується для звичайних запитів і відповідей. Завантаження відео та зображень використовує `multipart/form-data`. Ідентифікатори сутностей передаються як UUID. Дати повертаються у форматі ISO 8601.
 
-JSON
+## Авторизація
 
-Авторизація:
+Захищені HTTP маршрути очікують JWT access token:
 
-JWT Access Token
+```text
+Authorization: Bearer <accessToken>
+```
 
-Refresh Token
-
-## Загальні правила
-
-Усі ідентифікатори сутностей, крім Category, передаються як UUID.
-
-Дата та час повертаються у форматі ISO 8601.
-
-Захищені маршрути вимагають JWT Access Token.
-
-Медіафайли не передаються через звичайні JSON DTO.
-
-API повертає URL або шлях до медіафайлу.
-
-## Auth
-
-Відповідальна за реалізацію:
-
-Таня
+Refresh token не повертається frontend коду і не зберігається у `localStorage` або `sessionStorage`. Backend встановлює його у HttpOnly cookie `amtlis.refresh_token` з `SameSite=Lax` і шляхом `/api/v1/auth`.
 
 ### Реєстрація
 
+```text
 POST /api/v1/auth/register
+```
 
-Request:
+Приклад request:
 
+```json
 {
   "email": "user@example.com",
-  "password": "password",
-  "displayName": "User"
-}
-
-Response:
-
-{
-  "userId": "uuid",
+  "password": "password123",
   "displayName": "User",
-  "accessToken": "token",
-  "refreshToken": "token"
+  "userName": "user"
 }
+```
+
+Успішна response:
+
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "displayName": "User",
+    "handle": "@user",
+    "bio": "",
+    "avatarUrl": null,
+    "themeId": null
+  },
+  "accessToken": "jwt"
+}
+```
 
 ### Вхід
 
+```text
 POST /api/v1/auth/login
+```
 
 Request:
 
+```json
 {
   "email": "user@example.com",
-  "password": "password"
+  "password": "password123"
 }
+```
 
-Response:
+Response має ту саму форму, що й реєстрація. Refresh cookie встановлюється сервером.
 
-{
-  "userId": "uuid",
-  "displayName": "User",
-  "accessToken": "token",
-  "refreshToken": "token"
-}
+### Оновлення access token
 
-### Оновлення Access Token
-
+```text
 POST /api/v1/auth/refresh
+```
 
-Request:
-
-{
-  "refreshToken": "token"
-}
+Тіло не потрібне. Сервер читає HttpOnly refresh cookie, виконує rotation і повертає новий access token разом з актуальним користувачем.
 
 ### Вихід
 
+```text
 POST /api/v1/auth/logout
+```
 
-Маршрут відкликає поточний Refresh Token.
+Сервер відкликає refresh token, якщо він присутній, і видаляє refresh cookie.
 
 ## Users
 
-Відповідальна за реалізацію:
+Усі маршрути цього розділу, крім отримання аватара, захищені.
 
-Таня
-
-### Поточний користувач
-
+```text
 GET /api/v1/users/me
-
-Response:
-
-{
-  "id": "uuid",
-  "email": "user@example.com",
-  "displayName": "User",
-  "avatarPath": null
-}
-
-### Оновлення профілю
-
 PUT /api/v1/users/me
+POST /api/v1/users/me/avatar
+GET /api/v1/users/{userId}/avatar
+```
 
-Request:
+`PUT /users/me` приймає:
 
+```json
 {
-  "displayName": "New name"
+  "email": "user@example.com",
+  "displayName": "New name",
+  "handle": "@newhandle",
+  "bio": "Profile text",
+  "themeId": "midnight"
 }
+```
 
-Завантаження аватара реалізується окремим маршрутом роботи з файлами.
+Аватар завантажується окремо як поле `file`. Підтримуються PNG, JPEG та WebP, максимальний розмір 5 MB.
 
-## Channels
+## Channels та subscriptions
 
-Відповідальна за реалізацію:
+Публічні маршрути:
 
-Таня
-
-### Отримання каналу
-
+```text
+GET /api/v1/channels
 GET /api/v1/channels/{channelId}
+GET /api/v1/channels/{channelId}/avatar
+GET /api/v1/channels/{channelId}/banner
+```
 
-### Отримання каналу за handle
+Захищені маршрути:
 
-GET /api/v1/channels/handle/{handle}
-
-### Оновлення власного каналу
-
-PUT /api/v1/channels/me
-
-### Відео каналу
-
-GET /api/v1/channels/{channelId}/videos
-
-### Плейлисти каналу
-
-GET /api/v1/channels/{channelId}/playlists
-
-## Subscriptions
-
-Відповідальна за реалізацію:
-
-Таня
-
-### Підписатися
-
+```text
+GET /api/v1/channels/me
+POST /api/v1/channels
+PUT /api/v1/channels/{channelId}
+POST /api/v1/channels/{channelId}/avatar
+POST /api/v1/channels/{channelId}/banner
+GET /api/v1/channels/subscriptions
 POST /api/v1/channels/{channelId}/subscribe
-
-### Відписатися
-
 DELETE /api/v1/channels/{channelId}/subscribe
+```
 
-### Перевірка підписки
+Один користувач володіє одним каналом. `GET /channels/me` готує канал поточного користувача, якщо його ще немає. Підписка на власний канал заборонена.
 
-GET /api/v1/channels/{channelId}/subscription
+Аватар каналу підтримує PNG, JPEG та WebP до 5 MB. Banner підтримує ті самі формати до 10 MB.
 
-### Мої підписки
+Відео конкретного каналу отримуються через:
 
-GET /api/v1/subscriptions
+```text
+GET /api/v1/videos?channelId={channelId}
+```
 
 ## Videos
 
-Відповідальний за реалізацію:
+Публічні маршрути:
 
-Илья
-
-### Головна стрічка
-
+```text
 GET /api/v1/videos
-
-Параметри:
-
-page
-
-pageSize
-
-category
-
-### Отримання відео
-
 GET /api/v1/videos/{videoId}
-
-Response містить:
-
-id
-
-channel
-
-category
-
-title
-
-description
-
-videoPath
-
-thumbnailPath
-
-durationSeconds
-
-viewCount
-
-visibility
-
-publishedAt
-
-### Створення метаданих відео
-
-POST /api/v1/videos
-
-Маршрут захищений.
-
-### Оновлення відео
-
-PUT /api/v1/videos/{videoId}
-
-### Видалення відео
-
-DELETE /api/v1/videos/{videoId}
-
-### Потік відео
-
 GET /api/v1/videos/{videoId}/stream
-
-Маршрут повинен підтримувати HTTP Range Requests.
-
-### Реєстрація перегляду
-
 POST /api/v1/videos/{videoId}/view
+```
+
+`GET /videos` підтримує query параметри:
+
+```text
+page
+pageSize
+category
+channelId
+```
+
+`GET /videos/{videoId}/stream` повертає MP4 та підтримує HTTP Range Requests.
+
+Завантаження відео:
+
+```text
+POST /api/v1/videos/upload
+```
+
+Маршрут захищений і приймає `multipart/form-data` з полями `file`, `title`, `description`, `category`. Підтримується MP4 до 500 MB. Файл перевіряється через `ffprobe`, після чого метадані зберігаються через video service та EF Core repository.
+
+У поточному v1 немає окремих HTTP маршрутів для редагування, видалення відео або реакцій Like/Dislike на саме відео. Їх не слід вважати частиною реалізованого контракту.
 
 ## Categories
 
-Відповідальний за реалізацію:
-
-Илья
-
-### Список категорій
-
+```text
 GET /api/v1/categories
-
-### Відео категорії
-
 GET /api/v1/categories/{slug}/videos
+```
 
-## Video Reactions
+Для другого маршруту підтримуються `page` та `pageSize`. Максимальний `pageSize` дорівнює 50.
 
-Відповідальний за реалізацію:
+## Comments та comment reactions
 
-Илья
+Читання коментарів доступне без авторизації:
 
-### Додати або змінити реакцію
+```text
+GET /api/v1/videos/{videoId}/comments?page=1&pageSize=20&sort=newest
+```
 
-PUT /api/v1/videos/{videoId}/reaction
+`sort` приймає `newest`, `oldest` або `top`.
 
-Request:
+Захищені маршрути:
 
-{
-  "type": "Like"
-}
-
-### Видалити реакцію
-
-DELETE /api/v1/videos/{videoId}/reaction
-
-## Comments
-
-Відповідальна за реалізацію:
-
-Таня
-
-### Коментарі відео
-
-GET /api/v1/videos/{videoId}/comments
-
-### Створення коментаря
-
+```text
 POST /api/v1/videos/{videoId}/comments
+PUT /api/v1/comments/{commentId}
+DELETE /api/v1/comments/{commentId}
+POST /api/v1/comments/{commentId}/reaction
+```
 
-Request:
+Створення коментаря:
 
+```json
 {
   "text": "Comment",
   "parentCommentId": null
 }
+```
 
-### Редагування коментаря
+Реакція:
 
-PUT /api/v1/comments/{commentId}
+```json
+{
+  "reaction": "like"
+}
+```
 
-### Видалення коментаря
-
-DELETE /api/v1/comments/{commentId}
-
-### Реакція на коментар
-
-PUT /api/v1/comments/{commentId}/reaction
-
-### Видалення реакції
-
-DELETE /api/v1/comments/{commentId}/reaction
+Допустимі значення реакції: `like` та `dislike`. Повторна така сама реакція працює як toggle відповідно до логіки comment service.
 
 ## Watch History
 
-Відповідальний за реалізацію:
+Увесь розділ захищений і працює тільки з даними поточного користувача.
 
-Илья
-
-### Історія переглядів
-
+```text
 GET /api/v1/history
-
-### Оновлення прогресу
-
 PUT /api/v1/history/{videoId}
+DELETE /api/v1/history/{videoId}
+DELETE /api/v1/history
+GET /api/v1/history/status
+PUT /api/v1/history/status
+```
 
-Request:
+Оновлення прогресу:
 
+```json
 {
   "progressSeconds": 125,
   "completed": false
 }
+```
 
-### Видалення одного запису
+Стан паузи історії:
 
-DELETE /api/v1/history/{videoId}
+```json
+{
+  "isPaused": true
+}
+```
 
-### Очистити історію
-
-DELETE /api/v1/history
+Якщо історію поставлено на паузу, оновлення прогресу не створює і не змінює запис історії.
 
 ## Favorites
 
-Відповідальний за реалізацію:
+Усі маршрути захищені та ізольовані за користувачем.
 
-Илья
-
-### Улюблені відео
-
+```text
 GET /api/v1/favorites
-
-### Додати в улюблене
-
 POST /api/v1/favorites/{videoId}
-
-### Видалити з улюбленого
-
 DELETE /api/v1/favorites/{videoId}
+```
 
 ## Playlists
 
-Відповідальна за реалізацію:
+Усі маршрути захищені та працюють тільки з плейлистами поточного користувача.
 
-Таня
-
-### Мої плейлисти
-
+```text
 GET /api/v1/playlists
-
-### Отримання плейлиста
-
-GET /api/v1/playlists/{playlistId}
-
-### Створення плейлиста
-
 POST /api/v1/playlists
-
-### Оновлення плейлиста
-
 PUT /api/v1/playlists/{playlistId}
-
-### Видалення плейлиста
-
 DELETE /api/v1/playlists/{playlistId}
-
-### Додати відео
-
 POST /api/v1/playlists/{playlistId}/videos/{videoId}
-
-### Видалити відео
-
 DELETE /api/v1/playlists/{playlistId}/videos/{videoId}
+```
 
-### Змінити порядок відео
+Створення та оновлення використовують:
 
-PUT /api/v1/playlists/{playlistId}/videos/order
+```json
+{
+  "title": "My playlist",
+  "description": "Description"
+}
+```
+
+Поточний v1 не має окремого HTTP маршруту для ручного reorder елементів плейлиста.
 
 ## Search
 
-Відповідальний за реалізацію:
+```text
+GET /api/v1/search?query={text}
+```
 
-Илья
+`query` є обов'язковим, обрізається по краях і не може перевищувати 100 символів.
 
-### Пошук
+## Live Streams
 
-GET /api/v1/search
+Публічний демонстраційний live каталог:
 
-Параметр:
+```text
+GET /api/v1/streams
+GET /api/v1/streams/{streamId}
+GET /api/v1/streams/categories
+```
 
-query
+`GET /streams` підтримує необов'язковий параметр `category`.
 
-Пошук першої версії може повертати:
+Поточна реалізація live каталогу використовує runtime demo repository. Це свідоме обмеження навчальної версії, а не SQL persistent live management.
 
-Videos
+## SignalR
 
-Channels
+Realtime модулі використовують два hubs:
 
-Playlists
+```text
+/hubs/live-chat
+/hubs/watch-party
+```
+
+Live chat підтримує realtime повідомлення, replies, edit, delete та reactions. Його runtime repository тримає до 200 повідомлень на одну трансляцію і очищається після перезапуску процесу.
+
+Watch Party синхронізує кімнату, учасників, чат і playback state. Стан кімнат зберігається у локальному JSON файлі сервера та може відновлюватися після перезапуску того самого екземпляра застосунку.
 
 ## Health
 
-Спільна серверна інфраструктура.
-
-### Перевірка Backend
-
+```text
 GET /api/health
+```
 
-Response:
+Приклад response:
 
+```json
 {
   "status": "ok",
   "service": "YouTubeClone.Api"
 }
+```
 
-## Майбутні модулі
+## Межі v1
 
-Наступні системи не входять до першого API контракту:
+Основні соціальні та персональні модулі вже інтегровані через один backend і спільну frontend architecture. SQL Server використовується для користувачів, refresh tokens, каналів, підписок, коментарів, comment reactions, плейлистів, відеометаданих, історії та обраного.
 
-Playme
-
-Live Streams
-
-Live Chat
-
-Themes
-
-Achievements
-
-Profile decorations
-
-Amtlis Pro
-
-Вони будуть додані наступними версіями API після завершення основного вертикального зрізу.
-
-## Межі реалізації
-
-Илья відповідає за загальну архітектуру API, інтеграцію модулів, Videos, Categories, Video Reactions, Watch History, Favorites та Search.
-
-Таня відповідає за Auth, Users, Channels, Subscriptions, Comments, Comment Reactions та Playlists.
-
-Архітектурний контракт може змінюватися лише після узгодження змін між учасниками команди.
-
-Frontend повинен працювати з контрактами API, а не залежати від внутрішньої реалізації контролерів та сервісів Backend.
+Media files зберігаються окремо у файловому сховищі. Live catalog і Live Chat залишаються runtime модулями, а Watch Party використовує локальне file persistence. Це потрібно враховувати при переході від навчального single server deployment до production інфраструктури.

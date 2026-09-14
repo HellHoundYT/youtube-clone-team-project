@@ -15,19 +15,38 @@ import type {
   HistoryStatus,
   WatchHistoryItem,
 } from '../../domain/history/types'
+import {
+  createAuthorizedConfig,
+  withAuthenticatedRequest,
+} from './authSession'
 
 export async function getWatchHistory(
   signal?: CancellationSignal,
 ): Promise<WatchHistoryItem[]> {
-  const response =
-    await axios.get<WatchHistoryItem[]>(
-      '/api/v1/history',
-      {
-        signal,
-      },
-    )
+  try {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.get<WatchHistoryItem[]>(
+            '/api/v1/history',
+            {
+              ...createAuthorizedConfig(token),
+              signal,
+            },
+          ),
+      )
 
-  return response.data
+    return response.data
+  } catch (error) {
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 401
+    ) {
+      return []
+    }
+
+    throw error
+  }
 }
 
 export async function updateWatchHistory(
@@ -35,14 +54,18 @@ export async function updateWatchHistory(
   request: UpdateHistoryRequest,
 ): Promise<WatchHistoryItem | null> {
   const response =
-    await axios.put<WatchHistoryItem>(
-      `/api/v1/history/${videoId}`,
-      request,
-      {
-        validateStatus: (status) =>
-          status === 200 ||
-          status === 204,
-      },
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.put<WatchHistoryItem>(
+          `/api/v1/history/${videoId}`,
+          request,
+          {
+            ...createAuthorizedConfig(token),
+            validateStatus: (status) =>
+              status === 200 ||
+              status === 204,
+          },
+        ),
     )
 
   if (response.status === 204) {
@@ -55,15 +78,23 @@ export async function updateWatchHistory(
 export async function removeHistoryItem(
   videoId: string,
 ): Promise<void> {
-  await axios.delete(
-    `/api/v1/history/${videoId}`,
+  await withAuthenticatedRequest(
+    (token) =>
+      axios.delete(
+        `/api/v1/history/${videoId}`,
+        createAuthorizedConfig(token),
+      ),
   )
 }
 
 export async function clearWatchHistory():
 Promise<void> {
-  await axios.delete(
-    '/api/v1/history',
+  await withAuthenticatedRequest(
+    (token) =>
+      axios.delete(
+        '/api/v1/history',
+        createAuthorizedConfig(token),
+      ),
   )
 }
 
@@ -71,11 +102,15 @@ export async function getHistoryStatus(
   signal?: CancellationSignal,
 ): Promise<HistoryStatus> {
   const response =
-    await axios.get<HistoryStatus>(
-      '/api/v1/history/status',
-      {
-        signal,
-      },
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.get<HistoryStatus>(
+          '/api/v1/history/status',
+          {
+            ...createAuthorizedConfig(token),
+            signal,
+          },
+        ),
     )
 
   return response.data
@@ -85,11 +120,15 @@ export async function setHistoryPaused(
   isPaused: boolean,
 ): Promise<HistoryStatus> {
   const response =
-    await axios.put<HistoryStatus>(
-      '/api/v1/history/status',
-      {
-        isPaused,
-      },
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.put<HistoryStatus>(
+          '/api/v1/history/status',
+          {
+            isPaused,
+          },
+          createAuthorizedConfig(token),
+        ),
     )
 
   return response.data
@@ -99,11 +138,15 @@ export async function getFavorites(
   signal?: CancellationSignal,
 ): Promise<FavoriteItem[]> {
   const response =
-    await axios.get<FavoriteItem[]>(
-      '/api/v1/favorites',
-      {
-        signal,
-      },
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.get<FavoriteItem[]>(
+          '/api/v1/favorites',
+          {
+            ...createAuthorizedConfig(token),
+            signal,
+          },
+        ),
     )
 
   return response.data
@@ -113,8 +156,13 @@ export async function addFavorite(
   videoId: string,
 ): Promise<FavoriteItem> {
   const response =
-    await axios.post<FavoriteItem>(
-      `/api/v1/favorites/${videoId}`,
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.post<FavoriteItem>(
+          `/api/v1/favorites/${videoId}`,
+          undefined,
+          createAuthorizedConfig(token),
+        ),
     )
 
   return response.data
@@ -123,8 +171,12 @@ export async function addFavorite(
 export async function removeFavorite(
   videoId: string,
 ): Promise<void> {
-  await axios.delete(
-    `/api/v1/favorites/${videoId}`,
+  await withAuthenticatedRequest(
+    (token) =>
+      axios.delete(
+        `/api/v1/favorites/${videoId}`,
+        createAuthorizedConfig(token),
+      ),
   )
 }
 

@@ -81,6 +81,18 @@ public static class DependencyInjection
             IPlaylistRepository,
             EfPlaylistRepository>();
 
+        services.AddScoped<
+            IVideoRepository,
+            EfVideoRepository>();
+
+        services.AddScoped<
+            IWatchHistoryRepository,
+            EfWatchHistoryRepository>();
+
+        services.AddScoped<
+            IFavoritesRepository,
+            EfFavoritesRepository>();
+
         services.Configure<StorageOptions>(
             configuration.GetSection(
                 StorageOptions.SectionName));
@@ -92,18 +104,6 @@ public static class DependencyInjection
         services.AddSingleton<
             IMediaProbeService,
             FfprobeMediaProbeService>();
-
-        services.AddSingleton<
-            IVideoRepository,
-            InMemoryVideoRepository>();
-
-        services.AddSingleton<
-            IWatchHistoryRepository,
-            InMemoryWatchHistoryRepository>();
-
-        services.AddSingleton<
-            IFavoritesRepository,
-            InMemoryFavoritesRepository>();
 
         services.AddSingleton<
             ILiveStreamRepository,

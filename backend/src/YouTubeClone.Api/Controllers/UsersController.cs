@@ -17,6 +17,10 @@ public sealed class UsersController : ControllerBase
     private const long MaxAvatarFileSize =
         5L * 1024L * 1024L;
 
+    private const long MaxAvatarRequestSize =
+        MaxAvatarFileSize +
+        512L * 1024L;
+
     private static readonly HashSet<string>
         AllowedAvatarExtensions =
         new(StringComparer.OrdinalIgnoreCase)
@@ -102,7 +106,7 @@ public sealed class UsersController : ControllerBase
 
     [HttpPost("me/avatar")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(MaxAvatarFileSize)]
+    [RequestSizeLimit(MaxAvatarRequestSize)]
     public async Task<ActionResult<CurrentUserDto>> UpdateAvatar(
         [FromForm] IFormFile file,
         CancellationToken cancellationToken)

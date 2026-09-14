@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Application.Features.Favorites.Contracts;
 using YouTubeClone.Application.Features.Favorites;
 
 namespace YouTubeClone.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/favorites")]
 public sealed class FavoritesController :

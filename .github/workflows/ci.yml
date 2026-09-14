@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend / build, test, smoke
+    name: Backend / build, test, migrations, smoke
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -51,6 +51,34 @@ jobs:
           --configuration Release
           --no-restore
 
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 10.0.11
+
+      - name: Verify EF migration snapshot
+        run: >
+          dotnet ef migrations has-pending-model-changes
+          --project backend/src/YouTubeClone.Infrastructure/YouTubeClone.Infrastructure.csproj
+          --startup-project backend/src/YouTubeClone.Api/YouTubeClone.Api.csproj
+          --configuration Release
+          --no-build
+
+      - name: Verify SQL Server migration script
+        shell: bash
+        run: |
+          dotnet ef migrations script --idempotent \
+            --project backend/src/YouTubeClone.Infrastructure/YouTubeClone.Infrastructure.csproj \
+            --startup-project backend/src/YouTubeClone.Api/YouTubeClone.Api.csproj \
+            --configuration Release \
+            --no-build \
+            --output /tmp/amtlis-migrations.sql
+
+          if [ ! -s /tmp/amtlis-migrations.sql ]; then
+            echo "EF Core generated an empty SQL migration script."
+            exit 1
+          fi
+
+          echo "SQL Server migration script generated successfully."
+
       - name: Run backend tests
         run: >
           dotnet test
@@ -59,10 +87,10 @@ jobs:
           --no-build
           --verbosity normal
 
-      - name: Backend health smoke test
+      - name: Backend health and demo media smoke test
         shell: bash
         run: |
-          dotnet run \
+          Database__Provider=InMemory dotnet run \
             --project backend/src/YouTubeClone.Api/YouTubeClone.Api.csproj \
             --configuration Release \
             --no-build \
@@ -87,16 +115,33 @@ jobs:
             then
               echo "Backend health check passed:"
               cat health.json
-              exit 0
+              break
+            fi
+
+            if [ "$attempt" -eq 30 ]; then
+              echo "Backend did not become healthy."
+              echo "Backend log:"
+              cat backend-smoke.log
+              exit 1
             fi
 
             sleep 1
           done
 
-          echo "Backend did not become healthy."
-          echo "Backend log:"
-          cat backend-smoke.log
-          exit 1
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --header "Range: bytes=0-1023" \
+            http://127.0.0.1:5276/api/v1/videos/11111111-1111-1111-1111-111111111111/stream \
+            > demo-video.bin
+
+          if [ ! -s demo-video.bin ]; then
+            echo "Bundled demo video stream returned an empty response."
+            exit 1
+          fi
+
+          echo "Bundled demo video stream passed."
 
   frontend:
     name: Frontend / test, lint, build, smoke

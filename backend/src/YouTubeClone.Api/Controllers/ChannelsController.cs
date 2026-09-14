@@ -12,14 +12,10 @@ namespace YouTubeClone.Api.Controllers;
 [Route("api/v1/channels")]
 public sealed class ChannelsController : ControllerBase
 {
-    private const long MaxAvatarFileSize =
-        5L * 1024L * 1024L;
+    private const long MaxAvatarFileSize = 5L * 1024L * 1024L;
+    private const long MaxBannerFileSize = 10L * 1024L * 1024L;
 
-    private const long MaxBannerFileSize =
-        10L * 1024L * 1024L;
-
-    private static readonly HashSet<string>
-        AllowedImageExtensions =
+    private static readonly HashSet<string> AllowedImageExtensions =
         new(StringComparer.OrdinalIgnoreCase)
         {
             ".png",
@@ -145,18 +141,15 @@ public sealed class ChannelsController : ControllerBase
                 request.Description),
             cancellationToken);
 
-        if (result.Channel is not null)
-        {
-            return Ok(Map(result.Channel, userId));
-        }
-
-        return MapError(result.Error);
+        return result.Channel is not null
+            ? Ok(Map(result.Channel, userId))
+            : MapError(result.Error);
     }
 
     [Authorize]
     [HttpPost("{channelId:guid}/avatar")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(MaxAvatarFileSize)]
+    [RequestSizeLimit(MaxAvatarFileSize + 1024 * 1024)]
     public Task<ActionResult<ChannelResponseDto>> UpdateAvatar(
         Guid channelId,
         [FromForm] IFormFile file,
@@ -171,7 +164,7 @@ public sealed class ChannelsController : ControllerBase
     [Authorize]
     [HttpPost("{channelId:guid}/banner")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(MaxBannerFileSize)]
+    [RequestSizeLimit(MaxBannerFileSize + 1024 * 1024)]
     public Task<ActionResult<ChannelResponseDto>> UpdateBanner(
         Guid channelId,
         [FromForm] IFormFile file,
@@ -318,8 +311,7 @@ public sealed class ChannelsController : ControllerBase
 
         if (file is null || file.Length == 0)
         {
-            return BadRequest(
-                new { message = "Channel image is required." });
+            return BadRequest(new { message = "Channel image is required." });
         }
 
         if (file.Length > maxFileSize)
@@ -342,14 +334,10 @@ public sealed class ChannelsController : ControllerBase
 
         await using var source = file.OpenReadStream();
         using var bufferedImage = new MemoryStream();
-        await source.CopyToAsync(
-            bufferedImage,
-            cancellationToken);
+        await source.CopyToAsync(bufferedImage, cancellationToken);
 
         bufferedImage.Position = 0;
-        if (!HasValidImageSignature(
-                bufferedImage,
-                extension))
+        if (!HasValidImageSignature(bufferedImage, extension))
         {
             return BadRequest(
                 new { message = "Channel image content is not a valid supported image." });
@@ -358,13 +346,13 @@ public sealed class ChannelsController : ControllerBase
         bufferedImage.Position = 0;
 
         var normalizedExtension = extension.ToLowerInvariant();
-        var fileName = imageKind == ChannelImageKind.Avatar
-            ? $"avatar{normalizedExtension}"
-            : $"banner{normalizedExtension}";
+        var imagePrefix = imageKind == ChannelImageKind.Avatar
+            ? "avatar"
+            : "banner";
         var relativePath = Path.Combine(
             "channels",
             channelId.ToString("N"),
-            fileName);
+            $"{imagePrefix}-{Guid.NewGuid():N}{normalizedExtension}");
         var previousPath = imageKind == ChannelImageKind.Avatar
             ? channel.AvatarPath
             : channel.BannerPath;
@@ -458,24 +446,17 @@ public sealed class ChannelsController : ControllerBase
         var read = stream.Read(header);
         stream.Position = 0;
 
-        if (extension.Equals(
-                ".png",
-                StringComparison.OrdinalIgnoreCase))
+        if (extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
         {
             ReadOnlySpan<byte> pngSignature =
                 [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
             return read >= pngSignature.Length &&
-                header[..pngSignature.Length]
-                    .SequenceEqual(pngSignature);
+                header[..pngSignature.Length].SequenceEqual(pngSignature);
         }
 
-        if (extension.Equals(
-                ".jpg",
-                StringComparison.OrdinalIgnoreCase) ||
-            extension.Equals(
-                ".jpeg",
-                StringComparison.OrdinalIgnoreCase))
+        if (extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+            extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
         {
             return read >= 3 &&
                 header[0] == 0xFF &&
@@ -483,9 +464,7 @@ public sealed class ChannelsController : ControllerBase
                 header[2] == 0xFF;
         }
 
-        if (extension.Equals(
-                ".webp",
-                StringComparison.OrdinalIgnoreCase))
+        if (extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
         {
             return read >= 12 &&
                 header[..4].SequenceEqual("RIFF"u8) &&
@@ -511,6 +490,5 @@ public sealed class ChannelsController : ControllerBase
                 : $"/api/v1/channels/{channel.Id}/banner",
             channel.SubscriberCount,
             channel.IsSubscribed,
-            viewerUserId.HasValue &&
-            viewerUserId.Value == channel.OwnerId);
+            viewerUserId.HasValue && viewerUserId.Value == channel.OwnerId);
 }

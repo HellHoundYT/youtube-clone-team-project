@@ -27,7 +27,7 @@ public sealed class Video
 
     public int DurationSeconds { get; init; }
 
-    public long ViewCount { get; init; }
+    public long ViewCount { get; set; }
 
     public string Visibility { get; init; } =
         "Public";
