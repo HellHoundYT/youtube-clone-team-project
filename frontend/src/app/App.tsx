@@ -145,7 +145,10 @@ function App() {
             element={<UploadPage uploadService={uploadService} />}
           />
 
-          <Route path="profile" element={<ProfilePage />} />
+          <Route
+            path="profile"
+            element={<ProfilePage channelService={channelService} />}
+          />
 
           <Route
             path="playlists"
@@ -184,6 +187,7 @@ function App() {
           path="watch/:videoId"
           element={
             <WatchPage
+              channelService={channelService}
               libraryService={libraryService}
               playlistService={playlistService}
               videoService={videoService}
