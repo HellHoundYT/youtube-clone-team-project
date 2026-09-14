@@ -77,7 +77,10 @@ function App() {
         <Route
           path="subscriptions"
           element={
-            <SubscriptionsPage channelService={channelService} />
+            <SubscriptionsPage
+              channelService={channelService}
+              videoService={videoService}
+            />
           }
         />
 

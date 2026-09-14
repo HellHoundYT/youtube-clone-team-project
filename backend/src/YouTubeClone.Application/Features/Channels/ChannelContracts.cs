@@ -16,6 +16,12 @@ public sealed record SaveChannelCommand(
     string Handle,
     string Description);
 
+public enum ChannelImageKind
+{
+    Avatar,
+    Banner
+}
+
 public enum ChannelError
 {
     None,

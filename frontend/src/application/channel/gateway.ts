@@ -21,6 +21,16 @@ export interface ChannelGateway {
     request: SaveChannelRequest,
   ): Promise<Channel>
 
+  uploadAvatar(
+    channelId: string,
+    file: File,
+  ): Promise<Channel>
+
+  uploadBanner(
+    channelId: string,
+    file: File,
+  ): Promise<Channel>
+
   listSubscriptions(): Promise<Channel[]>
 
   subscribe(

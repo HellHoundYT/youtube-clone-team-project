@@ -92,6 +92,106 @@ public sealed class ChannelsApiIntegrationTests : IClassFixture<AuthApiFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Channel_owner_can_upload_avatar_and_banner()
+    {
+        using var client = _factory.CreateClient();
+        var auth = await RegisterAsync(
+            client,
+            "Image Owner");
+        Authorize(client, auth.AccessToken);
+
+        var channel = await client.GetFromJsonAsync<ChannelResponseDto>(
+            "/api/v1/channels/me");
+
+        Assert.NotNull(channel);
+
+        var avatarResponse = await UploadImageAsync(
+            client,
+            $"/api/v1/channels/{channel.Id}/avatar",
+            "avatar.png",
+            CreatePngBytes());
+
+        Assert.Equal(HttpStatusCode.OK, avatarResponse.StatusCode);
+
+        var updatedAvatar =
+            await avatarResponse.Content.ReadFromJsonAsync<ChannelResponseDto>();
+        Assert.NotNull(updatedAvatar);
+        Assert.Equal(
+            $"/api/v1/channels/{channel.Id}/avatar",
+            updatedAvatar.AvatarUrl);
+
+        var bannerResponse = await UploadImageAsync(
+            client,
+            $"/api/v1/channels/{channel.Id}/banner",
+            "banner.png",
+            CreatePngBytes());
+
+        Assert.Equal(HttpStatusCode.OK, bannerResponse.StatusCode);
+
+        var updatedBanner =
+            await bannerResponse.Content.ReadFromJsonAsync<ChannelResponseDto>();
+        Assert.NotNull(updatedBanner);
+        Assert.Equal(
+            $"/api/v1/channels/{channel.Id}/banner",
+            updatedBanner.BannerUrl);
+
+        var avatarGet = await client.GetAsync(updatedAvatar.AvatarUrl);
+        var bannerGet = await client.GetAsync(updatedBanner.BannerUrl);
+
+        Assert.Equal(HttpStatusCode.OK, avatarGet.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, bannerGet.StatusCode);
+    }
+
+    [Fact]
+    public async Task Non_owner_cannot_replace_channel_avatar()
+    {
+        using var ownerClient = _factory.CreateClient();
+        var ownerAuth = await RegisterAsync(
+            ownerClient,
+            "Protected Owner");
+        Authorize(ownerClient, ownerAuth.AccessToken);
+
+        var ownerChannel = await ownerClient.GetFromJsonAsync<ChannelResponseDto>(
+            "/api/v1/channels/me");
+        Assert.NotNull(ownerChannel);
+
+        using var otherClient = _factory.CreateClient();
+        var otherAuth = await RegisterAsync(
+            otherClient,
+            "Other User");
+        Authorize(otherClient, otherAuth.AccessToken);
+
+        var response = await UploadImageAsync(
+            otherClient,
+            $"/api/v1/channels/{ownerChannel.Id}/avatar",
+            "avatar.png",
+            CreatePngBytes());
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    private static async Task<HttpResponseMessage> UploadImageAsync(
+        HttpClient client,
+        string url,
+        string fileName,
+        byte[] bytes)
+    {
+        using var form = new MultipartFormDataContent();
+        using var file = new ByteArrayContent(bytes);
+        file.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        form.Add(file, "file", fileName);
+
+        return await client.PostAsync(url, form);
+    }
+
+    private static byte[] CreatePngBytes() =>
+    [
+        0x89, 0x50, 0x4E, 0x47,
+        0x0D, 0x0A, 0x1A, 0x0A,
+        0x00, 0x00, 0x00, 0x00
+    ];
+
     private static async Task<AuthResponseDto> RegisterAsync(
         HttpClient client,
         string displayName)

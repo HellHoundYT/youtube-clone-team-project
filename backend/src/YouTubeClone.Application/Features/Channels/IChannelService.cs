@@ -30,6 +30,13 @@ public interface IChannelService
         SaveChannelCommand command,
         CancellationToken cancellationToken);
 
+    Task<ChannelResult> UpdateImageAsync(
+        Guid ownerId,
+        Guid channelId,
+        ChannelImageKind imageKind,
+        string relativePath,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<ChannelModel>> ListSubscriptionsAsync(
         Guid subscriberId,
         CancellationToken cancellationToken);
