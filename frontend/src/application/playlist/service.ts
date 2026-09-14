@@ -21,6 +21,16 @@ export interface PlaylistService {
   delete(
     playlistId: string,
   ): Promise<void>
+
+  addVideo(
+    playlistId: string,
+    videoId: string,
+  ): Promise<void>
+
+  removeVideo(
+    playlistId: string,
+    videoId: string,
+  ): Promise<void>
 }
 
 export function createPlaylistService(
@@ -38,5 +48,11 @@ export function createPlaylistService(
 
     delete:
       gateway.delete,
+
+    addVideo:
+      gateway.addVideo,
+
+    removeVideo:
+      gateway.removeVideo,
   }
 }
