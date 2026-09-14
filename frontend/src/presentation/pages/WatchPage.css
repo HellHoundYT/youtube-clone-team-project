@@ -242,3 +242,8 @@
     width: 100%;
   }
 }
+
+.watch-channel-identity {
+  color: inherit;
+  text-decoration: none;
+}

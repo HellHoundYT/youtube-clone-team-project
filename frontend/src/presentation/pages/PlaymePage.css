@@ -318,6 +318,15 @@
   cursor: not-allowed;
 }
 
+.playme-author-link {
+  display: grid;
+  min-width: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
 .playme-slide-content h1 {
   display: -webkit-box;
 

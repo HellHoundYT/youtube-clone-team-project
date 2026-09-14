@@ -629,7 +629,7 @@ function WatchPage({
           </div>
 
           <div className="watch-channel-row">
-            <div className="watch-channel-identity">
+            <Link className="watch-channel-identity" to={`/channels/${video.channelId}`}>
               <div className="watch-channel-avatar">
                 {video.channelAvatarPath ? (
                   <img
@@ -660,7 +660,7 @@ function WatchPage({
                   )}
                 </span>
               </div>
-            </div>
+            </Link>
           </div>
 
           {video.description && (

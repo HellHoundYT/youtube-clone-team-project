@@ -73,7 +73,7 @@ function App() {
 
         <Route
           path="subscriptions"
-          element={<SubscriptionsPage videoService={videoService} />}
+          element={<SubscriptionsPage />}
         />
 
         <Route

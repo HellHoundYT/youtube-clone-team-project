@@ -31,7 +31,9 @@ function ChannelPage() {
   return <section className="channels-page">
     <Link className="channel-back" to="/subscriptions">← {t('system.channels.back')}</Link>
     <div className="channel-profile-hero">
-      <div className="channel-page-avatar channel-page-avatar-large">{channel.name.charAt(0)}</div>
+      <div className="channel-page-avatar channel-page-avatar-large">
+        {channel.avatarPath ? <img src={channel.avatarPath} alt="" /> : channel.name.charAt(0)}
+      </div>
       <div><p className="channel-eyebrow">CHANNEL</p><h1>{channel.name}</h1><p>{channel.subscriberCount} {t('system.channels.subscribers')}</p><p className="channel-description">{channel.description}</p></div>
       <button className={`subscribe-button ${isSubscribed ? 'is-subscribed' : ''}`} type="button" onClick={() => { void toggleSubscription() }}>{isSubscribed ? t('system.channels.subscribed') : t('system.channels.subscribe')}</button>
     </div>

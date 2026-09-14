@@ -1,4 +1,7 @@
 import {
+  useNavigate,
+} from 'react-router-dom'
+import {
   useCallback,
   useEffect,
   useRef,
@@ -202,6 +205,7 @@ interface PlaymePageProps {
 function PlaymePage({
   videoService,
 }: PlaymePageProps) {
+  const navigate = useNavigate()
   const {
     t,
     i18n,
@@ -1071,7 +1075,11 @@ function PlaymePage({
                             .toUpperCase()}
                         </div>
 
-                        <div>
+                        <button
+                          type="button"
+                          className="playme-author-link"
+                          onClick={() => navigate(`/channels/${video.channelId}`)}
+                        >
                           <strong>
                             {
                               video.channelName
@@ -1083,7 +1091,7 @@ function PlaymePage({
                               'playme.creatorIntegration',
                             )}
                           </span>
-                        </div>
+                        </button>
 
                         <button
                           type="button"
