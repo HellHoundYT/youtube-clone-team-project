@@ -10,6 +10,7 @@ import {
 import type {
   CommentItem,
   CommentReaction,
+  CommentSort,
 } from '../../../domain/comment/types'
 import {
   useAuthStore,
@@ -21,6 +22,8 @@ import {
   useAppTranslation,
 } from '../../../shared/i18n'
 import './CommentsSection.css'
+
+const pageSize = 20
 
 function CommentAvatar({
   comment,
@@ -51,12 +54,130 @@ function CommentAvatar({
   )
 }
 
-function CommentCard({
+function CommentOwnerActions({
   comment,
-  onReaction,
-  onReply,
+  viewerId,
+  onEdit,
+  onDelete,
 }: {
   comment: CommentItem
+  viewerId?: string
+  onEdit: (
+    commentId: string,
+    text: string,
+  ) => Promise<void>
+  onDelete: (
+    commentId: string,
+  ) => Promise<void>
+}) {
+  const { t } = useAppTranslation()
+  const [isEditing, setIsEditing] = useState(false)
+  const [draft, setDraft] = useState(comment.text)
+  const [isBusy, setIsBusy] = useState(false)
+
+  if (!viewerId || viewerId !== comment.authorId) {
+    return null
+  }
+
+  const save = async () => {
+    const text = draft.trim()
+
+    if (!text || text === comment.text || isBusy) {
+      setIsEditing(false)
+      setDraft(comment.text)
+      return
+    }
+
+    setIsBusy(true)
+    try {
+      await onEdit(comment.id, text)
+      setIsEditing(false)
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  const remove = async () => {
+    if (isBusy || !window.confirm(
+      t('system.comments.deleteConfirm'),
+    )) {
+      return
+    }
+
+    setIsBusy(true)
+    try {
+      await onDelete(comment.id)
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  return (
+    <div className="comment-owner-actions">
+      {isEditing ? (
+        <>
+          <input
+            value={draft}
+            maxLength={500}
+            disabled={isBusy}
+            onChange={(event) =>
+              setDraft(event.target.value)}
+          />
+          <button
+            type="button"
+            disabled={isBusy || !draft.trim()}
+            onClick={() => {
+              void save()
+            }}
+          >
+            {t('system.comments.save')}
+          </button>
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => {
+              setDraft(comment.text)
+              setIsEditing(false)
+            }}
+          >
+            {t('system.comments.cancel')}
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => setIsEditing(true)}
+          >
+            {t('system.comments.edit')}
+          </button>
+          <button
+            type="button"
+            className="comment-delete-action"
+            disabled={isBusy}
+            onClick={() => {
+              void remove()
+            }}
+          >
+            {t('system.comments.delete')}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function CommentCard({
+  comment,
+  viewerId,
+  onReaction,
+  onReply,
+  onEdit,
+  onDelete,
+}: {
+  comment: CommentItem
+  viewerId?: string
   onReaction: (
     commentId: string,
     reaction: Exclude<CommentReaction, null>,
@@ -65,10 +186,15 @@ function CommentCard({
     commentId: string,
     text: string,
   ) => Promise<void>
+  onEdit: (
+    commentId: string,
+    text: string,
+  ) => Promise<void>
+  onDelete: (
+    commentId: string,
+  ) => Promise<void>
 }) {
-  const {
-    t,
-  } = useAppTranslation()
+  const { t } = useAppTranslation()
   const [isReplying, setIsReplying] =
     useState(false)
   const [reply, setReply] =
@@ -151,6 +277,13 @@ function CommentCard({
           </button>
         </div>
 
+        <CommentOwnerActions
+          comment={comment}
+          viewerId={viewerId}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+
         {isReplying && (
           <form
             className="comment-reply-form"
@@ -189,11 +322,51 @@ function CommentCard({
                     comment={replyItem}
                     small
                   />
-                  <div>
+                  <div className="comment-reply-content">
                     <strong>
                       {replyItem.author}
                     </strong>
                     <p>{replyItem.text}</p>
+                    <div className="comment-actions">
+                      <button
+                        className={
+                          replyItem.reaction === 'like'
+                            ? 'is-active'
+                            : ''
+                        }
+                        type="button"
+                        onClick={() => {
+                          void onReaction(
+                            replyItem.id,
+                            'like',
+                          )
+                        }}
+                      >
+                        ♡ {replyItem.likes || ''}
+                      </button>
+                      <button
+                        className={
+                          replyItem.reaction === 'dislike'
+                            ? 'is-active'
+                            : ''
+                        }
+                        type="button"
+                        onClick={() => {
+                          void onReaction(
+                            replyItem.id,
+                            'dislike',
+                          )
+                        }}
+                      >
+                        ♢ {replyItem.dislikes || ''}
+                      </button>
+                    </div>
+                    <CommentOwnerActions
+                      comment={replyItem}
+                      viewerId={viewerId}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                    />
                   </div>
                 </div>
               ),
@@ -207,16 +380,15 @@ function CommentCard({
 
 function CommentsSection({
   videoId,
+  compact = false,
 }: {
   videoId: string
+  compact?: boolean
 }) {
-  const {
-    t,
-  } = useAppTranslation()
+  const { t } = useAppTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const commentService =
-    getCommentService()
+  const commentService = getCommentService()
   const profile = useAuthStore(
     (state) => state.profile,
   )
@@ -224,23 +396,39 @@ function CommentsSection({
     useState<CommentItem[]>([])
   const [text, setText] =
     useState('')
+  const [sort, setSort] =
+    useState<CommentSort>('newest')
+  const [page, setPage] =
+    useState(1)
+  const [hasMore, setHasMore] =
+    useState(false)
   const [isLoading, setIsLoading] =
     useState(true)
+  const [isLoadingMore, setIsLoadingMore] =
+    useState(false)
   const [error, setError] =
     useState('')
 
   useEffect(() => {
-    const controller =
-      new AbortController()
+    const controller = new AbortController()
+
+    setIsLoading(true)
+    setPage(1)
 
     void commentService
       .list(
         videoId,
+        {
+          page: 1,
+          pageSize,
+          sort,
+        },
         controller.signal,
       )
       .then((items) => {
         setError('')
         setComments(items)
+        setHasMore(items.length === pageSize)
       })
       .catch(() => {
         if (!controller.signal.aborted) {
@@ -255,12 +443,11 @@ function CommentsSection({
         }
       })
 
-    return () => {
-      controller.abort()
-    }
+    return () => controller.abort()
   }, [
     commentService,
     profile?.id,
+    sort,
     t,
     videoId,
   ])
@@ -274,12 +461,24 @@ function CommentsSection({
       '/auth',
       {
         state: {
-          from:
-            location.pathname,
+          from: location.pathname,
         },
       },
     )
     return false
+  }
+
+  const reload = async () => {
+    const items = await commentService.list(
+      videoId,
+      {
+        page: 1,
+        pageSize: page * pageSize,
+        sort,
+      },
+    )
+    setComments(items)
+    setHasMore(items.length === page * pageSize)
   }
 
   const addComment = async (
@@ -288,26 +487,18 @@ function CommentsSection({
     event.preventDefault()
     const content = text.trim()
 
-    if (!content ||
-        !requireProfile()) {
+    if (!content || !requireProfile()) {
       return
     }
 
     try {
       setError('')
-      const created =
-        await commentService.add(
-          videoId,
-          content,
-        )
-
-      setComments(
-        (current) => [
-          created,
-          ...current,
-        ],
+      await commentService.add(
+        videoId,
+        content,
       )
       setText('')
+      await reload()
     } catch {
       setError(
         t('system.comments.requestFailed'),
@@ -317,8 +508,7 @@ function CommentsSection({
 
   const reactToComment = async (
     commentId: string,
-    reaction:
-      Exclude<CommentReaction, null>,
+    reaction: Exclude<CommentReaction, null>,
   ) => {
     if (!requireProfile()) {
       return
@@ -326,21 +516,11 @@ function CommentsSection({
 
     try {
       setError('')
-      const updated =
-        await commentService.toggleReaction(
-          commentId,
-          reaction,
-        )
-
-      setComments(
-        (current) =>
-          current.map(
-            (comment) =>
-              comment.id === updated.id
-                ? updated
-                : comment,
-          ),
+      await commentService.toggleReaction(
+        commentId,
+        reaction,
       )
+      await reload()
     } catch {
       setError(
         t('system.comments.requestFailed'),
@@ -358,32 +538,80 @@ function CommentsSection({
 
     try {
       setError('')
-      const created =
-        await commentService.add(
-          videoId,
-          replyText,
-          commentId,
-        )
-
-      setComments(
-        (current) =>
-          current.map(
-            (comment) =>
-              comment.id === commentId
-                ? {
-                    ...comment,
-                    replies: [
-                      ...comment.replies,
-                      created,
-                    ],
-                  }
-                : comment,
-          ),
+      await commentService.add(
+        videoId,
+        replyText,
+        commentId,
       )
+      await reload()
     } catch {
       setError(
         t('system.comments.requestFailed'),
       )
+    }
+  }
+
+  const editComment = async (
+    commentId: string,
+    updatedText: string,
+  ) => {
+    try {
+      setError('')
+      await commentService.update(
+        commentId,
+        updatedText,
+      )
+      await reload()
+    } catch {
+      setError(
+        t('system.comments.requestFailed'),
+      )
+    }
+  }
+
+  const deleteComment = async (
+    commentId: string,
+  ) => {
+    try {
+      setError('')
+      await commentService.remove(commentId)
+      await reload()
+    } catch {
+      setError(
+        t('system.comments.requestFailed'),
+      )
+    }
+  }
+
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore) {
+      return
+    }
+
+    const nextPage = page + 1
+    setIsLoadingMore(true)
+
+    try {
+      const items = await commentService.list(
+        videoId,
+        {
+          page: nextPage,
+          pageSize,
+          sort,
+        },
+      )
+      setComments((current) => [
+        ...current,
+        ...items,
+      ])
+      setPage(nextPage)
+      setHasMore(items.length === pageSize)
+    } catch {
+      setError(
+        t('system.comments.requestFailed'),
+      )
+    } finally {
+      setIsLoadingMore(false)
     }
   }
 
@@ -392,18 +620,42 @@ function CommentsSection({
     t('system.comments.guest')
 
   return (
-    <section className="comments-section">
+    <section
+      className={
+        compact
+          ? 'comments-section comments-section-compact'
+          : 'comments-section'
+      }
+    >
       <div className="comments-heading">
-        <h2>{t('system.comments.title')}</h2>
-        <span>
-          {t(
-            'system.comments.count',
-            {
-              count:
-                comments.length,
-            },
-          )}
-        </span>
+        <div className="comments-heading-copy">
+          <h2>{t('system.comments.title')}</h2>
+          <span>
+            {t(
+              'system.comments.count',
+              {
+                count: comments.length,
+              },
+            )}
+          </span>
+        </div>
+        <select
+          className="comments-sort"
+          value={sort}
+          aria-label={t('system.comments.sortLabel')}
+          onChange={(event) =>
+            setSort(event.target.value as CommentSort)}
+        >
+          <option value="newest">
+            {t('system.comments.sortNewest')}
+          </option>
+          <option value="oldest">
+            {t('system.comments.sortOldest')}
+          </option>
+          <option value="top">
+            {t('system.comments.sortTop')}
+          </option>
+        </select>
       </div>
 
       <form
@@ -457,18 +709,38 @@ function CommentsSection({
           {t('system.comments.empty')}
         </div>
       ) : (
-        <div className="comments-list">
-          {comments.map(
-            (comment) => (
-              <CommentCard
-                key={comment.id}
-                comment={comment}
-                onReaction={reactToComment}
-                onReply={replyToComment}
-              />
-            ),
+        <>
+          <div className="comments-list">
+            {comments.map(
+              (comment) => (
+                <CommentCard
+                  key={comment.id}
+                  comment={comment}
+                  viewerId={profile?.id}
+                  onReaction={reactToComment}
+                  onReply={replyToComment}
+                  onEdit={editComment}
+                  onDelete={deleteComment}
+                />
+              ),
+            )}
+          </div>
+
+          {hasMore && (
+            <button
+              className="comments-load-more"
+              type="button"
+              disabled={isLoadingMore}
+              onClick={() => {
+                void loadMore()
+              }}
+            >
+              {isLoadingMore
+                ? t('system.comments.loading')
+                : t('system.comments.loadMore')}
+            </button>
           )}
-        </div>
+        </>
       )}
     </section>
   )
