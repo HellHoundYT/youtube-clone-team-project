@@ -108,27 +108,50 @@ public sealed class EfVideoRepository : IVideoRepository
             }
 
             var seedCatalog = VideoSeedData.CreateCatalog();
-            var seedIds = seedCatalog
-                .Select(video => video.Id)
-                .ToArray();
+            var seedById = seedCatalog.ToDictionary(video => video.Id);
+            var seedIds = seedById.Keys.ToArray();
 
-            var existingIds = await _dbContext.Videos
+            var existingVideos = await _dbContext.Videos
                 .Where(video => seedIds.Contains(video.Id))
-                .Select(video => video.Id)
                 .ToListAsync(cancellationToken);
 
-            if (existingIds.Count != seedIds.Length)
+            var hasChanges = false;
+
+            foreach (var existingVideo in existingVideos)
             {
-                var existing = existingIds.ToHashSet();
+                var seedVideo = seedById[existingVideo.Id];
+
+                if (existingVideo.DurationSeconds == seedVideo.DurationSeconds)
+                {
+                    continue;
+                }
+
+                _dbContext.Entry(existingVideo)
+                    .Property(video => video.DurationSeconds)
+                    .CurrentValue = seedVideo.DurationSeconds;
+
+                hasChanges = true;
+            }
+
+            if (existingVideos.Count != seedIds.Length)
+            {
+                var existingIds = existingVideos
+                    .Select(video => video.Id)
+                    .ToHashSet();
                 var missing = seedCatalog
-                    .Where(video => !existing.Contains(video.Id))
+                    .Where(video => !existingIds.Contains(video.Id))
                     .ToList();
 
                 if (missing.Count > 0)
                 {
                     _dbContext.Videos.AddRange(missing);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    hasChanges = true;
                 }
+            }
+
+            if (hasChanges)
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }
 
             _seedChecked = true;

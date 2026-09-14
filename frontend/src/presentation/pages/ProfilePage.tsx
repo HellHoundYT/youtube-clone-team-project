@@ -6,6 +6,9 @@ import {
 import {
   useNavigate,
 } from 'react-router-dom'
+import type {
+  ChannelService,
+} from '../../application/channel/service'
 import {
   type AccountProfile,
   useAuthStore,
@@ -25,7 +28,13 @@ const allowedAvatarTypes =
     'image/webp',
   ])
 
-function ProfilePage() {
+interface ProfilePageProps {
+  channelService: ChannelService
+}
+
+function ProfilePage({
+  channelService,
+}: ProfilePageProps) {
   const navigate =
     useNavigate()
   const {
@@ -48,6 +57,8 @@ function ProfilePage() {
   const [avatarError, setAvatarError] =
     useState('')
   const [isUploadingAvatar, setIsUploadingAvatar] =
+    useState(false)
+  const [isOpeningChannel, setIsOpeningChannel] =
     useState(false)
 
   if (!profile || !form) {
@@ -152,6 +163,28 @@ function ProfilePage() {
       )
     } finally {
       setIsUploadingAvatar(false)
+    }
+  }
+
+  const handleOpenChannel = async () => {
+    if (isOpeningChannel) {
+      return
+    }
+
+    setIsOpeningChannel(true)
+    setSaveError('')
+
+    try {
+      const channel =
+        await channelService.getMyChannel()
+
+      navigate(`/channels/${channel.id}`)
+    } catch {
+      setSaveError(
+        t('system.profile.saveError'),
+      )
+    } finally {
+      setIsOpeningChannel(false)
     }
   }
 
@@ -310,11 +343,30 @@ function ProfilePage() {
             </div>
             <div>
               <dt>{t('system.profile.channel')}</dt>
-              <dd>{t('system.profile.comingNext')}</dd>
+              <dd>
+                <button
+                  className="account-secondary"
+                  type="button"
+                  disabled={isOpeningChannel}
+                  onClick={() => {
+                    void handleOpenChannel()
+                  }}
+                >
+                  {t('system.channels.ownerTitle')}
+                </button>
+              </dd>
             </div>
             <div>
               <dt>{t('system.profile.subscriptions')}</dt>
-              <dd>{t('system.profile.comingNext')}</dd>
+              <dd>
+                <button
+                  className="account-secondary"
+                  type="button"
+                  onClick={() => navigate('/subscriptions')}
+                >
+                  {t('system.channels.subscriptionsTitle')}
+                </button>
+              </dd>
             </div>
           </dl>
           <button

@@ -25,10 +25,11 @@ public sealed class EfChannelRepository : IChannelRepository
         Guid channelId,
         Guid? subscriberId,
         CancellationToken cancellationToken) =>
-        Query(subscriberId)
-            .SingleOrDefaultAsync(
-                channel => channel.Id == channelId,
-                cancellationToken);
+        Project(
+                _db.Channels.Where(
+                    channel => channel.Id == channelId),
+                subscriberId)
+            .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyList<ChannelModel>> ListSubscriptionsAsync(
         Guid subscriberId,
@@ -93,7 +94,12 @@ public sealed class EfChannelRepository : IChannelRepository
         _db.SaveChangesAsync(cancellationToken);
 
     private IQueryable<ChannelModel> Query(Guid? subscriberId) =>
-        _db.Channels.Select(
+        Project(_db.Channels, subscriberId);
+
+    private IQueryable<ChannelModel> Project(
+        IQueryable<Channel> channels,
+        Guid? subscriberId) =>
+        channels.Select(
             channel =>
                 new ChannelModel(
                     channel.Id,

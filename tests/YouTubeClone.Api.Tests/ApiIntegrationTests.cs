@@ -123,7 +123,7 @@ public sealed class ApiIntegrationTests
                 $"/api/v1/history/{VideoId}",
                 new
                 {
-                    progressSeconds = 42,
+                    progressSeconds = 4,
                     completed = false
                 });
 
@@ -146,7 +146,7 @@ public sealed class ApiIntegrationTests
                 .GetString());
 
         Assert.Equal(
-            42,
+            4,
             updatedItem
                 .GetProperty("progressSeconds")
                 .GetInt32());
@@ -184,7 +184,7 @@ public sealed class ApiIntegrationTests
                 item
                     .GetProperty("progressSeconds")
                     .GetInt32() ==
-                42);
+                4);
 
         var clearResponse =
             await client.DeleteAsync(

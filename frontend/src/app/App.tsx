@@ -27,6 +27,7 @@ import UploadPage from '../presentation/pages/UploadPage'
 import WatchPage from '../presentation/pages/WatchPage'
 import WatchPartyPage from '../presentation/pages/WatchPartyPage'
 import './App.css'
+import '../presentation/pages/RegressionPolish.css'
 import '../shared/theme/theme-runtime.css'
 import {
   useAuthStore,
@@ -90,6 +91,7 @@ function App() {
           path="streamers/:streamId"
           element={
             <LiveStreamPage
+              channelService={channelService}
               liveChatClientFactory={liveChatClientFactory}
               liveChatSessionStore={liveChatSessionStore}
               streamService={streamService}
@@ -145,7 +147,10 @@ function App() {
             element={<UploadPage uploadService={uploadService} />}
           />
 
-          <Route path="profile" element={<ProfilePage />} />
+          <Route
+            path="profile"
+            element={<ProfilePage channelService={channelService} />}
+          />
 
           <Route
             path="playlists"
@@ -184,6 +189,7 @@ function App() {
           path="watch/:videoId"
           element={
             <WatchPage
+              channelService={channelService}
               libraryService={libraryService}
               playlistService={playlistService}
               videoService={videoService}
