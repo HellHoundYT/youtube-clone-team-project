@@ -55,23 +55,20 @@ function App() {
 
   return (
     <Routes>
-      <Route
-        element={
-          <AppLayout />
-        }
-      >
+      <Route element={<AppLayout />}>
         <Route
           index
           element={
-            <HomePage libraryService={libraryService} videoService={videoService} />
+            <HomePage
+              libraryService={libraryService}
+              videoService={videoService}
+            />
           }
         />
 
         <Route
           path="playme"
-          element={
-            <PlaymePage videoService={videoService} />
-          }
+          element={<PlaymePage videoService={videoService} />}
         />
 
         <Route
@@ -97,29 +94,26 @@ function App() {
         <Route
           path="library"
           element={
-            <LibraryPage libraryService={libraryService} />
+            <LibraryPage
+              libraryService={libraryService}
+              playlistService={playlistService}
+            />
           }
         />
 
         <Route
           path="history"
-          element={
-            <HistoryPage libraryService={libraryService} />
-          }
+          element={<HistoryPage libraryService={libraryService} />}
         />
 
         <Route
           path="favorites"
-          element={
-            <FavoritesPage libraryService={libraryService} />
-          }
+          element={<FavoritesPage libraryService={libraryService} />}
         />
 
         <Route
           path="streamers"
-          element={
-            <StreamsPage streamService={streamService} />
-          }
+          element={<StreamsPage streamService={streamService} />}
         />
 
         <Route
@@ -133,44 +127,33 @@ function App() {
           }
         />
 
-        <Route
-          path="themes"
-          element={
-            <ThemesPage />
-          }
-        />
+        <Route path="themes" element={<ThemesPage />} />
 
         <Route
           path="search"
-          element={
-            <SearchPage discoveryService={discoveryService} />
-          }
+          element={<SearchPage discoveryService={discoveryService} />}
         />
 
         <Route
           path="categories/:slug"
-          element={
-            <CategoryPage discoveryService={discoveryService} />
-          }
+          element={<CategoryPage discoveryService={discoveryService} />}
         />
 
         <Route element={<RequireAuth />}>
           <Route
             path="upload"
-            element={
-              <UploadPage uploadService={uploadService} />
-            }
+            element={<UploadPage uploadService={uploadService} />}
           />
 
-          <Route
-            path="profile"
-            element={<ProfilePage />}
-          />
+          <Route path="profile" element={<ProfilePage />} />
 
           <Route
             path="playlists"
             element={
-              <PlaylistsPage playlistService={playlistService} />
+              <PlaylistsPage
+                playlistService={playlistService}
+                videoService={videoService}
+              />
             }
           />
         </Route>
@@ -178,38 +161,42 @@ function App() {
         <Route
           path="watch-party"
           element={
-            <WatchPartyPage videoService={videoService} watchPartyClientFactory={watchPartyClientFactory} watchPartySessionStore={watchPartySessionStore} />
+            <WatchPartyPage
+              videoService={videoService}
+              watchPartyClientFactory={watchPartyClientFactory}
+              watchPartySessionStore={watchPartySessionStore}
+            />
           }
         />
 
         <Route
           path="watch-party/:roomCode"
           element={
-            <WatchPartyPage videoService={videoService} watchPartyClientFactory={watchPartyClientFactory} watchPartySessionStore={watchPartySessionStore} />
+            <WatchPartyPage
+              videoService={videoService}
+              watchPartyClientFactory={watchPartyClientFactory}
+              watchPartySessionStore={watchPartySessionStore}
+            />
           }
         />
 
         <Route
           path="watch/:videoId"
           element={
-            <WatchPage libraryService={libraryService} videoService={videoService} />
+            <WatchPage
+              libraryService={libraryService}
+              playlistService={playlistService}
+              videoService={videoService}
+            />
           }
         />
       </Route>
 
-      <Route
-        path="auth"
-        element={<AuthPage />}
-      />
+      <Route path="auth" element={<AuthPage />} />
 
       <Route
         path="*"
-        element={
-          <Navigate
-            to="/"
-            replace
-          />
-        }
+        element={<Navigate to="/" replace />}
       />
     </Routes>
   )
