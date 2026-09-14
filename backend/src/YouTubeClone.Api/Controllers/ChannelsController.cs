@@ -12,6 +12,22 @@ namespace YouTubeClone.Api.Controllers;
 [Route("api/v1/channels")]
 public sealed class ChannelsController : ControllerBase
 {
+    private const long MaxAvatarFileSize =
+        5L * 1024L * 1024L;
+
+    private const long MaxBannerFileSize =
+        10L * 1024L * 1024L;
+
+    private static readonly HashSet<string>
+        AllowedImageExtensions =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp"
+        };
+
     private readonly IChannelService _channelService;
     private readonly IFileStorageService _fileStorageService;
 
@@ -138,6 +154,36 @@ public sealed class ChannelsController : ControllerBase
     }
 
     [Authorize]
+    [HttpPost("{channelId:guid}/avatar")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(MaxAvatarFileSize)]
+    public Task<ActionResult<ChannelResponseDto>> UpdateAvatar(
+        Guid channelId,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken) =>
+        UpdateImageAsync(
+            channelId,
+            file,
+            ChannelImageKind.Avatar,
+            MaxAvatarFileSize,
+            cancellationToken);
+
+    [Authorize]
+    [HttpPost("{channelId:guid}/banner")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(MaxBannerFileSize)]
+    public Task<ActionResult<ChannelResponseDto>> UpdateBanner(
+        Guid channelId,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken) =>
+        UpdateImageAsync(
+            channelId,
+            file,
+            ChannelImageKind.Banner,
+            MaxBannerFileSize,
+            cancellationToken);
+
+    [Authorize]
     [HttpGet("subscriptions")]
     public async Task<ActionResult<IReadOnlyList<ChannelResponseDto>>> Subscriptions(
         CancellationToken cancellationToken)
@@ -242,6 +288,125 @@ public sealed class ChannelsController : ControllerBase
             : StreamStoredImage(channel.BannerPath);
     }
 
+    private async Task<ActionResult<ChannelResponseDto>> UpdateImageAsync(
+        Guid channelId,
+        IFormFile file,
+        ChannelImageKind imageKind,
+        long maxFileSize,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var channel = await _channelService.GetAsync(
+            channelId,
+            userId.Value,
+            cancellationToken);
+
+        if (channel is null)
+        {
+            return NotFound();
+        }
+
+        if (channel.OwnerId != userId.Value)
+        {
+            return Forbid();
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(
+                new { message = "Channel image is required." });
+        }
+
+        if (file.Length > maxFileSize)
+        {
+            return BadRequest(
+                new
+                {
+                    message = imageKind == ChannelImageKind.Avatar
+                        ? "Channel avatar must not exceed 5 MB."
+                        : "Channel banner must not exceed 10 MB."
+                });
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (!AllowedImageExtensions.Contains(extension))
+        {
+            return BadRequest(
+                new { message = "Channel image must be PNG, JPEG, or WebP." });
+        }
+
+        await using var source = file.OpenReadStream();
+        using var bufferedImage = new MemoryStream();
+        await source.CopyToAsync(
+            bufferedImage,
+            cancellationToken);
+
+        bufferedImage.Position = 0;
+        if (!HasValidImageSignature(
+                bufferedImage,
+                extension))
+        {
+            return BadRequest(
+                new { message = "Channel image content is not a valid supported image." });
+        }
+
+        bufferedImage.Position = 0;
+
+        var normalizedExtension = extension.ToLowerInvariant();
+        var fileName = imageKind == ChannelImageKind.Avatar
+            ? $"avatar{normalizedExtension}"
+            : $"banner{normalizedExtension}";
+        var relativePath = Path.Combine(
+            "channels",
+            channelId.ToString("N"),
+            fileName);
+        var previousPath = imageKind == ChannelImageKind.Avatar
+            ? channel.AvatarPath
+            : channel.BannerPath;
+
+        try
+        {
+            await _fileStorageService.SaveAsync(
+                relativePath,
+                bufferedImage,
+                cancellationToken);
+
+            var result = await _channelService.UpdateImageAsync(
+                userId.Value,
+                channelId,
+                imageKind,
+                relativePath,
+                cancellationToken);
+
+            if (result.Channel is null)
+            {
+                _fileStorageService.Delete(relativePath);
+                return MapError(result.Error);
+            }
+
+            if (!string.IsNullOrWhiteSpace(previousPath) &&
+                !string.Equals(
+                    previousPath,
+                    relativePath,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                _fileStorageService.Delete(previousPath);
+            }
+
+            return Ok(Map(result.Channel, userId));
+        }
+        catch
+        {
+            _fileStorageService.Delete(relativePath);
+            throw;
+        }
+    }
+
     private IActionResult StreamStoredImage(string? path)
     {
         if (string.IsNullOrWhiteSpace(path) ||
@@ -283,6 +448,51 @@ public sealed class ChannelsController : ControllerBase
         return Guid.TryParse(subject, out var userId)
             ? userId
             : null;
+    }
+
+    private static bool HasValidImageSignature(
+        Stream stream,
+        string extension)
+    {
+        Span<byte> header = stackalloc byte[12];
+        var read = stream.Read(header);
+        stream.Position = 0;
+
+        if (extension.Equals(
+                ".png",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            ReadOnlySpan<byte> pngSignature =
+                [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+            return read >= pngSignature.Length &&
+                header[..pngSignature.Length]
+                    .SequenceEqual(pngSignature);
+        }
+
+        if (extension.Equals(
+                ".jpg",
+                StringComparison.OrdinalIgnoreCase) ||
+            extension.Equals(
+                ".jpeg",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return read >= 3 &&
+                header[0] == 0xFF &&
+                header[1] == 0xD8 &&
+                header[2] == 0xFF;
+        }
+
+        if (extension.Equals(
+                ".webp",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return read >= 12 &&
+                header[..4].SequenceEqual("RIFF"u8) &&
+                header[8..12].SequenceEqual("WEBP"u8);
+        }
+
+        return false;
     }
 
     private static ChannelResponseDto Map(
