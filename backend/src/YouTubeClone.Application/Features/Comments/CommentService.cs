@@ -13,31 +13,46 @@ public sealed class CommentService : ICommentService
         _repository = repository;
     }
 
-    public Task<IReadOnlyList<CommentModel>> ListAsync(
+    public async Task<IReadOnlyList<CommentModel>> ListAsync(
         Guid videoId,
         Guid? viewerUserId,
-        CancellationToken cancellationToken) =>
-        _repository.ListAsync(
+        int page,
+        int pageSize,
+        CommentSort sort,
+        CancellationToken cancellationToken)
+    {
+        var comments = await _repository.ListAsync(
             videoId,
             viewerUserId,
             cancellationToken);
+
+        IEnumerable<CommentModel> query =
+            sort switch
+            {
+                CommentSort.Oldest =>
+                    comments.OrderBy(comment => comment.CreatedAt),
+                CommentSort.Top =>
+                    comments
+                        .OrderByDescending(comment => comment.Likes)
+                        .ThenByDescending(comment => comment.CreatedAt),
+                _ =>
+                    comments.OrderByDescending(comment => comment.CreatedAt)
+            };
+
+        return query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
 
     public async Task<CommentResult> AddAsync(
         AddCommentCommand command,
         CancellationToken cancellationToken)
     {
-        var text = command.Text.Trim();
-
-        if (string.IsNullOrWhiteSpace(text))
+        var validation = ValidateText(command.Text);
+        if (validation.Error != CommentError.None)
         {
-            return CommentResult.Failure(
-                CommentError.TextRequired);
-        }
-
-        if (text.Length > MaxTextLength)
-        {
-            return CommentResult.Failure(
-                CommentError.TextTooLong);
+            return CommentResult.Failure(validation.Error);
         }
 
         if (command.ParentCommentId.HasValue)
@@ -61,7 +76,7 @@ public sealed class CommentService : ICommentService
             VideoId = command.VideoId,
             AuthorId = command.AuthorId,
             ParentCommentId = command.ParentCommentId,
-            Text = text,
+            Text = validation.Text,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -76,6 +91,70 @@ public sealed class CommentService : ICommentService
         return created is null
             ? CommentResult.Failure(CommentError.NotFound)
             : CommentResult.Success(created);
+    }
+
+    public async Task<CommentResult> UpdateAsync(
+        UpdateCommentCommand command,
+        CancellationToken cancellationToken)
+    {
+        var comment = await _repository.FindByIdAsync(
+            command.CommentId,
+            cancellationToken);
+
+        if (comment is null)
+        {
+            return CommentResult.Failure(CommentError.NotFound);
+        }
+
+        if (comment.AuthorId != command.AuthorId)
+        {
+            return CommentResult.Failure(CommentError.Forbidden);
+        }
+
+        var validation = ValidateText(command.Text);
+        if (validation.Error != CommentError.None)
+        {
+            return CommentResult.Failure(validation.Error);
+        }
+
+        comment.Text = validation.Text;
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        var updated = await _repository.GetAsync(
+            comment.Id,
+            command.AuthorId,
+            cancellationToken);
+
+        return updated is null
+            ? CommentResult.Failure(CommentError.NotFound)
+            : CommentResult.Success(updated);
+    }
+
+    public async Task<CommentError> DeleteAsync(
+        Guid commentId,
+        Guid authorId,
+        CancellationToken cancellationToken)
+    {
+        var comment = await _repository.FindByIdAsync(
+            commentId,
+            cancellationToken);
+
+        if (comment is null)
+        {
+            return CommentError.NotFound;
+        }
+
+        if (comment.AuthorId != authorId)
+        {
+            return CommentError.Forbidden;
+        }
+
+        await _repository.RemoveCommentTreeAsync(
+            comment,
+            cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return CommentError.None;
     }
 
     public async Task<CommentResult> ToggleReactionAsync(
@@ -129,5 +208,23 @@ public sealed class CommentService : ICommentService
         return updated is null
             ? CommentResult.Failure(CommentError.NotFound)
             : CommentResult.Success(updated);
+    }
+
+    private static (string Text, CommentError Error) ValidateText(
+        string source)
+    {
+        var text = source.Trim();
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return (string.Empty, CommentError.TextRequired);
+        }
+
+        if (text.Length > MaxTextLength)
+        {
+            return (string.Empty, CommentError.TextTooLong);
+        }
+
+        return (text, CommentError.None);
     }
 }
