@@ -90,6 +90,7 @@ function App() {
           path="streamers/:streamId"
           element={
             <LiveStreamPage
+              channelService={channelService}
               liveChatClientFactory={liveChatClientFactory}
               liveChatSessionStore={liveChatSessionStore}
               streamService={streamService}
