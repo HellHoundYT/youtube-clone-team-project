@@ -1,3 +1,4 @@
+using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Domain.Playlists;
 
 namespace YouTubeClone.Application.Features.Playlists;
@@ -8,10 +9,14 @@ public sealed class PlaylistService : IPlaylistService
     private const int MaxDescriptionLength = 300;
 
     private readonly IPlaylistRepository _repository;
+    private readonly IVideoService _videoService;
 
-    public PlaylistService(IPlaylistRepository repository)
+    public PlaylistService(
+        IPlaylistRepository repository,
+        IVideoService videoService)
     {
         _repository = repository;
+        _videoService = videoService;
     }
 
     public async Task<IReadOnlyList<PlaylistModel>> ListAsync(
@@ -22,9 +27,16 @@ public sealed class PlaylistService : IPlaylistService
             ownerId,
             cancellationToken);
 
-        return playlists
-            .Select(Map)
-            .ToList();
+        var models = new List<PlaylistModel>(playlists.Count);
+        foreach (var playlist in playlists)
+        {
+            models.Add(
+                await MapAsync(
+                    playlist,
+                    cancellationToken));
+        }
+
+        return models;
     }
 
     public async Task<PlaylistResult> CreateAsync(
@@ -52,7 +64,10 @@ public sealed class PlaylistService : IPlaylistService
         _repository.Add(playlist);
         await _repository.SaveChangesAsync(cancellationToken);
 
-        return PlaylistResult.Success(Map(playlist));
+        return PlaylistResult.Success(
+            await MapAsync(
+                playlist,
+                cancellationToken));
     }
 
     public async Task<PlaylistResult> UpdateAsync(
@@ -67,11 +82,12 @@ public sealed class PlaylistService : IPlaylistService
             return PlaylistResult.Failure(validationError);
         }
 
-        var playlist = await _repository.FindByIdAsync(
+        var playlist = await FindOwnedAsync(
+            ownerId,
             playlistId,
             cancellationToken);
 
-        if (playlist is null || playlist.OwnerId != ownerId)
+        if (playlist is null)
         {
             return PlaylistResult.Failure(
                 PlaylistError.NotFound);
@@ -83,10 +99,124 @@ public sealed class PlaylistService : IPlaylistService
 
         await _repository.SaveChangesAsync(cancellationToken);
 
-        return PlaylistResult.Success(Map(playlist));
+        return PlaylistResult.Success(
+            await MapAsync(
+                playlist,
+                cancellationToken));
     }
 
     public async Task<bool> DeleteAsync(
+        Guid ownerId,
+        Guid playlistId,
+        CancellationToken cancellationToken)
+    {
+        var playlist = await FindOwnedAsync(
+            ownerId,
+            playlistId,
+            cancellationToken);
+
+        if (playlist is null)
+        {
+            return false;
+        }
+
+        _repository.Remove(playlist);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<PlaylistError> AddVideoAsync(
+        Guid ownerId,
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken)
+    {
+        var playlist = await FindOwnedAsync(
+            ownerId,
+            playlistId,
+            cancellationToken);
+
+        if (playlist is null)
+        {
+            return PlaylistError.NotFound;
+        }
+
+        var video = await _videoService.GetVideoByIdAsync(
+            videoId,
+            cancellationToken);
+
+        if (video is null)
+        {
+            return PlaylistError.VideoNotFound;
+        }
+
+        var existing = await _repository.FindVideoAsync(
+            playlistId,
+            videoId,
+            cancellationToken);
+
+        if (existing is not null)
+        {
+            return PlaylistError.None;
+        }
+
+        _repository.AddVideo(
+            new PlaylistVideo
+            {
+                PlaylistId = playlistId,
+                VideoId = videoId,
+                AddedAt = DateTimeOffset.UtcNow
+            });
+
+        playlist.UpdatedAt = DateTimeOffset.UtcNow;
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return PlaylistError.None;
+    }
+
+    public async Task<PlaylistError> RemoveVideoAsync(
+        Guid ownerId,
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken)
+    {
+        var playlist = await FindOwnedAsync(
+            ownerId,
+            playlistId,
+            cancellationToken);
+
+        if (playlist is null)
+        {
+            return PlaylistError.NotFound;
+        }
+
+        var existing = await _repository.FindVideoAsync(
+            playlistId,
+            videoId,
+            cancellationToken);
+
+        if (existing is null)
+        {
+            return PlaylistError.None;
+        }
+
+        _repository.RemoveVideo(existing);
+        playlist.UpdatedAt = DateTimeOffset.UtcNow;
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return PlaylistError.None;
+    }
+
+    private Task<Playlist?> FindOwnedAsync(
+        Guid ownerId,
+        Guid playlistId,
+        CancellationToken cancellationToken) =>
+        FindOwnedCoreAsync(
+            ownerId,
+            playlistId,
+            cancellationToken);
+
+    private async Task<Playlist?> FindOwnedCoreAsync(
         Guid ownerId,
         Guid playlistId,
         CancellationToken cancellationToken)
@@ -95,14 +225,9 @@ public sealed class PlaylistService : IPlaylistService
             playlistId,
             cancellationToken);
 
-        if (playlist is null || playlist.OwnerId != ownerId)
-        {
-            return false;
-        }
-
-        _repository.Remove(playlist);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return true;
+        return playlist?.OwnerId == ownerId
+            ? playlist
+            : null;
     }
 
     private static PlaylistError Validate(
@@ -129,13 +254,21 @@ public sealed class PlaylistService : IPlaylistService
         return PlaylistError.None;
     }
 
-    private static PlaylistModel Map(
-        Playlist playlist) =>
-        new(
+    private async Task<PlaylistModel> MapAsync(
+        Playlist playlist,
+        CancellationToken cancellationToken)
+    {
+        var videoIds = await _repository.ListVideoIdsAsync(
+            playlist.Id,
+            cancellationToken);
+
+        return new PlaylistModel(
             playlist.Id,
             playlist.OwnerId,
             playlist.Title,
             playlist.Description,
             playlist.CreatedAt,
-            playlist.UpdatedAt);
+            playlist.UpdatedAt,
+            videoIds);
+    }
 }
