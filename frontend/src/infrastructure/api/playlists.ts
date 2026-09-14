@@ -87,4 +87,39 @@ PlaylistGateway = {
         ),
     )
   },
+
+  async addVideo(
+    playlistId,
+    videoId,
+  ) {
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.post(
+          `/api/v1/playlists/${encodeURIComponent(playlistId)}/videos/${encodeURIComponent(videoId)}`,
+          undefined,
+          {
+            withCredentials:
+              true,
+            ...createAuthorizedConfig(token),
+          },
+        ),
+    )
+  },
+
+  async removeVideo(
+    playlistId,
+    videoId,
+  ) {
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.delete(
+          `/api/v1/playlists/${encodeURIComponent(playlistId)}/videos/${encodeURIComponent(videoId)}`,
+          {
+            withCredentials:
+              true,
+            ...createAuthorizedConfig(token),
+          },
+        ),
+    )
+  },
 }
