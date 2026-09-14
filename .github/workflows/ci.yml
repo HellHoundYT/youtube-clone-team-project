@@ -79,6 +79,12 @@ jobs:
 
           echo "SQL Server migration script generated successfully."
 
+      - name: Install ffprobe
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
       - name: Run backend tests
         run: >
           dotnet test
