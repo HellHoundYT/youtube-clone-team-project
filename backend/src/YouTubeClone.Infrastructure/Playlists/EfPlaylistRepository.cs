@@ -21,7 +21,7 @@ public sealed class EfPlaylistRepository : IPlaylistRepository
         return await _db.Playlists
             .AsNoTracking()
             .Where(playlist => playlist.OwnerId == ownerId)
-            .OrderByDescending(playlist => playlist.CreatedAt)
+            .OrderByDescending(playlist => playlist.UpdatedAt)
             .ToListAsync(cancellationToken);
     }
 
@@ -32,6 +32,28 @@ public sealed class EfPlaylistRepository : IPlaylistRepository
             playlist => playlist.Id == playlistId,
             cancellationToken);
 
+    public async Task<IReadOnlyList<Guid>> ListVideoIdsAsync(
+        Guid playlistId,
+        CancellationToken cancellationToken)
+    {
+        return await _db.PlaylistVideos
+            .AsNoTracking()
+            .Where(item => item.PlaylistId == playlistId)
+            .OrderBy(item => item.AddedAt)
+            .Select(item => item.VideoId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<PlaylistVideo?> FindVideoAsync(
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken) =>
+        _db.PlaylistVideos.FirstOrDefaultAsync(
+            item =>
+                item.PlaylistId == playlistId &&
+                item.VideoId == videoId,
+            cancellationToken);
+
     public void Add(Playlist playlist)
     {
         _db.Playlists.Add(playlist);
@@ -40,6 +62,16 @@ public sealed class EfPlaylistRepository : IPlaylistRepository
     public void Remove(Playlist playlist)
     {
         _db.Playlists.Remove(playlist);
+    }
+
+    public void AddVideo(PlaylistVideo playlistVideo)
+    {
+        _db.PlaylistVideos.Add(playlistVideo);
+    }
+
+    public void RemoveVideo(PlaylistVideo playlistVideo)
+    {
+        _db.PlaylistVideos.Remove(playlistVideo);
     }
 
     public async Task SaveChangesAsync(
