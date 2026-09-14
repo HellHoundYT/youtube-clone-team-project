@@ -212,6 +212,48 @@ public sealed class ChannelService : IChannelService
             : ChannelResult.Success(updated);
     }
 
+    public async Task<ChannelResult> UpdateImageAsync(
+        Guid ownerId,
+        Guid channelId,
+        ChannelImageKind imageKind,
+        string relativePath,
+        CancellationToken cancellationToken)
+    {
+        var channel = await _repository.FindByIdAsync(
+            channelId,
+            cancellationToken);
+
+        if (channel is null)
+        {
+            return ChannelResult.Failure(ChannelError.NotFound);
+        }
+
+        if (channel.OwnerId != ownerId)
+        {
+            return ChannelResult.Failure(ChannelError.Forbidden);
+        }
+
+        if (imageKind == ChannelImageKind.Avatar)
+        {
+            channel.AvatarPath = relativePath;
+        }
+        else
+        {
+            channel.BannerPath = relativePath;
+        }
+
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        var updated = await _repository.GetAsync(
+            channel.Id,
+            ownerId,
+            cancellationToken);
+
+        return updated is null
+            ? ChannelResult.Failure(ChannelError.NotFound)
+            : ChannelResult.Success(updated);
+    }
+
     public Task<IReadOnlyList<ChannelModel>> ListSubscriptionsAsync(
         Guid subscriberId,
         CancellationToken cancellationToken) =>
