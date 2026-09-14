@@ -1,11 +1,13 @@
 import type {
   CommentItem,
+  CommentListOptions,
   CommentReaction,
 } from '../../domain/comment/types'
 
 export interface CommentGateway {
   list(
     videoId: string,
+    options?: CommentListOptions,
     signal?: AbortSignal,
   ): Promise<CommentItem[]>
 
@@ -14,6 +16,15 @@ export interface CommentGateway {
     text: string,
     parentCommentId?: string,
   ): Promise<CommentItem>
+
+  update(
+    commentId: string,
+    text: string,
+  ): Promise<CommentItem>
+
+  remove(
+    commentId: string,
+  ): Promise<void>
 
   toggleReaction(
     commentId: string,
