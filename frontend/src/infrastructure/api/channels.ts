@@ -1,45 +1,208 @@
 import axios from 'axios'
+import type {
+  ChannelGateway,
+} from '../../application/channel/gateway'
+import type {
+  Channel,
+  SaveChannelRequest,
+} from '../../domain/channel/types'
 import {
-  getAuthenticatedConfig,
-} from './auth'
+  createAuthorizedConfig,
+  withAuthenticatedRequest,
+} from './authSession'
 
-export interface ApiChannel {
-  id: string
-  name: string
-  handle: string
-  description: string
-  avatarPath: string | null
-  bannerPath: string | null
-  subscriberCount: number
+function createImageForm(
+  file: File,
+) {
+  const form =
+    new FormData()
+
+  form.append(
+    'file',
+    file,
+  )
+
+  return form
 }
 
-export const channelsApi = {
-  async list() {
-    const response = await axios.get<ApiChannel[]>('/api/v1/channels')
+export const channelGateway:
+ChannelGateway = {
+  async listChannels() {
+    const response =
+      await axios.get<Channel[]>(
+        '/api/v1/channels',
+      )
+
     return response.data
   },
 
-  async get(channelId: string) {
-    const response = await axios.get<ApiChannel>(`/api/v1/channels/${channelId}`)
+  async getChannel(
+    channelId,
+  ) {
+    const response =
+      await axios.get<Channel>(
+        `/api/v1/channels/${channelId}`,
+      )
+
     return response.data
   },
 
-  async subscriptions() {
-    const response = await axios.get<ApiChannel[]>('/api/v1/channels/subscriptions', {
-      ...getAuthenticatedConfig(),
-    })
+  async getMyChannel() {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.get<Channel>(
+            '/api/v1/channels/me',
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
     return response.data
   },
 
-  async subscribe(channelId: string) {
-    await axios.post(`/api/v1/channels/${channelId}/subscribe`, null, {
-      ...getAuthenticatedConfig(),
-    })
+  async createChannel(
+    request:
+      SaveChannelRequest,
+  ) {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.post<Channel>(
+            '/api/v1/channels',
+            request,
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
   },
 
-  async unsubscribe(channelId: string) {
-    await axios.delete(`/api/v1/channels/${channelId}/subscribe`, {
-      ...getAuthenticatedConfig(),
-    })
+  async updateChannel(
+    channelId,
+    request,
+  ) {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.put<Channel>(
+            `/api/v1/channels/${channelId}`,
+            request,
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async uploadAvatar(
+    channelId,
+    file,
+  ) {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.post<Channel>(
+            `/api/v1/channels/${channelId}/avatar`,
+            createImageForm(file),
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async uploadBanner(
+    channelId,
+    file,
+  ) {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.post<Channel>(
+            `/api/v1/channels/${channelId}/banner`,
+            createImageForm(file),
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async listSubscriptions() {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.get<Channel[]>(
+            '/api/v1/channels/subscriptions',
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async subscribe(
+    channelId,
+  ) {
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.post(
+          `/api/v1/channels/${channelId}/subscribe`,
+          undefined,
+          {
+            withCredentials:
+              true,
+
+            ...createAuthorizedConfig(token),
+          },
+        ),
+    )
+  },
+
+  async unsubscribe(
+    channelId,
+  ) {
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.delete(
+          `/api/v1/channels/${channelId}/subscribe`,
+          {
+            withCredentials:
+              true,
+
+            ...createAuthorizedConfig(token),
+          },
+        ),
+    )
   },
 }

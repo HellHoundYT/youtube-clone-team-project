@@ -1,31 +1,19 @@
 const systemEn = {
   system: {
-    closeNavigation:
-      'Close navigation',
+    closeNavigation: 'Close navigation',
 
     placeholders: {
       subscriptions: {
-        title:
-          'Subscriptions',
-
-        description:
-          'Subscription content will be connected here.',
+        title: 'Subscriptions',
+        description: 'Subscription content will be connected here.',
       },
-
       playlists: {
-        title:
-          'Playlists',
-
-        description:
-          'User playlists will be connected here.',
+        title: 'Playlists',
+        description: 'User playlists will be connected here.',
       },
-
       profile: {
-        title:
-          'Profile',
-
-        description:
-          'User profile will be connected here.',
+        title: 'Profile',
+        description: 'User profile will be connected here.',
       },
     },
 
@@ -41,7 +29,7 @@ const systemEn = {
       displayName: 'Display name',
       email: 'Email',
       password: 'Password',
-      localSession: 'You stay signed in for the current browser session.',
+      localSession: 'Your secure session can be restored when you return to this browser.',
       backHome: '← Back to home',
       invalidEmail: 'Enter a valid email address.',
       invalidPassword: 'Password must contain at least 6 characters.',
@@ -53,6 +41,7 @@ const systemEn = {
       continueGoogle: 'Continue with Google',
       continueX: 'Continue with X',
       continueApple: 'Continue with Apple',
+      comingSoon: 'Social sign in is not connected yet.',
     },
 
     channels: {
@@ -60,16 +49,41 @@ const systemEn = {
       subscriptionsLead: 'Follow the creators whose new videos you do not want to miss.',
       channelCount: '{{count}} channels followed',
       loading: 'Loading channels…',
+      unavailable: 'This channel could not be loaded.',
       emptyTitle: 'Your subscriptions are empty',
       emptyLead: 'Discover a channel below and subscribe to see it here.',
       discoverTitle: 'Discover channels',
+      followingTitle: 'Channels you follow',
       subscribers: 'subscribers',
       subscribe: 'Subscribe',
       subscribed: 'Subscribed',
       unsubscribe: 'Unsubscribe',
       back: 'Back to subscriptions',
       videosTitle: 'Channel videos',
-      videosLead: 'Videos from this channel will be connected here when the channel API is available.',
+      videosLead: 'Published videos from this channel appear here.',
+      videoCount_one: '{{count}} video',
+      videoCount_other: '{{count}} videos',
+      noVideos: 'This channel has not published any videos yet.',
+      feedTitle: 'Latest from your subscriptions',
+      feedLead: 'Recent videos from the creators you follow.',
+      feedEmpty: 'The channels you follow have no published videos yet.',
+      ownerEyebrow: 'CREATOR SETTINGS',
+      ownerTitle: 'Manage your channel',
+      ownerLead: 'Update your public channel details and visual identity.',
+      nameLabel: 'Channel name',
+      handleLabel: 'Handle',
+      descriptionLabel: 'Description',
+      save: 'Save channel',
+      saving: 'Saving…',
+      saved: 'Saved',
+      saveFailed: 'Changes could not be saved. Check the fields or image and try again.',
+      avatarTitle: 'Channel avatar',
+      avatarHint: 'PNG, JPEG, or WebP. Maximum size 5 MB.',
+      chooseAvatar: 'Choose avatar',
+      bannerTitle: 'Channel banner',
+      bannerHint: 'PNG, JPEG, or WebP. Maximum size 10 MB.',
+      chooseBanner: 'Choose banner',
+      uploading: 'Uploading…',
     },
 
     comments: {
@@ -77,12 +91,26 @@ const systemEn = {
       count_one: '{{count}} comment',
       count_other: '{{count}} comments',
       placeholder: 'Add a comment…',
+      signInToComment: 'Sign in to add a comment…',
       replyPlaceholder: 'Write a reply…',
       send: 'Send',
       reply: 'Reply',
       guest: 'Guest',
       justNow: 'just now',
+      loading: 'Loading comments…',
+      requestFailed: 'Comments could not be loaded or saved. Please try again.',
       empty: 'Be the first to leave a comment.',
+      sortLabel: 'Sort comments',
+      sortNewest: 'Newest first',
+      sortOldest: 'Oldest first',
+      sortTop: 'Top rated',
+      edit: 'Edit',
+      delete: 'Delete',
+      save: 'Save',
+      cancel: 'Cancel',
+      deleteConfirm: 'Delete this comment?',
+      loadMore: 'Load more comments',
+      close: 'Close comments',
     },
 
     playlists: {
@@ -90,6 +118,9 @@ const systemEn = {
       title: 'Playlists',
       lead: 'Create collections for the videos you want to return to.',
       create: 'New playlist',
+      loading: 'Loading playlists…',
+      saving: 'Saving…',
+      requestFailed: 'Playlists could not be loaded or saved. Please try again.',
       emptyTitle: 'No playlists yet',
       emptyLead: 'Create a playlist to keep your favorite videos together.',
       noVideos: 'No videos yet',
@@ -97,12 +128,25 @@ const systemEn = {
       created: 'Created',
       edit: 'Edit',
       delete: 'Delete',
+      deleteConfirm: 'Delete this playlist?',
       createTitle: 'Create a playlist',
       editTitle: 'Edit playlist',
       name: 'Playlist name',
       description: 'Description',
       save: 'Save changes',
       cancel: 'Cancel',
+      open: 'Open',
+      back: 'Back to playlists',
+      videoCount_one: '{{count}} video',
+      videoCount_other: '{{count}} videos',
+      addFromWatchHint: 'Open a video and use “Add to playlist” to build this collection.',
+      videoUnavailable: 'Video unavailable',
+      removeVideo: 'Remove from playlist',
+      addToPlaylist: 'Add to playlist',
+      choosePlaylist: 'Choose a playlist',
+      closeMenu: 'Close playlist menu',
+      added: 'Added',
+      add: 'Add',
     },
 
     profile: {
@@ -112,14 +156,21 @@ const systemEn = {
       emptyLead: 'Sign in or register to create and manage your profile.',
       signIn: 'Sign in',
       detailsTitle: 'Profile details',
-      detailsLead: 'These settings are saved only in this browser for now.',
+      detailsLead: 'These settings are saved to your account.',
       saved: 'Saved',
-      saveError: 'Changes could not be saved in this browser. Please try again.',
+      saveError: 'Changes could not be saved. Please try again.',
       displayName: 'Display name',
       handle: 'Handle',
       email: 'Email',
       about: 'About',
       aboutPlaceholder: 'Tell viewers a little about yourself',
+      avatar: 'Profile picture',
+      avatarHint: 'PNG, JPEG, or WebP. Maximum size 5 MB.',
+      avatarUpload: 'Choose image',
+      avatarUploading: 'Uploading…',
+      avatarTypeError: 'Choose a PNG, JPEG, or WebP image.',
+      avatarSizeError: 'The profile picture must not exceed 5 MB.',
+      avatarUploadError: 'The profile picture could not be uploaded. Please try again.',
       saveChanges: 'Save changes',
       account: 'Account',
       status: 'Status',
@@ -132,92 +183,39 @@ const systemEn = {
   },
 
   upload: {
-    eyebrow:
-      'CREATOR STUDIO',
-
-    title:
-      'Upload video',
-
-    description:
-      'Upload an MP4 and publish it directly to the AMTLIS video catalogue.',
-
-    selectVideo:
-      'Select your video',
-
-    fileHint:
-      'MP4, maximum 500 MB',
-
-    chooseFile:
-      'Choose file',
-
-    fileMeta:
-      '{{size}} MB · {{duration}}',
-
-    titleLabel:
-      'Title',
-
-    titlePlaceholder:
-      'Video title',
-
-    categoryLabel:
-      'Category',
-
-    descriptionLabel:
-      'Description',
-
-    descriptionPlaceholder:
-      'Tell viewers about this video',
-
-    uploading:
-      'Uploading...',
-
-    publish:
-      'Publish video',
+    eyebrow: 'CREATOR STUDIO',
+    title: 'Upload video',
+    description: 'Upload an MP4 and publish it directly to the AMTLIS video catalogue.',
+    selectVideo: 'Select your video',
+    fileHint: 'MP4, maximum 500 MB',
+    chooseFile: 'Choose file',
+    fileMeta: '{{size}} MB · {{duration}}',
+    titleLabel: 'Title',
+    titlePlaceholder: 'Video title',
+    categoryLabel: 'Category',
+    descriptionLabel: 'Description',
+    descriptionPlaceholder: 'Tell viewers about this video',
+    uploading: 'Uploading...',
+    publish: 'Publish video',
 
     categories: {
-      music:
-        'Music',
-
-      games:
-        'Games',
-
-      cybersport:
-        'Cybersport',
-
-      education:
-        'Education',
-
-      programming:
-        'Programming',
-
-      films:
-        'Films',
-
-      podcasts:
-        'Podcasts',
-
-      mixes:
-        'Mixes',
+      music: 'Music',
+      games: 'Games',
+      cybersport: 'Cybersport',
+      education: 'Education',
+      programming: 'Programming',
+      films: 'Films',
+      podcasts: 'Podcasts',
+      mixes: 'Mixes',
     },
 
     errors: {
-      chooseMp4:
-        'Choose an MP4 video file.',
-
-      unreadableMp4:
-        'The selected MP4 could not be read.',
-
-      chooseFile:
-        'Choose a video file first.',
-
-      enterTitle:
-        'Enter a video title.',
-
-      durationUnknown:
-        'Video duration could not be determined.',
-
-      uploadFailed:
-        'Video upload failed. Check that the API is running and try again.',
+      chooseMp4: 'Choose an MP4 video file.',
+      unreadableMp4: 'The selected MP4 could not be read.',
+      chooseFile: 'Choose a video file first.',
+      enterTitle: 'Enter a video title.',
+      durationUnknown: 'Video duration could not be determined.',
+      uploadFailed: 'Video upload failed. Check that the API is running and try again.',
     },
   },
 }

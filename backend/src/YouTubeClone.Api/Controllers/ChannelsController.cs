@@ -2,85 +2,493 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using YouTubeClone.Domain.Channels;
-using YouTubeClone.Infrastructure.Persistence;
+using YouTubeClone.Api.DTOs.Channels;
+using YouTubeClone.Application.Abstractions.Storage;
+using YouTubeClone.Application.Features.Channels;
 
 namespace YouTubeClone.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/channels")]
-public sealed class ChannelsController(AppDbContext db) : ControllerBase
+public sealed class ChannelsController : ControllerBase
 {
-    [HttpGet]
-    public Task<List<ChannelResponse>> List(CancellationToken ct) => Query().ToListAsync(ct);
+    private const long MaxAvatarFileSize = 5L * 1024L * 1024L;
+    private const long MaxBannerFileSize = 10L * 1024L * 1024L;
 
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ChannelResponse>> Get(Guid id, CancellationToken ct)
+    private static readonly HashSet<string> AllowedImageExtensions =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp"
+        };
+
+    private readonly IChannelService _channelService;
+    private readonly IFileStorageService _fileStorageService;
+
+    public ChannelsController(
+        IChannelService channelService,
+        IFileStorageService fileStorageService)
     {
-        var channel = await Query().SingleOrDefaultAsync(item => item.Id == id, ct);
-        return channel is null ? NotFound() : Ok(channel);
+        _channelService = channelService;
+        _fileStorageService = fileStorageService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<ChannelResponseDto>>> List(
+        CancellationToken cancellationToken)
+    {
+        var viewerUserId = GetUserId();
+        var channels = await _channelService.ListAsync(
+            viewerUserId,
+            cancellationToken);
+
+        return Ok(
+            channels
+                .Select(channel => Map(channel, viewerUserId))
+                .ToList());
+    }
+
+    [HttpGet("{channelId:guid}")]
+    public async Task<ActionResult<ChannelResponseDto>> Get(
+        Guid channelId,
+        CancellationToken cancellationToken)
+    {
+        var viewerUserId = GetUserId();
+        var channel = await _channelService.GetAsync(
+            channelId,
+            viewerUserId,
+            cancellationToken);
+
+        return channel is null
+            ? NotFound()
+            : Ok(Map(channel, viewerUserId));
     }
 
     [Authorize]
-    [HttpGet("subscriptions")]
-    public async Task<ActionResult<IReadOnlyList<ChannelResponse>>> Subscriptions(CancellationToken ct)
+    [HttpGet("me")]
+    public async Task<ActionResult<ChannelResponseDto>> Me(
+        CancellationToken cancellationToken)
     {
-        var userId = GetUserId(); if (userId is null) return Unauthorized();
-        return Ok(await Query().Where(channel => db.Subscriptions.Any(subscription => subscription.SubscriberId == userId && subscription.ChannelId == channel.Id)).ToListAsync(ct));
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _channelService.EnsureOwnedAsync(
+            userId.Value,
+            cancellationToken);
+
+        return result.Channel is null
+            ? StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { message = "The channel could not be loaded." })
+            : Ok(Map(result.Channel, userId));
     }
 
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<ChannelResponse>> Create(ChannelRequest request, CancellationToken ct)
+    public async Task<ActionResult<ChannelResponseDto>> Create(
+        SaveChannelRequestDto request,
+        CancellationToken cancellationToken)
     {
-        var userId = GetUserId(); if (userId is null) return Unauthorized();
-        var handle = request.Handle.Trim().TrimStart('@');
-        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(handle)) return BadRequest(new { message = "Name and handle are required." });
-        if (await db.Channels.AnyAsync(channel => channel.Handle == handle, ct)) return Conflict(new { message = "Handle is already registered." });
-        var channel = new Channel { Id = Guid.NewGuid(), OwnerId = userId.Value, Name = request.Name.Trim(), Handle = handle, Description = request.Description.Trim(), AvatarPath = request.AvatarPath, BannerPath = request.BannerPath, CreatedAt = DateTimeOffset.UtcNow };
-        db.Channels.Add(channel); await db.SaveChangesAsync(ct); return CreatedAtAction(nameof(Get), new { id = channel.Id }, ToResponse(channel));
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _channelService.CreateAsync(
+            userId.Value,
+            new SaveChannelCommand(
+                request.Name,
+                request.Handle,
+                request.Description),
+            cancellationToken);
+
+        if (result.Channel is not null)
+        {
+            return CreatedAtAction(
+                nameof(Get),
+                new { channelId = result.Channel.Id },
+                Map(result.Channel, userId));
+        }
+
+        return MapError(result.Error);
     }
 
     [Authorize]
-    [HttpPut("{id:guid}")]
-    public async Task<ActionResult<ChannelResponse>> Update(Guid id, ChannelRequest request, CancellationToken ct)
+    [HttpPut("{channelId:guid}")]
+    public async Task<ActionResult<ChannelResponseDto>> Update(
+        Guid channelId,
+        SaveChannelRequestDto request,
+        CancellationToken cancellationToken)
     {
-        var userId = GetUserId(); if (userId is null) return Unauthorized();
-        var channel = await db.Channels.SingleOrDefaultAsync(item => item.Id == id, ct);
-        if (channel is null) return NotFound();
-        if (channel.OwnerId != userId) return Forbid();
-        var handle = request.Handle.Trim().TrimStart('@');
-        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(handle)) return BadRequest(new { message = "Name and handle are required." });
-        if (await db.Channels.AnyAsync(item => item.Id != id && item.Handle == handle, ct)) return Conflict(new { message = "Handle is already registered." });
-        channel.Name = request.Name.Trim(); channel.Handle = handle; channel.Description = request.Description.Trim(); channel.AvatarPath = request.AvatarPath; channel.BannerPath = request.BannerPath;
-        await db.SaveChangesAsync(ct); return Ok(await Query().SingleAsync(item => item.Id == id, ct));
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _channelService.UpdateAsync(
+            userId.Value,
+            channelId,
+            new SaveChannelCommand(
+                request.Name,
+                request.Handle,
+                request.Description),
+            cancellationToken);
+
+        return result.Channel is not null
+            ? Ok(Map(result.Channel, userId))
+            : MapError(result.Error);
     }
 
     [Authorize]
-    [HttpPost("{id:guid}/subscribe")]
-    public async Task<IActionResult> Subscribe(Guid id, CancellationToken ct)
+    [HttpPost("{channelId:guid}/avatar")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(MaxAvatarFileSize + 1024 * 1024)]
+    public Task<ActionResult<ChannelResponseDto>> UpdateAvatar(
+        Guid channelId,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken) =>
+        UpdateImageAsync(
+            channelId,
+            file,
+            ChannelImageKind.Avatar,
+            MaxAvatarFileSize,
+            cancellationToken);
+
+    [Authorize]
+    [HttpPost("{channelId:guid}/banner")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(MaxBannerFileSize + 1024 * 1024)]
+    public Task<ActionResult<ChannelResponseDto>> UpdateBanner(
+        Guid channelId,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken) =>
+        UpdateImageAsync(
+            channelId,
+            file,
+            ChannelImageKind.Banner,
+            MaxBannerFileSize,
+            cancellationToken);
+
+    [Authorize]
+    [HttpGet("subscriptions")]
+    public async Task<ActionResult<IReadOnlyList<ChannelResponseDto>>> Subscriptions(
+        CancellationToken cancellationToken)
     {
-        var userId = GetUserId(); if (userId is null) return Unauthorized();
-        if (!await db.Channels.AnyAsync(channel => channel.Id == id, ct)) return NotFound();
-        if (!await db.Subscriptions.AnyAsync(item => item.SubscriberId == userId && item.ChannelId == id, ct)) { db.Subscriptions.Add(new Subscription { SubscriberId = userId.Value, ChannelId = id, CreatedAt = DateTimeOffset.UtcNow }); await db.SaveChangesAsync(ct); }
-        return NoContent();
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var channels = await _channelService.ListSubscriptionsAsync(
+            userId.Value,
+            cancellationToken);
+
+        return Ok(
+            channels
+                .Select(channel => Map(channel, userId))
+                .ToList());
     }
 
     [Authorize]
-    [HttpDelete("{id:guid}/subscribe")]
-    public async Task<IActionResult> Unsubscribe(Guid id, CancellationToken ct)
+    [HttpPost("{channelId:guid}/subscribe")]
+    public async Task<IActionResult> Subscribe(
+        Guid channelId,
+        CancellationToken cancellationToken)
     {
-        var userId = GetUserId(); if (userId is null) return Unauthorized();
-        var subscription = await db.Subscriptions.FindAsync([userId.Value, id], ct);
-        if (subscription is not null) { db.Subscriptions.Remove(subscription); await db.SaveChangesAsync(ct); }
-        return NoContent();
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var error = await _channelService.SubscribeAsync(
+            userId.Value,
+            channelId,
+            cancellationToken);
+
+        return error switch
+        {
+            ChannelError.None => NoContent(),
+            ChannelError.NotFound => NotFound(),
+            ChannelError.CannotSubscribeOwnChannel =>
+                BadRequest(new { message = "You cannot subscribe to your own channel." }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
     }
 
-    private IQueryable<ChannelResponse> Query() => db.Channels.Select(channel => new ChannelResponse(channel.Id, channel.Name, $"@{channel.Handle}", channel.Description, channel.AvatarPath, channel.BannerPath, db.Subscriptions.Count(subscription => subscription.ChannelId == channel.Id)));
-    private Guid? GetUserId() => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var id) ? id : null;
-    private ChannelResponse ToResponse(Channel channel) => new(channel.Id, channel.Name, $"@{channel.Handle}", channel.Description, channel.AvatarPath, channel.BannerPath, 0);
+    [Authorize]
+    [HttpDelete("{channelId:guid}/subscribe")]
+    public async Task<IActionResult> Unsubscribe(
+        Guid channelId,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var error = await _channelService.UnsubscribeAsync(
+            userId.Value,
+            channelId,
+            cancellationToken);
+
+        return error switch
+        {
+            ChannelError.None => NoContent(),
+            ChannelError.NotFound => NotFound(),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
+    }
+
+    [AllowAnonymous]
+    [HttpGet("{channelId:guid}/avatar")]
+    public async Task<IActionResult> Avatar(
+        Guid channelId,
+        CancellationToken cancellationToken)
+    {
+        var channel = await _channelService.GetAsync(
+            channelId,
+            null,
+            cancellationToken);
+
+        return channel is null
+            ? NotFound()
+            : StreamStoredImage(channel.AvatarPath);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("{channelId:guid}/banner")]
+    public async Task<IActionResult> Banner(
+        Guid channelId,
+        CancellationToken cancellationToken)
+    {
+        var channel = await _channelService.GetAsync(
+            channelId,
+            null,
+            cancellationToken);
+
+        return channel is null
+            ? NotFound()
+            : StreamStoredImage(channel.BannerPath);
+    }
+
+    private async Task<ActionResult<ChannelResponseDto>> UpdateImageAsync(
+        Guid channelId,
+        IFormFile file,
+        ChannelImageKind imageKind,
+        long maxFileSize,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var channel = await _channelService.GetAsync(
+            channelId,
+            userId.Value,
+            cancellationToken);
+
+        if (channel is null)
+        {
+            return NotFound();
+        }
+
+        if (channel.OwnerId != userId.Value)
+        {
+            return Forbid();
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { message = "Channel image is required." });
+        }
+
+        if (file.Length > maxFileSize)
+        {
+            return BadRequest(
+                new
+                {
+                    message = imageKind == ChannelImageKind.Avatar
+                        ? "Channel avatar must not exceed 5 MB."
+                        : "Channel banner must not exceed 10 MB."
+                });
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (!AllowedImageExtensions.Contains(extension))
+        {
+            return BadRequest(
+                new { message = "Channel image must be PNG, JPEG, or WebP." });
+        }
+
+        await using var source = file.OpenReadStream();
+        using var bufferedImage = new MemoryStream();
+        await source.CopyToAsync(bufferedImage, cancellationToken);
+
+        bufferedImage.Position = 0;
+        if (!HasValidImageSignature(bufferedImage, extension))
+        {
+            return BadRequest(
+                new { message = "Channel image content is not a valid supported image." });
+        }
+
+        bufferedImage.Position = 0;
+
+        var normalizedExtension = extension.ToLowerInvariant();
+        var imagePrefix = imageKind == ChannelImageKind.Avatar
+            ? "avatar"
+            : "banner";
+        var relativePath = Path.Combine(
+            "channels",
+            channelId.ToString("N"),
+            $"{imagePrefix}-{Guid.NewGuid():N}{normalizedExtension}");
+        var previousPath = imageKind == ChannelImageKind.Avatar
+            ? channel.AvatarPath
+            : channel.BannerPath;
+
+        try
+        {
+            await _fileStorageService.SaveAsync(
+                relativePath,
+                bufferedImage,
+                cancellationToken);
+
+            var result = await _channelService.UpdateImageAsync(
+                userId.Value,
+                channelId,
+                imageKind,
+                relativePath,
+                cancellationToken);
+
+            if (result.Channel is null)
+            {
+                _fileStorageService.Delete(relativePath);
+                return MapError(result.Error);
+            }
+
+            if (!string.IsNullOrWhiteSpace(previousPath) &&
+                !string.Equals(
+                    previousPath,
+                    relativePath,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                _fileStorageService.Delete(previousPath);
+            }
+
+            return Ok(Map(result.Channel, userId));
+        }
+        catch
+        {
+            _fileStorageService.Delete(relativePath);
+            throw;
+        }
+    }
+
+    private IActionResult StreamStoredImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) ||
+            !_fileStorageService.Exists(path))
+        {
+            return NotFound();
+        }
+
+        Response.Headers["Cache-Control"] = "no-store";
+
+        return File(
+            _fileStorageService.OpenRead(path),
+            _fileStorageService.GetContentType(path));
+    }
+
+    private ActionResult<ChannelResponseDto> MapError(ChannelError error) =>
+        error switch
+        {
+            ChannelError.NotFound => NotFound(),
+            ChannelError.OwnerNotFound => Unauthorized(),
+            ChannelError.AlreadyOwnsChannel =>
+                Conflict(new { message = "This account already has a channel." }),
+            ChannelError.NameRequired =>
+                BadRequest(new { message = "Channel name is required." }),
+            ChannelError.HandleRequired =>
+                BadRequest(new { message = "Channel handle is required." }),
+            ChannelError.HandleTaken =>
+                Conflict(new { message = "Channel handle is already registered." }),
+            ChannelError.Forbidden => Forbid(),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
+
+    private Guid? GetUserId()
+    {
+        var subject =
+            User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+        return Guid.TryParse(subject, out var userId)
+            ? userId
+            : null;
+    }
+
+    private static bool HasValidImageSignature(
+        Stream stream,
+        string extension)
+    {
+        Span<byte> header = stackalloc byte[12];
+        var read = stream.Read(header);
+        stream.Position = 0;
+
+        if (extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
+        {
+            ReadOnlySpan<byte> pngSignature =
+                [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+            return read >= pngSignature.Length &&
+                header[..pngSignature.Length].SequenceEqual(pngSignature);
+        }
+
+        if (extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+            extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+        {
+            return read >= 3 &&
+                header[0] == 0xFF &&
+                header[1] == 0xD8 &&
+                header[2] == 0xFF;
+        }
+
+        if (extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
+        {
+            return read >= 12 &&
+                header[..4].SequenceEqual("RIFF"u8) &&
+                header[8..12].SequenceEqual("WEBP"u8);
+        }
+
+        return false;
+    }
+
+    private static ChannelResponseDto Map(
+        ChannelModel channel,
+        Guid? viewerUserId) =>
+        new(
+            channel.Id,
+            channel.Name,
+            channel.Handle,
+            channel.Description,
+            string.IsNullOrWhiteSpace(channel.AvatarPath)
+                ? null
+                : $"/api/v1/channels/{channel.Id}/avatar",
+            string.IsNullOrWhiteSpace(channel.BannerPath)
+                ? null
+                : $"/api/v1/channels/{channel.Id}/banner",
+            channel.SubscriberCount,
+            channel.IsSubscribed,
+            viewerUserId.HasValue && viewerUserId.Value == channel.OwnerId);
 }
-
-public sealed class ChannelRequest { public string Name { get; init; } = string.Empty; public string Handle { get; init; } = string.Empty; public string Description { get; init; } = string.Empty; public string? AvatarPath { get; init; } public string? BannerPath { get; init; } }
-public sealed record ChannelResponse(Guid Id, string Name, string Handle, string Description, string? AvatarPath, string? BannerPath, int SubscriberCount);

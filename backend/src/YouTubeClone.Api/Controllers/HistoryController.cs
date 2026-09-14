@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YouTubeClone.Api.DTOs.History;
 using YouTubeClone.Application.Features.History;
@@ -5,6 +6,7 @@ using YouTubeClone.Application.Features.History.Contracts;
 
 namespace YouTubeClone.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/history")]
 public sealed class HistoryController :

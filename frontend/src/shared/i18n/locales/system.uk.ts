@@ -1,31 +1,19 @@
 const systemUk = {
   system: {
-    closeNavigation:
-      'Закрити навігацію',
+    closeNavigation: 'Закрити навігацію',
 
     placeholders: {
       subscriptions: {
-        title:
-          'Підписки',
-
-        description:
-          'Контент підписок буде підключено тут.',
+        title: 'Підписки',
+        description: 'Контент підписок буде підключено тут.',
       },
-
       playlists: {
-        title:
-          'Плейлісти',
-
-        description:
-          'Плейлісти користувача буде підключено тут.',
+        title: 'Плейлісти',
+        description: 'Плейлісти користувача буде підключено тут.',
       },
-
       profile: {
-        title:
-          'Профіль',
-
-        description:
-          'Профіль користувача буде підключено тут.',
+        title: 'Профіль',
+        description: 'Профіль користувача буде підключено тут.',
       },
     },
 
@@ -41,7 +29,7 @@ const systemUk = {
       displayName: 'Ім’я для відображення',
       email: 'Електронна пошта',
       password: 'Пароль',
-      localSession: 'Ви залишаєтеся в системі протягом поточної сесії браузера.',
+      localSession: 'Захищену сесію можна відновити, коли ви повернетеся в цей браузер.',
       backHome: '← На головну',
       invalidEmail: 'Введіть коректну адресу електронної пошти.',
       invalidPassword: 'Пароль має містити щонайменше 6 символів.',
@@ -53,6 +41,7 @@ const systemUk = {
       continueGoogle: 'Продовжити через Google',
       continueX: 'Продовжити через X',
       continueApple: 'Продовжити через Apple',
+      comingSoon: 'Вхід через соціальні мережі ще не підключено.',
     },
 
     channels: {
@@ -60,16 +49,43 @@ const systemUk = {
       subscriptionsLead: 'Стежте за авторами, чиї нові відео ви не хочете пропускати.',
       channelCount: 'Відстежується каналів: {{count}}',
       loading: 'Завантаження каналів…',
+      unavailable: 'Не вдалося завантажити цей канал.',
       emptyTitle: 'У вас ще немає підписок',
       emptyLead: 'Відкрийте канал нижче та підпишіться, щоб він з’явився тут.',
       discoverTitle: 'Відкрийте для себе канали',
+      followingTitle: 'Канали, на які ви підписані',
       subscribers: 'підписників',
       subscribe: 'Підписатися',
       subscribed: 'Ви підписані',
       unsubscribe: 'Відписатися',
       back: 'До підписок',
       videosTitle: 'Відео каналу',
-      videosLead: 'Відео цього каналу з’являться тут після підключення API каналів.',
+      videosLead: 'Опубліковані відео цього каналу відображаються тут.',
+      videoCount_one: '{{count}} відео',
+      videoCount_few: '{{count}} відео',
+      videoCount_many: '{{count}} відео',
+      videoCount_other: '{{count}} відео',
+      noVideos: 'Цей канал ще не опублікував жодного відео.',
+      feedTitle: 'Нове з ваших підписок',
+      feedLead: 'Останні відео від авторів, на яких ви підписані.',
+      feedEmpty: 'Канали, на які ви підписані, ще не опублікували відео.',
+      ownerEyebrow: 'НАЛАШТУВАННЯ АВТОРА',
+      ownerTitle: 'Керування каналом',
+      ownerLead: 'Оновлюйте публічні дані каналу та його візуальне оформлення.',
+      nameLabel: 'Назва каналу',
+      handleLabel: 'Ім’я каналу',
+      descriptionLabel: 'Опис',
+      save: 'Зберегти канал',
+      saving: 'Збереження…',
+      saved: 'Збережено',
+      saveFailed: 'Не вдалося зберегти зміни. Перевірте поля або зображення та спробуйте ще раз.',
+      avatarTitle: 'Аватар каналу',
+      avatarHint: 'PNG, JPEG або WebP. Максимальний розмір 5 МБ.',
+      chooseAvatar: 'Обрати аватар',
+      bannerTitle: 'Банер каналу',
+      bannerHint: 'PNG, JPEG або WebP. Максимальний розмір 10 МБ.',
+      chooseBanner: 'Обрати банер',
+      uploading: 'Завантаження…',
     },
 
     comments: {
@@ -79,12 +95,26 @@ const systemUk = {
       count_many: '{{count}} коментарів',
       count_other: '{{count}} коментаря',
       placeholder: 'Додайте коментар…',
+      signInToComment: 'Увійдіть, щоб додати коментар…',
       replyPlaceholder: 'Напишіть відповідь…',
       send: 'Надіслати',
       reply: 'Відповісти',
       guest: 'Гість',
       justNow: 'щойно',
+      loading: 'Завантаження коментарів…',
+      requestFailed: 'Не вдалося завантажити або зберегти коментарі. Спробуйте ще раз.',
       empty: 'Залиште перший коментар.',
+      sortLabel: 'Сортування коментарів',
+      sortNewest: 'Спочатку нові',
+      sortOldest: 'Спочатку старі',
+      sortTop: 'Найкращі',
+      edit: 'Редагувати',
+      delete: 'Видалити',
+      save: 'Зберегти',
+      cancel: 'Скасувати',
+      deleteConfirm: 'Видалити цей коментар?',
+      loadMore: 'Завантажити ще коментарі',
+      close: 'Закрити коментарі',
     },
 
     playlists: {
@@ -92,6 +122,9 @@ const systemUk = {
       title: 'Плейлісти',
       lead: 'Створюйте добірки відео, до яких хочете повертатися.',
       create: 'Новий плейліст',
+      loading: 'Завантаження плейлістів…',
+      saving: 'Збереження…',
+      requestFailed: 'Не вдалося завантажити або зберегти плейлісти. Спробуйте ще раз.',
       emptyTitle: 'Плейлістів ще немає',
       emptyLead: 'Створіть плейліст, щоб зберігати улюблені відео разом.',
       noVideos: 'Відео ще немає',
@@ -99,12 +132,27 @@ const systemUk = {
       created: 'Створено',
       edit: 'Редагувати',
       delete: 'Видалити',
+      deleteConfirm: 'Видалити цей плейліст?',
       createTitle: 'Створити плейліст',
       editTitle: 'Редагувати плейліст',
       name: 'Назва плейліста',
       description: 'Опис',
       save: 'Зберегти зміни',
       cancel: 'Скасувати',
+      open: 'Відкрити',
+      back: 'До плейлістів',
+      videoCount_one: '{{count}} відео',
+      videoCount_few: '{{count}} відео',
+      videoCount_many: '{{count}} відео',
+      videoCount_other: '{{count}} відео',
+      addFromWatchHint: 'Відкрийте відео та скористайтеся кнопкою «Додати до плейліста», щоб наповнити цю добірку.',
+      videoUnavailable: 'Відео недоступне',
+      removeVideo: 'Видалити з плейліста',
+      addToPlaylist: 'Додати до плейліста',
+      choosePlaylist: 'Оберіть плейліст',
+      closeMenu: 'Закрити меню плейлістів',
+      added: 'Додано',
+      add: 'Додати',
     },
 
     profile: {
@@ -114,14 +162,21 @@ const systemUk = {
       emptyLead: 'Увійдіть або зареєструйтеся, щоб створити профіль і керувати ним.',
       signIn: 'Увійти',
       detailsTitle: 'Дані профілю',
-      detailsLead: 'Наразі ці налаштування зберігаються лише у вашому браузері.',
+      detailsLead: 'Ці налаштування зберігаються у вашому обліковому записі.',
       saved: 'Збережено',
-      saveError: 'Не вдалося зберегти зміни у цьому браузері. Спробуйте ще раз.',
+      saveError: 'Не вдалося зберегти зміни. Спробуйте ще раз.',
       displayName: 'Ім’я для відображення',
       handle: 'Ім’я користувача',
       email: 'Електронна пошта',
       about: 'Про себе',
       aboutPlaceholder: 'Розкажіть глядачам трохи про себе',
+      avatar: 'Фото профілю',
+      avatarHint: 'PNG, JPEG або WebP. Максимальний розмір 5 МБ.',
+      avatarUpload: 'Обрати зображення',
+      avatarUploading: 'Завантаження…',
+      avatarTypeError: 'Оберіть зображення PNG, JPEG або WebP.',
+      avatarSizeError: 'Фото профілю не повинно перевищувати 5 МБ.',
+      avatarUploadError: 'Не вдалося завантажити фото профілю. Спробуйте ще раз.',
       saveChanges: 'Зберегти зміни',
       account: 'Обліковий запис',
       status: 'Стан',
@@ -134,92 +189,39 @@ const systemUk = {
   },
 
   upload: {
-    eyebrow:
-      'СТУДІЯ АВТОРА',
-
-    title:
-      'Завантажити відео',
-
-    description:
-      'Завантажте MP4 і опублікуйте його безпосередньо в каталозі відео AMTLIS.',
-
-    selectVideo:
-      'Оберіть відео',
-
-    fileHint:
-      'MP4, максимум 500 МБ',
-
-    chooseFile:
-      'Обрати файл',
-
-    fileMeta:
-      '{{size}} МБ · {{duration}}',
-
-    titleLabel:
-      'Назва',
-
-    titlePlaceholder:
-      'Назва відео',
-
-    categoryLabel:
-      'Категорія',
-
-    descriptionLabel:
-      'Опис',
-
-    descriptionPlaceholder:
-      'Розкажіть глядачам про це відео',
-
-    uploading:
-      'Завантаження...',
-
-    publish:
-      'Опублікувати відео',
+    eyebrow: 'СТУДІЯ АВТОРА',
+    title: 'Завантажити відео',
+    description: 'Завантажте MP4 і опублікуйте його безпосередньо в каталозі відео AMTLIS.',
+    selectVideo: 'Оберіть відео',
+    fileHint: 'MP4, максимум 500 МБ',
+    chooseFile: 'Обрати файл',
+    fileMeta: '{{size}} МБ · {{duration}}',
+    titleLabel: 'Назва',
+    titlePlaceholder: 'Назва відео',
+    categoryLabel: 'Категорія',
+    descriptionLabel: 'Опис',
+    descriptionPlaceholder: 'Розкажіть глядачам про це відео',
+    uploading: 'Завантаження...',
+    publish: 'Опублікувати відео',
 
     categories: {
-      music:
-        'Музика',
-
-      games:
-        'Ігри',
-
-      cybersport:
-        'Кіберспорт',
-
-      education:
-        'Освіта',
-
-      programming:
-        'Програмування',
-
-      films:
-        'Фільми',
-
-      podcasts:
-        'Подкасти',
-
-      mixes:
-        'Мікси',
+      music: 'Музика',
+      games: 'Ігри',
+      cybersport: 'Кіберспорт',
+      education: 'Освіта',
+      programming: 'Програмування',
+      films: 'Фільми',
+      podcasts: 'Подкасти',
+      mixes: 'Мікси',
     },
 
     errors: {
-      chooseMp4:
-        'Оберіть відеофайл у форматі MP4.',
-
-      unreadableMp4:
-        'Не вдалося прочитати вибраний MP4 файл.',
-
-      chooseFile:
-        'Спочатку оберіть відеофайл.',
-
-      enterTitle:
-        'Введіть назву відео.',
-
-      durationUnknown:
-        'Не вдалося визначити тривалість відео.',
-
-      uploadFailed:
-        'Не вдалося завантажити відео. Перевірте, чи запущено API, і спробуйте ще раз.',
+      chooseMp4: 'Оберіть відеофайл у форматі MP4.',
+      unreadableMp4: 'Не вдалося прочитати вибраний MP4 файл.',
+      chooseFile: 'Спочатку оберіть відеофайл.',
+      enterTitle: 'Введіть назву відео.',
+      durationUnknown: 'Не вдалося визначити тривалість відео.',
+      uploadFailed: 'Не вдалося завантажити відео. Перевірте, чи запущено API, і спробуйте ще раз.',
     },
   },
 }

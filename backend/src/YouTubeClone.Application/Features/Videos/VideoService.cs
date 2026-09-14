@@ -16,12 +16,40 @@ public sealed class VideoService :
             repository;
     }
 
-    public async Task<IReadOnlyList<VideoListItemDto>>
+    public Task<IReadOnlyList<VideoListItemDto>>
         GetVideosAsync(
             int page,
             int pageSize,
             string? category,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default) =>
+        GetVideosCoreAsync(
+            page,
+            pageSize,
+            category,
+            null,
+            cancellationToken);
+
+    public Task<IReadOnlyList<VideoListItemDto>>
+        GetVideosAsync(
+            int page,
+            int pageSize,
+            string? category,
+            CancellationToken cancellationToken,
+            Guid? channelId) =>
+        GetVideosCoreAsync(
+            page,
+            pageSize,
+            category,
+            channelId,
+            cancellationToken);
+
+    private async Task<IReadOnlyList<VideoListItemDto>>
+        GetVideosCoreAsync(
+            int page,
+            int pageSize,
+            string? category,
+            Guid? channelId,
+            CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -46,6 +74,14 @@ public sealed class VideoService :
                             video.CategorySlug,
                             category,
                             StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (channelId.HasValue)
+        {
+            query =
+                query.Where(
+                    video =>
+                        video.ChannelId == channelId.Value);
         }
 
         return query

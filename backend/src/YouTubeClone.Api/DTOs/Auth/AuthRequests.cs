@@ -26,12 +26,6 @@ public sealed class LoginRequestDto
     public string Password { get; init; } = string.Empty;
 }
 
-public sealed class RefreshRequestDto
-{
-    [Required]
-    public string RefreshToken { get; init; } = string.Empty;
-}
-
 public sealed class UpdateCurrentUserRequestDto
 {
     [Required, EmailAddress, MaxLength(256)]
@@ -45,4 +39,7 @@ public sealed class UpdateCurrentUserRequestDto
 
     [MaxLength(240)]
     public string Bio { get; init; } = string.Empty;
+
+    [MaxLength(64)]
+    public string? ThemeId { get; init; }
 }

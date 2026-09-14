@@ -1,263 +1,213 @@
-# YouTube Clone Database v1
+# AMTLIS Database v1
 
-## Загальна мета
+## Призначення
 
-Цей документ фіксує першу версію структури бази даних для командного проєкту FrameSync.
-
-База даних використовується для зберігання метаданих застосунку.
-
-Відеофайли, зображення, аватари, банери та інші медіафайли не зберігаються у SQL Server.
-
-У базі даних зберігаються лише шляхи до відповідних файлів.
+Цей документ описує фактичну persistent модель поточної версії AMTLIS.
 
 Основна СУБД: SQL Server.
 
-ORM: Entity Framework Core.
+ORM: Entity Framework Core 10.
 
-Основні ідентифікатори сутностей використовують тип uniqueidentifier.
+Основні ідентифікатори мають тип `uniqueidentifier`. Дати та час зберігаються як `datetimeoffset`. Відеофайли, аватари та банери не зберігаються у SQL Server. У таблицях зберігаються метадані та відносні шляхи до файлового сховища.
 
-Для дат використовується datetimeoffset.
+Актуальним джерелом істини для схеми є `AppDbContext`, EF migrations та `AppDbContextModelSnapshot`.
 
 ## Users
 
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| Id | uniqueidentifier | Primary Key |
-| Email | nvarchar(320) | Required, Unique |
-| PasswordHash | nvarchar(500) | Required |
-| DisplayName | nvarchar(100) | Required |
-| AvatarPath | nvarchar(500) | Nullable |
-| IsActive | bit | Required |
-| CreatedAt | datetimeoffset | Required |
-| UpdatedAt | datetimeoffset | Nullable |
+| Поле | Обмеження |
+| --- | --- |
+| Id | Primary Key |
+| Email | Required, max 256, Unique |
+| UserName | Required, max 64, Unique |
+| DisplayName | Required, max 100 |
+| Bio | Required, max 240 |
+| AvatarPath | Nullable, max 512 |
+| ThemeId | Nullable, max 64 |
+| PasswordHash | Required, max 512 |
+| CreatedAt | Required |
 
-Email користувача повинен бути унікальним.
-
-Пароль у відкритому вигляді не зберігається.
-
-## Channels
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| Id | uniqueidentifier | Primary Key |
-| OwnerUserId | uniqueidentifier | Foreign Key, Unique |
-| Name | nvarchar(120) | Required |
-| Handle | nvarchar(50) | Required, Unique |
-| Description | nvarchar(2000) | Nullable |
-| AvatarPath | nvarchar(500) | Nullable |
-| BannerPath | nvarchar(500) | Nullable |
-| CreatedAt | datetimeoffset | Required |
-| UpdatedAt | datetimeoffset | Nullable |
-
-У першій версії один користувач має один основний канал.
-
-## Categories
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| Id | int | Primary Key, Identity |
-| Name | nvarchar(100) | Required |
-| Slug | nvarchar(100) | Required, Unique |
-
-Категорії використовуються для групування відео та формування тематичних сторінок.
-
-## Videos
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| Id | uniqueidentifier | Primary Key |
-| ChannelId | uniqueidentifier | Foreign Key |
-| CategoryId | int | Foreign Key, Nullable |
-| Title | nvarchar(200) | Required |
-| Description | nvarchar(5000) | Nullable |
-| VideoPath | nvarchar(1000) | Required |
-| ThumbnailPath | nvarchar(1000) | Nullable |
-| DurationSeconds | int | Required |
-| Visibility | int | Required |
-| ProcessingStatus | int | Required |
-| ViewCount | bigint | Required |
-| CreatedAt | datetimeoffset | Required |
-| PublishedAt | datetimeoffset | Nullable |
-
-Visibility визначає доступність відео.
-
-Значення:
-
-Public
-
-Unlisted
-
-Private
-
-ProcessingStatus визначає стан обробки відео.
-
-Значення:
-
-Draft
-
-Processing
-
-Published
-
-Failed
-
-## Subscriptions
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| SubscriberUserId | uniqueidentifier | Primary Key, Foreign Key |
-| ChannelId | uniqueidentifier | Primary Key, Foreign Key |
-| CreatedAt | datetimeoffset | Required |
-
-Комбінація SubscriberUserId та ChannelId повинна бути унікальною.
-
-## Comments
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| Id | uniqueidentifier | Primary Key |
-| VideoId | uniqueidentifier | Foreign Key |
-| UserId | uniqueidentifier | Foreign Key |
-| ParentCommentId | uniqueidentifier | Foreign Key, Nullable |
-| Text | nvarchar(2000) | Required |
-| CreatedAt | datetimeoffset | Required |
-| UpdatedAt | datetimeoffset | Nullable |
-| IsDeleted | bit | Required |
-
-ParentCommentId дозволяє створювати відповіді на коментарі.
-
-Видалення коментаря може бути логічним через IsDeleted без фізичного видалення запису.
-
-## VideoReactions
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| UserId | uniqueidentifier | Primary Key, Foreign Key |
-| VideoId | uniqueidentifier | Primary Key, Foreign Key |
-| Type | int | Required |
-| CreatedAt | datetimeoffset | Required |
-
-Один користувач може мати лише одну реакцію на конкретне відео.
-
-## CommentReactions
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| UserId | uniqueidentifier | Primary Key, Foreign Key |
-| CommentId | uniqueidentifier | Primary Key, Foreign Key |
-| Type | int | Required |
-| CreatedAt | datetimeoffset | Required |
-
-Один користувач може мати лише одну реакцію на конкретний коментар.
-
-## WatchHistory
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| UserId | uniqueidentifier | Primary Key, Foreign Key |
-| VideoId | uniqueidentifier | Primary Key, Foreign Key |
-| ProgressSeconds | int | Required |
-| Completed | bit | Required |
-| LastWatchedAt | datetimeoffset | Required |
-
-Один запис відповідає одному відео в історії конкретного користувача.
-
-При повторному перегляді запис оновлюється.
-
-## Favorites
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| UserId | uniqueidentifier | Primary Key, Foreign Key |
-| VideoId | uniqueidentifier | Primary Key, Foreign Key |
-| CreatedAt | datetimeoffset | Required |
-
-Favorites реалізує окремий список улюбленого контенту користувача.
-
-## Playlists
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| Id | uniqueidentifier | Primary Key |
-| OwnerUserId | uniqueidentifier | Foreign Key |
-| Name | nvarchar(150) | Required |
-| Description | nvarchar(1000) | Nullable |
-| Visibility | int | Required |
-| CreatedAt | datetimeoffset | Required |
-| UpdatedAt | datetimeoffset | Nullable |
-
-## PlaylistVideos
-
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| PlaylistId | uniqueidentifier | Primary Key, Foreign Key |
-| VideoId | uniqueidentifier | Primary Key, Foreign Key |
-| Position | int | Required |
-| AddedAt | datetimeoffset | Required |
-
-PlaylistVideos реалізує зв'язок багато до багатьох між Playlists та Videos.
-
-Position визначає порядок відео у плейлисті.
+Пароль у відкритому вигляді не зберігається. `AvatarPath` містить шлях до локального media storage. `ThemeId` зберігає вибрану користувачем тему оформлення.
 
 ## RefreshTokens
 
-| Поле | Тип | Обмеження |
-| --- | --- | --- |
-| Id | uniqueidentifier | Primary Key |
-| UserId | uniqueidentifier | Foreign Key |
-| TokenHash | nvarchar(500) | Required, Unique |
-| CreatedAt | datetimeoffset | Required |
-| ExpiresAt | datetimeoffset | Required |
-| RevokedAt | datetimeoffset | Nullable |
+| Поле | Обмеження |
+| --- | --- |
+| Id | Primary Key |
+| UserId | Foreign Key до Users |
+| TokenHash | Required, max 128, Unique |
+| ExpiresAt | Required |
+| RevokedAt | Nullable |
 
-Refresh token у відкритому вигляді у базі даних не зберігається.
+Є індекс за `UserId`. Видалення User каскадно видаляє його refresh tokens. У базі зберігається hash, а не відкритий refresh token.
 
-## Основні зв'язки
+## Channels
 
-User має один Channel.
+| Поле | Обмеження |
+| --- | --- |
+| Id | Primary Key |
+| OwnerId | Foreign Key до Users, Unique |
+| Name | Required, max 100 |
+| Handle | Required, max 64, Unique |
+| Description | Required, max 1000 |
+| AvatarPath | Nullable, max 512 |
+| BannerPath | Nullable, max 512 |
+| CreatedAt | Required |
 
-User може мати багато RefreshTokens.
+`OwnerId` є унікальним, тому один користувач має один канал.
 
-Channel має багато Videos.
+## Subscriptions
 
-Category може містити багато Videos.
+| Поле | Обмеження |
+| --- | --- |
+| SubscriberId | Composite Primary Key, Foreign Key до Users |
+| ChannelId | Composite Primary Key, Foreign Key до Channels |
+| CreatedAt | Required |
 
-User підписується на Channels через Subscriptions.
+Є окремий індекс за `ChannelId`. Для зв'язку з користувачем використовується `DeleteBehavior.NoAction`, а при видаленні каналу його subscriptions видаляються каскадно.
 
-Video має багато Comments.
+## Videos
 
-Comment може мати дочірні Comments.
+| Поле | Обмеження |
+| --- | --- |
+| Id | Primary Key |
+| ChannelId | Indexed UUID |
+| ChannelName | Required, max 100 |
+| ChannelAvatarPath | Nullable, max 512 |
+| Category | Nullable, max 100 |
+| CategorySlug | Nullable, max 100, Indexed |
+| Title | Required, max 200 |
+| Description | Nullable, max 5000 |
+| VideoPath | Required, max 512 |
+| ThumbnailPath | Nullable, max 512 |
+| DurationSeconds | Required |
+| ViewCount | Required |
+| Visibility | Required, max 32 |
+| PublishedAt | Indexed |
 
-User взаємодіє з Videos через VideoReactions.
+У поточній версії `ChannelId` зберігається як UUID та індексується, але SQL foreign key до `Channels` не створюється. Це дозволяє працювати як із реальними каналами користувачів, так і з початковим demo catalog.
 
-User взаємодіє з Comments через CommentReactions.
+`VideoPath` для API відео вказує на streaming endpoint. Фізичний MP4 зберігається у файловому storage за ідентифікатором відео.
 
-User має історію переглядів через WatchHistory.
+Категорії у v1 не мають окремої SQL таблиці. Вони визначаються application service і дублюються у відеометаданих як `Category` та `CategorySlug`.
 
-User має улюблені відео через Favorites.
+## Comments
 
-User має багато Playlists.
+| Поле | Обмеження |
+| --- | --- |
+| Id | Primary Key |
+| VideoId | Indexed UUID |
+| AuthorId | Indexed UUID |
+| ParentCommentId | Nullable, Indexed UUID |
+| Text | Required, max 500 |
+| CreatedAt | Required |
 
-Playlist містить Videos через PlaylistVideos.
+`ParentCommentId` використовується для replies. Поточна модель фізично видаляє коментар згідно з service/repository логікою і не містить поля `IsDeleted`.
 
-## Видалення даних
+`VideoId` та `AuthorId` індексуються, але у поточному snapshot не є SQL foreign keys. Валідація власника і зв'язків виконується application та repository шарами.
 
-Для ключових сутностей не планується агресивне каскадне видалення.
+## CommentReactions
 
-Для зв'язувальних таблиць може використовуватися каскадне видалення.
+| Поле | Обмеження |
+| --- | --- |
+| CommentId | Composite Primary Key, Foreign Key до Comments |
+| UserId | Composite Primary Key, Indexed UUID |
+| Kind | Required |
+| UpdatedAt | Required |
 
-Для Comments передбачене логічне видалення.
+На один коментар один користувач може мати не більше однієї reaction. Видалення comment каскадно видаляє його reactions.
 
-Для User, Channel та Video можливість повного soft delete буде розглянута окремо у наступних версіях.
+Окремої таблиці `VideoReactions` у поточному v1 немає.
 
-## Межі відповідальності
+## Playlists
 
-Ця схема є спільним архітектурним контрактом Backend.
+| Поле | Обмеження |
+| --- | --- |
+| Id | Primary Key |
+| OwnerId | Foreign Key до Users, Indexed |
+| Title | Required, max 80 |
+| Description | Required, max 300 |
+| CreatedAt | Required |
+| UpdatedAt | Required |
 
-Илья відповідає за структуру бази даних, AppDbContext, загальні зв'язки та інтеграцію модулів.
+Видалення користувача каскадно видаляє його playlists.
 
-Реалізацію Auth, User Profile, Channels, Subscriptions, Comments та Playlists виконує Таня відповідно до окремих задач Trello.
+## PlaylistVideos
 
-Илья реалізує Video, History, Favorites, Search та іншу серверну логіку зі своєї зони відповідальності.
+| Поле | Обмеження |
+| --- | --- |
+| PlaylistId | Composite Primary Key, Foreign Key до Playlists |
+| VideoId | Composite Primary Key, Indexed UUID |
+| AddedAt | Required |
 
-Спільні сутності не змінюються одним учасником без узгодження контракту.
+Пара `PlaylistId + VideoId` унікальна. У поточному v1 немає поля `Position`, тому ручний порядок елементів плейлиста не зберігається окремо.
+
+## WatchHistoryEntries
+
+| Поле | Обмеження |
+| --- | --- |
+| UserId | Composite Primary Key, Foreign Key до Users |
+| VideoId | Composite Primary Key |
+| ProgressSeconds | Required |
+| Completed | Required |
+| LastWatchedAt | Required, входить до індексу з UserId |
+
+Історія фізично ізольована за `UserId`. Повторний перегляд того самого відео оновлює існуючий запис.
+
+## WatchHistoryPreferences
+
+| Поле | Обмеження |
+| --- | --- |
+| UserId | Primary Key, Foreign Key до Users |
+| IsPaused | Required |
+
+Таблиця зберігає персональний стан паузи історії. На одного користувача існує не більше одного preference record.
+
+## FavoriteEntries
+
+| Поле | Обмеження |
+| --- | --- |
+| UserId | Composite Primary Key, Foreign Key до Users |
+| VideoId | Composite Primary Key |
+| CreatedAt | Required, входить до індексу з UserId |
+
+Обране фізично ізольоване за користувачем. Пара `UserId + VideoId` не може дублюватися.
+
+## Дані поза SQL Server
+
+### Media storage
+
+MP4, user avatars, channel avatars та channel banners зберігаються у локальному файловому storage. SQL Server містить тільки метадані або шлях до файлу.
+
+### Live Streams
+
+Поточний live catalog використовує `InMemoryLiveStreamRepository`. Це demo runtime data і воно не створює SQL таблицю.
+
+### Live Chat
+
+`InMemoryLiveChatRepository` тримає до 200 повідомлень на одну трансляцію у пам'яті процесу. Після перезапуску сервера ця історія очищається.
+
+### Watch Party
+
+Watch Party не використовує SQL Server. `FileWatchPartyRepository` зберігає кімнати, учасників, playback state та повідомлення у локальному JSON файлі сервера.
+
+## Каскадне видалення
+
+Поточна схема використовує каскадне видалення там, де дочірні записи не мають сенсу без власника: refresh tokens користувача, channel користувача, playlists, history, favorites, history preferences, comment reactions та playlist membership.
+
+Для subscription зв'язку користувача застосовано `DeleteBehavior.NoAction`, щоб уникати проблем множинних cascade paths у SQL Server.
+
+## Migration discipline
+
+Кожна зміна persistent моделі повинна супроводжуватися EF migration і оновленим `AppDbContextModelSnapshot`.
+
+CI виконує:
+
+```text
+dotnet ef migrations has-pending-model-changes
+```
+
+Тому pull request не повинен проходити backend CI, якщо модель `AppDbContext` змінилася без відповідної migration/snapshot синхронізації.
+
+## Межі v1
+
+Ця схема описує саме реалізовану версію, а не майбутній задум. Потенційні production розширення, такі як SQL persistence для live streams, durable live chat, окремі video reactions, playlist ordering, distributed media storage та multi instance Watch Party, повинні додаватися окремими migrations і контрактними змінами.

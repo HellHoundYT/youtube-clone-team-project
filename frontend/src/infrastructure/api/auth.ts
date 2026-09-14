@@ -10,60 +10,16 @@ import type {
 import type {
   User,
 } from '../../domain/user/types'
+import {
+  clearAccessToken,
+  createAuthorizedConfig,
+  setAccessToken,
+  withAuthenticatedRequest,
+} from './authSession'
 
 interface AuthResponse {
   user: User
   accessToken: string
-  refreshToken: string
-}
-
-let accessToken:
-string | null = null
-
-let refreshToken:
-string | null = null
-
-function setAccessToken(
-  token: string | null,
-) {
-  accessToken =
-    token
-}
-
-function setRefreshToken(
-  token: string | null,
-) {
-  refreshToken = token
-}
-
-function authorizedConfig() {
-  if (!accessToken) {
-    throw new Error(
-      'No authenticated user.',
-    )
-  }
-
-  return {
-    headers: {
-      Authorization:
-        `Bearer ${accessToken}`,
-    },
-  }
-}
-
-export function getAuthenticatedConfig() {
-  return authorizedConfig()
-}
-
-function optionalAuthorizedConfig() {
-  return accessToken
-    ? {
-        headers: {
-          Authorization:
-            `Bearer ${accessToken}`,
-        },
-      }
-    : {}
 }
 
 export const authGateway:
@@ -71,18 +27,22 @@ AuthGateway = {
   async getCurrentUser() {
     try {
       const response =
-        await axios.get<User>(
-          '/api/v1/users/me',
-          {
-            withCredentials:
-              true,
+        await withAuthenticatedRequest(
+          (token) =>
+            axios.get<User>(
+              '/api/v1/users/me',
+              {
+                withCredentials:
+                  true,
 
-            ...optionalAuthorizedConfig(),
-          },
+                ...createAuthorizedConfig(token),
+              },
+            ),
         )
 
       return response.data
     } catch {
+      clearAccessToken()
       return null
     }
   },
@@ -103,9 +63,6 @@ AuthGateway = {
 
     setAccessToken(
       response.data.accessToken,
-    )
-    setRefreshToken(
-      response.data.refreshToken,
     )
 
     return response.data.user
@@ -128,9 +85,6 @@ AuthGateway = {
     setAccessToken(
       response.data.accessToken,
     )
-    setRefreshToken(
-      response.data.refreshToken,
-    )
 
     return response.data.user
   },
@@ -140,39 +94,59 @@ AuthGateway = {
       UpdateUserRequest,
   ) {
     const response =
-      await axios.put<User>(
-        '/api/v1/users/me',
-        request,
-        {
-          withCredentials:
-            true,
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.put<User>(
+            '/api/v1/users/me',
+            request,
+            {
+              withCredentials:
+                true,
 
-          ...authorizedConfig(),
-        },
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async uploadAvatar(
+    file: File,
+  ) {
+    const form = new FormData()
+    form.append('file', file)
+
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.post<User>(
+            '/api/v1/users/me/avatar',
+            form,
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
       )
 
     return response.data
   },
 
   async signOut() {
-    if (refreshToken) {
+    try {
       await axios.post(
-      '/api/v1/auth/logout',
-      { refreshToken },
-      {
-        withCredentials:
-          true,
-
-        ...authorizedConfig(),
-      },
+        '/api/v1/auth/logout',
+        undefined,
+        {
+          withCredentials:
+            true,
+        },
       )
+    } finally {
+      clearAccessToken()
     }
-
-    setAccessToken(
-      null,
-    )
-    setRefreshToken(
-      null,
-    )
   },
 }
