@@ -4,4 +4,5 @@ export interface Playlist {
   description: string
   createdAt: string
   updatedAt: string
+  videoIds: string[]
 }
