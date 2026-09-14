@@ -22,10 +22,23 @@ public sealed record AddCommentCommand(
     string Text,
     Guid? ParentCommentId);
 
+public sealed record UpdateCommentCommand(
+    Guid CommentId,
+    Guid AuthorId,
+    string Text);
+
+public enum CommentSort
+{
+    Newest,
+    Oldest,
+    Top
+}
+
 public enum CommentError
 {
     None,
     NotFound,
+    Forbidden,
     TextRequired,
     TextTooLong,
     InvalidParent
