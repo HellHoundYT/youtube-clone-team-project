@@ -16,6 +16,7 @@ export const commentGateway:
 CommentGateway = {
   async list(
     videoId,
+    options = {},
     signal,
   ) {
     const response =
@@ -23,6 +24,11 @@ CommentGateway = {
         `/api/v1/videos/${encodeURIComponent(videoId)}/comments`,
         {
           signal,
+          params: {
+            page: options.page ?? 1,
+            pageSize: options.pageSize ?? 20,
+            sort: options.sort ?? 'newest',
+          },
           ...createOptionalAuthorizedConfig(),
         },
       )
@@ -54,6 +60,45 @@ CommentGateway = {
       )
 
     return response.data
+  },
+
+  async update(
+    commentId,
+    text,
+  ) {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.put<CommentItem>(
+            `/api/v1/comments/${encodeURIComponent(commentId)}`,
+            {
+              text,
+            },
+            {
+              withCredentials:
+                true,
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async remove(
+    commentId,
+  ) {
+    await withAuthenticatedRequest(
+      (token) =>
+        axios.delete(
+          `/api/v1/comments/${encodeURIComponent(commentId)}`,
+          {
+            withCredentials:
+              true,
+            ...createAuthorizedConfig(token),
+          },
+        ),
+    )
   },
 
   async toggleReaction(

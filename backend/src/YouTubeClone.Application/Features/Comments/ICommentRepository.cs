@@ -25,6 +25,10 @@ public interface ICommentRepository
 
     void AddComment(Comment comment);
 
+    Task RemoveCommentTreeAsync(
+        Comment comment,
+        CancellationToken cancellationToken);
+
     void AddReaction(CommentReaction reaction);
 
     void RemoveReaction(CommentReaction reaction);

@@ -3,6 +3,17 @@ export type CommentReaction =
   | 'dislike'
   | null
 
+export type CommentSort =
+  | 'newest'
+  | 'oldest'
+  | 'top'
+
+export interface CommentListOptions {
+  page?: number
+  pageSize?: number
+  sort?: CommentSort
+}
+
 export interface CommentItem {
   id: string
   videoId: string

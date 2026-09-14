@@ -12,6 +12,8 @@ namespace YouTubeClone.Api.Controllers;
 [Route("api/v1")]
 public sealed class CommentsController : ControllerBase
 {
+    private const int MaxPageSize = 50;
+
     private readonly ICommentService _commentService;
 
     public CommentsController(ICommentService commentService)
@@ -23,12 +25,36 @@ public sealed class CommentsController : ControllerBase
     [HttpGet("videos/{videoId:guid}/comments")]
     public async Task<ActionResult<IReadOnlyList<CommentResponseDto>>> List(
         Guid videoId,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string sort = "newest",
+        CancellationToken cancellationToken = default)
     {
+        if (page < 1)
+        {
+            return BadRequest(
+                new { message = "Page must be greater than zero." });
+        }
+
+        if (pageSize < 1 || pageSize > MaxPageSize)
+        {
+            return BadRequest(
+                new { message = "Page size must be between 1 and 50." });
+        }
+
+        if (!TryParseSort(sort, out var commentSort))
+        {
+            return BadRequest(
+                new { message = "Sort must be newest, oldest, or top." });
+        }
+
         var viewerUserId = GetUserId();
         var comments = await _commentService.ListAsync(
             videoId,
             viewerUserId,
+            page,
+            pageSize,
+            commentSort,
             cancellationToken);
 
         return Ok(
@@ -61,6 +87,57 @@ public sealed class CommentsController : ControllerBase
         return result.Comment is not null
             ? Ok(Map(result.Comment))
             : MapError(result.Error);
+    }
+
+    [Authorize]
+    [HttpPut("comments/{commentId:guid}")]
+    public async Task<ActionResult<CommentResponseDto>> Update(
+        Guid commentId,
+        UpdateCommentRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _commentService.UpdateAsync(
+            new UpdateCommentCommand(
+                commentId,
+                userId.Value,
+                request.Text),
+            cancellationToken);
+
+        return result.Comment is not null
+            ? Ok(Map(result.Comment))
+            : MapError(result.Error);
+    }
+
+    [Authorize]
+    [HttpDelete("comments/{commentId:guid}")]
+    public async Task<IActionResult> Delete(
+        Guid commentId,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var error = await _commentService.DeleteAsync(
+            commentId,
+            userId.Value,
+            cancellationToken);
+
+        return error switch
+        {
+            CommentError.None => NoContent(),
+            CommentError.NotFound => NotFound(),
+            CommentError.Forbidden => Forbid(),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
+        };
     }
 
     [Authorize]
@@ -100,6 +177,7 @@ public sealed class CommentsController : ControllerBase
         error switch
         {
             CommentError.NotFound => NotFound(),
+            CommentError.Forbidden => Forbid(),
             CommentError.TextRequired =>
                 BadRequest(new { message = "Comment text is required." }),
             CommentError.TextTooLong =>
@@ -118,6 +196,38 @@ public sealed class CommentsController : ControllerBase
         return Guid.TryParse(subject, out var userId)
             ? userId
             : null;
+    }
+
+    private static bool TryParseSort(
+        string value,
+        out CommentSort sort)
+    {
+        if (value.Equals(
+                "oldest",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sort = CommentSort.Oldest;
+            return true;
+        }
+
+        if (value.Equals(
+                "top",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sort = CommentSort.Top;
+            return true;
+        }
+
+        if (value.Equals(
+                "newest",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sort = CommentSort.Newest;
+            return true;
+        }
+
+        sort = default;
+        return false;
     }
 
     private static bool TryParseReaction(

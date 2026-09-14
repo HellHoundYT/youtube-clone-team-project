@@ -112,6 +112,17 @@ const systemEn = {
       loading: 'Loading comments…',
       requestFailed: 'Comments could not be loaded or saved. Please try again.',
       empty: 'Be the first to leave a comment.',
+      sortLabel: 'Sort comments',
+      sortNewest: 'Newest first',
+      sortOldest: 'Oldest first',
+      sortTop: 'Top rated',
+      edit: 'Edit',
+      delete: 'Delete',
+      save: 'Save',
+      cancel: 'Cancel',
+      deleteConfirm: 'Delete this comment?',
+      loadMore: 'Load more comments',
+      close: 'Close comments',
     },
 
     playlists: {
