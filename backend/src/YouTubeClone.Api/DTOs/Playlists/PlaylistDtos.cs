@@ -16,4 +16,5 @@ public sealed record PlaylistResponseDto(
     string Title,
     string Description,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    IReadOnlyList<Guid> VideoIds);
