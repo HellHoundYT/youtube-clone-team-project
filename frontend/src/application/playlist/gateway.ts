@@ -22,4 +22,14 @@ export interface PlaylistGateway {
   delete(
     playlistId: string,
   ): Promise<void>
+
+  addVideo(
+    playlistId: string,
+    videoId: string,
+  ): Promise<void>
+
+  removeVideo(
+    playlistId: string,
+    videoId: string,
+  ): Promise<void>
 }
