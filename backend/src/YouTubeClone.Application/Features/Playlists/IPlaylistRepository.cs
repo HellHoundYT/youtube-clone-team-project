@@ -12,9 +12,22 @@ public interface IPlaylistRepository
         Guid playlistId,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Guid>> ListVideoIdsAsync(
+        Guid playlistId,
+        CancellationToken cancellationToken);
+
+    Task<PlaylistVideo?> FindVideoAsync(
+        Guid playlistId,
+        Guid videoId,
+        CancellationToken cancellationToken);
+
     void Add(Playlist playlist);
 
     void Remove(Playlist playlist);
+
+    void AddVideo(PlaylistVideo playlistVideo);
+
+    void RemoveVideo(PlaylistVideo playlistVideo);
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
