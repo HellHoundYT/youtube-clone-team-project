@@ -45,7 +45,6 @@ function AddToPlaylistButton({
     }
 
     let cancelled = false
-    setIsLoading(true)
 
     void playlistService
       .list()
@@ -81,7 +80,14 @@ function AddToPlaylistButton({
       return
     }
 
-    setIsOpen((current) => !current)
+    if (isOpen) {
+      setIsOpen(false)
+      return
+    }
+
+    setError('')
+    setIsLoading(true)
+    setIsOpen(true)
   }
 
   const togglePlaylist = async (playlist: Playlist) => {
@@ -135,6 +141,7 @@ function AddToPlaylistButton({
             <strong>{t('system.playlists.choosePlaylist')}</strong>
             <button
               type="button"
+              aria-label={t('system.playlists.closeMenu')}
               onClick={() => setIsOpen(false)}
             >
               ×
