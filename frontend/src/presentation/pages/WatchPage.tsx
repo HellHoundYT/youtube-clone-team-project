@@ -8,6 +8,9 @@ import {
   useParams,
 } from 'react-router-dom'
 import type {
+  ChannelService,
+} from '../../application/channel/service'
+import type {
   LibraryService,
 } from '../../application/library/service'
 import type {
@@ -23,6 +26,9 @@ import type {
 import CommentsSection from '../components/comments/CommentsSection'
 import AddToPlaylistButton from '../components/playlists/AddToPlaylistButton'
 import VideoPlayer from '../components/video/VideoPlayer'
+import {
+  useAuthStore,
+} from '../features/auth/authStore'
 import {
   useAppTranslation,
 } from '../../shared/i18n'
@@ -96,12 +102,14 @@ function formatPublishedDate(
 }
 
 interface WatchPageProps {
+  channelService: ChannelService
   libraryService: LibraryService
   playlistService: PlaylistService
   videoService: VideoService
 }
 
 function WatchPage({
+  channelService,
   libraryService,
   playlistService,
   videoService,
@@ -110,7 +118,15 @@ function WatchPage({
   const navigate = useNavigate()
   const { t, i18n } = useAppTranslation()
   const locale = getLocale(i18n.resolvedLanguage)
+  const profile =
+    useAuthStore((state) => state.profile)
   const [loadState, setLoadState] = useState<WatchLoadState | null>(null)
+  const [subscriberCount, setSubscriberCount] = useState(0)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [isOwnChannel, setIsOwnChannel] = useState(false)
+  const [isSubscriptionBusy, setIsSubscriptionBusy] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [isFavoriteBusy, setIsFavoriteBusy] = useState(false)
 
   useEffect(() => {
     if (!videoId) {
@@ -128,6 +144,10 @@ function WatchPage({
 
         let recommendations: VideoListItem[] = []
         let initialProgressSeconds = 0
+        let loadedSubscriberCount = 0
+        let loadedIsSubscribed = false
+        let loadedIsOwnChannel = false
+        let loadedIsFavorite = false
 
         try {
           recommendations = await videoService.getVideoRecommendations(
@@ -157,10 +177,49 @@ function WatchPage({
           }
         }
 
+        try {
+          const channel = await channelService.getChannel(
+            video.channelId,
+          )
+
+          loadedSubscriberCount = channel.subscriberCount
+        } catch {
+          if (controller.signal.aborted) {
+            return
+          }
+        }
+
+        if (profile) {
+          try {
+            const [subscriptions, ownChannel, favorites] =
+              await Promise.all([
+                channelService.listSubscriptions(),
+                channelService.getMyChannel().catch(() => null),
+                libraryService.getFavorites(controller.signal),
+              ])
+
+            loadedIsSubscribed = subscriptions.some(
+              (channel) => channel.id === video.channelId,
+            )
+            loadedIsOwnChannel = ownChannel?.id === video.channelId
+            loadedIsFavorite = favorites.some(
+              (favorite) => favorite.videoId === video.id,
+            )
+          } catch {
+            if (controller.signal.aborted) {
+              return
+            }
+          }
+        }
+
         if (controller.signal.aborted) {
           return
         }
 
+        setSubscriberCount(loadedSubscriberCount)
+        setIsSubscribed(loadedIsSubscribed)
+        setIsOwnChannel(loadedIsOwnChannel)
+        setIsFavorite(loadedIsFavorite)
         setLoadState({
           videoId,
           video,
@@ -183,7 +242,13 @@ function WatchPage({
 
     void loadWatchPage()
     return () => controller.abort()
-  }, [libraryService, videoId, videoService])
+  }, [
+    channelService,
+    libraryService,
+    profile,
+    videoId,
+    videoService,
+  ])
 
   if (!videoId) {
     return (
@@ -244,6 +309,69 @@ function WatchPage({
     `common.visibility.${video.visibility.toLowerCase()}`,
     { defaultValue: video.visibility },
   )
+
+  const requireAuthentication = () => {
+    if (profile) {
+      return true
+    }
+
+    navigate(
+      '/auth',
+      {
+        state: {
+          from: `/watch/${video.id}`,
+        },
+      },
+    )
+
+    return false
+  }
+
+  const toggleFavorite = async () => {
+    if (isFavoriteBusy || !requireAuthentication()) {
+      return
+    }
+
+    setIsFavoriteBusy(true)
+
+    try {
+      if (isFavorite) {
+        await libraryService.removeFavorite(video.id)
+        setIsFavorite(false)
+      } else {
+        await libraryService.addFavorite(video.id)
+        setIsFavorite(true)
+      }
+    } finally {
+      setIsFavoriteBusy(false)
+    }
+  }
+
+  const toggleSubscription = async () => {
+    if (
+      isSubscriptionBusy ||
+      isOwnChannel ||
+      !requireAuthentication()
+    ) {
+      return
+    }
+
+    setIsSubscriptionBusy(true)
+
+    try {
+      if (isSubscribed) {
+        await channelService.unsubscribe(video.channelId)
+        setIsSubscribed(false)
+        setSubscriberCount((current) => Math.max(0, current - 1))
+      } else {
+        await channelService.subscribe(video.channelId)
+        setIsSubscribed(true)
+        setSubscriberCount((current) => current + 1)
+      }
+    } finally {
+      setIsSubscriptionBusy(false)
+    }
+  }
 
   const handleFirstPlay = async (currentTime: number) => {
     try {
@@ -352,6 +480,18 @@ function WatchPage({
             <button
               type="button"
               className="watch-start-party-button"
+              disabled={isFavoriteBusy}
+              onClick={() => {
+                void toggleFavorite()
+              }}
+            >
+              {isFavorite
+                ? `✓ ${t('layout.navigation.favorites')}`
+                : `+ ${t('layout.navigation.favorites')}`}
+            </button>
+            <button
+              type="button"
+              className="watch-start-party-button"
               onClick={() => {
                 navigate(
                   `/watch-party?videoId=${encodeURIComponent(video.id)}`,
@@ -367,7 +507,11 @@ function WatchPage({
           </div>
 
           <div className="watch-channel-row">
-            <div className="watch-channel-identity">
+            <Link
+              className="watch-channel-identity"
+              to={`/channels/${video.channelId}`}
+              aria-label={video.channelName}
+            >
               <div className="watch-channel-avatar">
                 {video.channelAvatarPath ? (
                   <img src={video.channelAvatarPath} alt="" />
@@ -379,9 +523,26 @@ function WatchPage({
               </div>
               <div className="watch-channel-copy">
                 <strong>{video.channelName}</strong>
-                <span>{t('watch.channel')}</span>
+                <span>
+                  {subscriberCount} {t('system.channels.subscribers')}
+                </span>
               </div>
-            </div>
+            </Link>
+
+            {!isOwnChannel && (
+              <button
+                type="button"
+                className="watch-start-party-button"
+                disabled={isSubscriptionBusy}
+                onClick={() => {
+                  void toggleSubscription()
+                }}
+              >
+                {isSubscribed
+                  ? t('system.channels.subscribed')
+                  : t('system.channels.subscribe')}
+              </button>
+            )}
           </div>
 
           {video.description && (
