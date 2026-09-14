@@ -16,7 +16,7 @@ internal static class VideoSeedData
                 "music",
                 "Midnight City",
                 "A late night electronic music session.",
-                131,
+                6,
                 2_400_000,
                 new DateTimeOffset(2026, 8, 8, 18, 0, 0, TimeSpan.Zero)),
             Create(
@@ -27,7 +27,7 @@ internal static class VideoSeedData
                 "cybersport",
                 "Cyber Arena Finals",
                 "The final match from the cyber arena.",
-                1696,
+                6,
                 842_000,
                 new DateTimeOffset(2026, 8, 18, 20, 30, 0, TimeSpan.Zero)),
             Create(
@@ -38,7 +38,7 @@ internal static class VideoSeedData
                 "films",
                 "Beyond The Horizon",
                 "A cinematic journey beyond the horizon.",
-                1122,
+                6,
                 1_700_000,
                 new DateTimeOffset(2026, 7, 22, 18, 0, 0, TimeSpan.Zero)),
             Create(
@@ -49,7 +49,7 @@ internal static class VideoSeedData
                 "mixes",
                 "Night Drive Mix",
                 "Music for a long night drive.",
-                2702,
+                6,
                 956_000,
                 new DateTimeOffset(2026, 8, 16, 21, 0, 0, TimeSpan.Zero)),
             Create(
@@ -60,7 +60,7 @@ internal static class VideoSeedData
                 "games",
                 "Inside The Game",
                 "Explore what happens inside the game.",
-                1270,
+                6,
                 634_000,
                 new DateTimeOffset(2026, 8, 19, 17, 0, 0, TimeSpan.Zero)),
             Create(
@@ -71,7 +71,7 @@ internal static class VideoSeedData
                 "education",
                 "Future Technology",
                 "Technology that may define the future.",
-                936,
+                6,
                 1_100_000,
                 new DateTimeOffset(2026, 8, 15, 15, 0, 0, TimeSpan.Zero)),
             Create(
@@ -82,7 +82,7 @@ internal static class VideoSeedData
                 "games",
                 "Pro Game Moments",
                 "A collection of intense competitive gaming moments.",
-                12,
+                6,
                 1_350_000,
                 new DateTimeOffset(2026, 8, 20, 19, 15, 0, TimeSpan.Zero)),
             Create(
@@ -93,7 +93,7 @@ internal static class VideoSeedData
                 "music",
                 "Wave Session",
                 "A neon electronic music session for the night.",
-                12,
+                6,
                 1_280_000,
                 new DateTimeOffset(2026, 8, 21, 20, 0, 0, TimeSpan.Zero)),
             Create(
@@ -104,7 +104,7 @@ internal static class VideoSeedData
                 "podcasts",
                 "Talk Session",
                 "A relaxed conversation about ideas, technology and culture.",
-                12,
+                6,
                 720_000,
                 new DateTimeOffset(2026, 8, 17, 16, 30, 0, TimeSpan.Zero)),
             Create(
@@ -115,7 +115,7 @@ internal static class VideoSeedData
                 "education",
                 "Learn Fast",
                 "A short visual guide focused on faster and smarter learning.",
-                12,
+                6,
                 1_520_000,
                 new DateTimeOffset(2026, 8, 22, 14, 0, 0, TimeSpan.Zero))
         ];
