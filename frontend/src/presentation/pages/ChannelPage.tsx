@@ -1,6 +1,8 @@
 import {
   useEffect,
   useState,
+  type ChangeEvent,
+  type FormEvent,
 } from 'react'
 import {
   Link,
@@ -84,6 +86,20 @@ function ChannelPage({
     useState(false)
   const [isUpdating, setIsUpdating] =
     useState(false)
+  const [ownerName, setOwnerName] =
+    useState('')
+  const [ownerHandle, setOwnerHandle] =
+    useState('')
+  const [ownerDescription, setOwnerDescription] =
+    useState('')
+  const [isSavingOwner, setIsSavingOwner] =
+    useState(false)
+  const [imageBusy, setImageBusy] =
+    useState<'avatar' | 'banner' | null>(null)
+  const [ownerSaved, setOwnerSaved] =
+    useState(false)
+  const [ownerError, setOwnerError] =
+    useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -127,6 +143,9 @@ function ChannelPage({
           return
         }
 
+        const ownsChannel =
+          ownChannel?.id === loadedChannel.id
+
         setChannel(loadedChannel)
         setVideos(loadedVideos)
         setIsSubscribed(
@@ -134,8 +153,21 @@ function ChannelPage({
             (item) => item.id === loadedChannel.id,
           ),
         )
-        setIsOwner(
-          ownChannel?.id === loadedChannel.id,
+        setIsOwner(ownsChannel)
+        setOwnerName(
+          ownsChannel && ownChannel
+            ? ownChannel.name
+            : loadedChannel.name,
+        )
+        setOwnerHandle(
+          ownsChannel && ownChannel
+            ? ownChannel.handle
+            : loadedChannel.handle,
+        )
+        setOwnerDescription(
+          ownsChannel && ownChannel
+            ? ownChannel.description
+            : loadedChannel.description,
         )
       } catch {
         if (!cancelled) {
@@ -213,6 +245,109 @@ function ChannelPage({
     }
   }
 
+  const saveOwnerChannel = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault()
+
+    if (!channel || !isOwner || isSavingOwner) {
+      return
+    }
+
+    setIsSavingOwner(true)
+    setOwnerSaved(false)
+    setOwnerError(false)
+
+    try {
+      const updated =
+        await channelService.updateChannel(
+          channel.id,
+          {
+            name: ownerName,
+            handle: ownerHandle,
+            description: ownerDescription,
+          },
+        )
+
+      setChannel(updated)
+      setOwnerName(updated.name)
+      setOwnerHandle(updated.handle)
+      setOwnerDescription(updated.description)
+      setOwnerSaved(true)
+    } catch {
+      setOwnerError(true)
+    } finally {
+      setIsSavingOwner(false)
+    }
+  }
+
+  const uploadOwnerImage = async (
+    kind: 'avatar' | 'banner',
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file =
+      event.target.files?.[0]
+
+    event.target.value = ''
+
+    if (!file || !channel || !isOwner || imageBusy) {
+      return
+    }
+
+    const allowedTypes =
+      new Set([
+        'image/png',
+        'image/jpeg',
+        'image/webp',
+      ])
+    const maxSize =
+      kind === 'avatar'
+        ? 5 * 1024 * 1024
+        : 10 * 1024 * 1024
+
+    setOwnerSaved(false)
+    setOwnerError(false)
+
+    if (!allowedTypes.has(file.type) || file.size > maxSize) {
+      setOwnerError(true)
+      return
+    }
+
+    setImageBusy(kind)
+
+    try {
+      const updated =
+        kind === 'avatar'
+          ? await channelService.uploadAvatar(
+              channel.id,
+              file,
+            )
+          : await channelService.uploadBanner(
+              channel.id,
+              file,
+            )
+      const cacheToken =
+        Date.now()
+
+      setChannel({
+        ...updated,
+        avatarUrl:
+          updated.avatarUrl
+            ? `${updated.avatarUrl}?v=${cacheToken}`
+            : null,
+        bannerUrl:
+          updated.bannerUrl
+            ? `${updated.bannerUrl}?v=${cacheToken}`
+            : null,
+      })
+      setOwnerSaved(true)
+    } catch {
+      setOwnerError(true)
+    } finally {
+      setImageBusy(null)
+    }
+  }
+
   if (isLoading) {
     return (
       <section className="channels-page">
@@ -270,7 +405,7 @@ function ChannelPage({
           <p className="channel-eyebrow">AMTLIS CHANNEL</p>
           <h1>{channel.name}</h1>
           <p>
-            {channel.handle} · {channel.subscriberCount}{' '}
+            @{channel.handle} · {channel.subscriberCount}{' '}
             {t('system.channels.subscribers')}
           </p>
           <p className="channel-description">
@@ -297,6 +432,126 @@ function ChannelPage({
           </button>
         )}
       </div>
+
+      {isOwner && (
+        <section className="channel-owner-panel">
+          <div className="channel-owner-heading">
+            <div>
+              <p className="channel-eyebrow">
+                {t('system.channels.ownerEyebrow')}
+              </p>
+              <h2>{t('system.channels.ownerTitle')}</h2>
+              <p>{t('system.channels.ownerLead')}</p>
+            </div>
+            {ownerSaved && (
+              <span className="channel-owner-status is-success">
+                {t('system.channels.saved')}
+              </span>
+            )}
+            {ownerError && (
+              <span className="channel-owner-status is-error">
+                {t('system.channels.saveFailed')}
+              </span>
+            )}
+          </div>
+
+          <form
+            className="channel-owner-form"
+            onSubmit={(event) => {
+              void saveOwnerChannel(event)
+            }}
+          >
+            <label>
+              <span>{t('system.channels.nameLabel')}</span>
+              <input
+                type="text"
+                value={ownerName}
+                maxLength={100}
+                required
+                onChange={(event) =>
+                  setOwnerName(event.target.value)}
+              />
+            </label>
+
+            <label>
+              <span>{t('system.channels.handleLabel')}</span>
+              <input
+                type="text"
+                value={ownerHandle}
+                maxLength={64}
+                required
+                onChange={(event) =>
+                  setOwnerHandle(event.target.value)}
+              />
+            </label>
+
+            <label className="channel-owner-description">
+              <span>{t('system.channels.descriptionLabel')}</span>
+              <textarea
+                value={ownerDescription}
+                maxLength={1000}
+                rows={4}
+                onChange={(event) =>
+                  setOwnerDescription(event.target.value)}
+              />
+            </label>
+
+            <button
+              className="channel-owner-save"
+              type="submit"
+              disabled={isSavingOwner}
+            >
+              {isSavingOwner
+                ? t('system.channels.saving')
+                : t('system.channels.save')}
+            </button>
+          </form>
+
+          <div className="channel-owner-media-grid">
+            <label className="channel-owner-upload">
+              <strong>{t('system.channels.avatarTitle')}</strong>
+              <span>{t('system.channels.avatarHint')}</span>
+              <span className="channel-owner-upload-action">
+                {imageBusy === 'avatar'
+                  ? t('system.channels.uploading')
+                  : t('system.channels.chooseAvatar')}
+              </span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={imageBusy !== null}
+                onChange={(event) => {
+                  void uploadOwnerImage(
+                    'avatar',
+                    event,
+                  )
+                }}
+              />
+            </label>
+
+            <label className="channel-owner-upload">
+              <strong>{t('system.channels.bannerTitle')}</strong>
+              <span>{t('system.channels.bannerHint')}</span>
+              <span className="channel-owner-upload-action">
+                {imageBusy === 'banner'
+                  ? t('system.channels.uploading')
+                  : t('system.channels.chooseBanner')}
+              </span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={imageBusy !== null}
+                onChange={(event) => {
+                  void uploadOwnerImage(
+                    'banner',
+                    event,
+                  )
+                }}
+              />
+            </label>
+          </div>
+        </section>
+      )}
 
       <section className="channel-videos-section">
         <div className="channel-videos-heading">
