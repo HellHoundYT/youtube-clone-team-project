@@ -3,12 +3,14 @@ import type {
 } from './gateway'
 import type {
   CommentItem,
+  CommentListOptions,
   CommentReaction,
 } from '../../domain/comment/types'
 
 export interface CommentService {
   list(
     videoId: string,
+    options?: CommentListOptions,
     signal?: AbortSignal,
   ): Promise<CommentItem[]>
 
@@ -17,6 +19,15 @@ export interface CommentService {
     text: string,
     parentCommentId?: string,
   ): Promise<CommentItem>
+
+  update(
+    commentId: string,
+    text: string,
+  ): Promise<CommentItem>
+
+  remove(
+    commentId: string,
+  ): Promise<void>
 
   toggleReaction(
     commentId: string,
@@ -33,6 +44,12 @@ export function createCommentService(
 
     add:
       gateway.add,
+
+    update:
+      gateway.update,
+
+    remove:
+      gateway.remove,
 
     toggleReaction:
       gateway.toggleReaction,
