@@ -224,7 +224,12 @@ function PlaymePage({ videoService }: PlaymePageProps) {
         })
       }
     },
-    [videos.length],
+    [
+      setActionNoticeKey,
+      setActiveIndex,
+      setIsPaused,
+      videos.length,
+    ],
   )
 
   useEffect(() => {
