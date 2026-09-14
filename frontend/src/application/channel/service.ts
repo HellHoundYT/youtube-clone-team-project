@@ -24,6 +24,16 @@ export interface ChannelService {
     request: SaveChannelRequest,
   ): Promise<Channel>
 
+  uploadAvatar(
+    channelId: string,
+    file: File,
+  ): Promise<Channel>
+
+  uploadBanner(
+    channelId: string,
+    file: File,
+  ): Promise<Channel>
+
   listSubscriptions(): Promise<Channel[]>
 
   subscribe(
@@ -53,6 +63,12 @@ export function createChannelService(
 
     updateChannel:
       gateway.updateChannel,
+
+    uploadAvatar:
+      gateway.uploadAvatar,
+
+    uploadBanner:
+      gateway.uploadBanner,
 
     listSubscriptions:
       gateway.listSubscriptions,
