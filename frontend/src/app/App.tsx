@@ -27,6 +27,7 @@ import UploadPage from '../presentation/pages/UploadPage'
 import WatchPage from '../presentation/pages/WatchPage'
 import WatchPartyPage from '../presentation/pages/WatchPartyPage'
 import './App.css'
+import '../presentation/pages/RegressionPolish.css'
 import '../shared/theme/theme-runtime.css'
 import {
   useAuthStore,
