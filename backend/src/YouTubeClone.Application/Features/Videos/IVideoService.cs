@@ -10,6 +10,26 @@ public interface IVideoService
         string? category,
         CancellationToken cancellationToken = default);
 
+    async Task<IReadOnlyList<VideoListItemDto>> GetVideosAsync(
+        int page,
+        int pageSize,
+        string? category,
+        CancellationToken cancellationToken,
+        Guid? channelId)
+    {
+        var videos = await GetVideosAsync(
+            page,
+            pageSize,
+            category,
+            cancellationToken);
+
+        return channelId.HasValue
+            ? videos
+                .Where(video => video.ChannelId == channelId.Value)
+                .ToList()
+            : videos;
+    }
+
     Task<VideoDetailsDto?> GetVideoByIdAsync(
         Guid videoId,
         CancellationToken cancellationToken = default);

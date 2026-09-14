@@ -26,6 +26,10 @@ export interface AuthService {
     request: UpdateUserRequest,
   ): Promise<User>
 
+  uploadAvatar(
+    file: File,
+  ): Promise<User>
+
   signOut(): Promise<void>
 }
 
@@ -44,6 +48,9 @@ export function createAuthService(
 
     updateCurrentUser:
       gateway.updateCurrentUser,
+
+    uploadAvatar:
+      gateway.uploadAvatar,
 
     signOut:
       gateway.signOut,

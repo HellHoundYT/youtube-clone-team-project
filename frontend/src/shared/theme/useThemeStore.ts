@@ -8,10 +8,41 @@ import {
   defaultThemeId,
 } from './themeCatalog'
 
+type ThemeProfileSync = (
+  themeId: string,
+) => Promise<void>
+
+let configuredProfileSync:
+ThemeProfileSync | null = null
+
+export function configureThemeProfileSync(
+  sync: ThemeProfileSync,
+) {
+  configuredProfileSync = sync
+}
+
+function syncProfileTheme(
+  themeId: string,
+) {
+  if (!configuredProfileSync) {
+    return
+  }
+
+  void configuredProfileSync(
+    themeId,
+  ).catch(() => {
+    // Local theme selection remains valid when profile persistence is unavailable.
+  })
+}
+
 interface ThemeStore {
   selectedThemeId: string
 
   setTheme: (
+    themeId: string,
+  ) => void
+
+  applyThemeFromProfile: (
     themeId: string,
   ) => void
 
@@ -32,6 +63,19 @@ export const useThemeStore =
             selectedThemeId:
               themeId,
           })
+
+          syncProfileTheme(
+            themeId,
+          )
+        },
+
+        applyThemeFromProfile: (
+          themeId,
+        ) => {
+          set({
+            selectedThemeId:
+              themeId,
+          })
         },
 
         resetTheme: () => {
@@ -39,6 +83,10 @@ export const useThemeStore =
             selectedThemeId:
               defaultThemeId,
           })
+
+          syncProfileTheme(
+            defaultThemeId,
+          )
         },
       }),
 

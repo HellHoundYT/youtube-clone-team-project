@@ -1,16 +1,19 @@
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using YouTubeClone.Domain.Users;
 using YouTubeClone.Api.Hubs;
+using YouTubeClone.Application.Features.Auth;
 using YouTubeClone.Application.Features.Categories;
+using YouTubeClone.Application.Features.Channels;
+using YouTubeClone.Application.Features.Comments;
 using YouTubeClone.Application.Features.Favorites;
 using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.LiveChat;
+using YouTubeClone.Application.Features.Playlists;
 using YouTubeClone.Application.Features.Search;
 using YouTubeClone.Application.Features.Streams;
+using YouTubeClone.Application.Features.Users;
 using YouTubeClone.Application.Features.Videos;
 using YouTubeClone.Application.Features.WatchParty;
 using YouTubeClone.Infrastructure;
@@ -19,8 +22,6 @@ var builder =
     WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -32,7 +33,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"]!))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(
+                    builder.Configuration["Jwt:SigningKey"]!))
         };
     });
 
@@ -57,6 +60,26 @@ builder.Services.Configure<FormOptions>(
 
 builder.Services.AddInfrastructure(
     builder.Configuration);
+
+builder.Services.AddScoped<
+    IAuthService,
+    AuthService>();
+
+builder.Services.AddScoped<
+    IUserProfileService,
+    UserProfileService>();
+
+builder.Services.AddScoped<
+    IChannelService,
+    ChannelService>();
+
+builder.Services.AddScoped<
+    ICommentService,
+    CommentService>();
+
+builder.Services.AddScoped<
+    IPlaylistService,
+    PlaylistService>();
 
 builder.Services.AddSingleton<
     IVideoService,

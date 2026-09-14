@@ -11,6 +11,9 @@ import type {
 import type {
   User,
 } from '../../../domain/user/types'
+import {
+  useThemeStore,
+} from '../../../shared/theme/useThemeStore'
 
 export type AccountProfile =
   User
@@ -18,6 +21,9 @@ export type AccountProfile =
 interface AuthState {
   profile:
     AccountProfile | null
+
+  isLoading:
+    boolean
 
   loadCurrentUser:
     () => Promise<void>
@@ -39,6 +45,9 @@ interface AuthState {
       request:
         UpdateUserRequest,
     ) => Promise<void>
+
+  uploadAvatar:
+    (file: File) => Promise<void>
 
   signOut:
     () => Promise<void>
@@ -65,21 +74,43 @@ AuthService {
   return configuredAuthService
 }
 
+function applyProfileTheme(
+  user: User | null,
+) {
+  if (user?.themeId) {
+    useThemeStore
+      .getState()
+      .applyThemeFromProfile(
+        user.themeId,
+      )
+  }
+}
+
 export const useAuthStore =
   create<AuthState>(
     (set) => ({
       profile: null,
 
+      isLoading: true,
+
       loadCurrentUser:
         async () => {
-          const user =
-            await getAuthService()
-              .getCurrentUser()
+          try {
+            const user =
+              await getAuthService()
+                .getCurrentUser()
 
-          set({
-            profile:
-              user,
-          })
+            set({
+              profile:
+                user,
+            })
+            applyProfileTheme(user)
+          } finally {
+            set({
+              isLoading:
+                false,
+            })
+          }
         },
 
       signIn:
@@ -97,7 +128,10 @@ export const useAuthStore =
           set({
             profile:
               user,
+            isLoading:
+              false,
           })
+          applyProfileTheme(user)
         },
 
       register:
@@ -113,7 +147,10 @@ export const useAuthStore =
           set({
             profile:
               user,
+            isLoading:
+              false,
           })
+          applyProfileTheme(user)
         },
 
       updateProfile:
@@ -130,6 +167,21 @@ export const useAuthStore =
             profile:
               user,
           })
+          applyProfileTheme(user)
+        },
+
+      uploadAvatar:
+        async (
+          file,
+        ) => {
+          const user =
+            await getAuthService()
+              .uploadAvatar(file)
+
+          set({
+            profile:
+              user,
+          })
         },
 
       signOut:
@@ -140,6 +192,8 @@ export const useAuthStore =
           set({
             profile:
               null,
+            isLoading:
+              false,
           })
         },
     }),

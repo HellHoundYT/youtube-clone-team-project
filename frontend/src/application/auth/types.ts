@@ -13,4 +13,5 @@ export interface UpdateUserRequest {
   email: string
   handle: string
   bio: string
+  themeId: string | null
 }

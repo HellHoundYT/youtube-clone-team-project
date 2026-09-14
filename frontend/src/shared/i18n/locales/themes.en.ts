@@ -7,7 +7,7 @@ const themesEn = {
       'Theme system',
 
     description:
-      'Preview and test visually distinct profile themes. Account persistence will be connected after Profile and Auth integration.',
+      'Preview and test visually distinct profile themes. Signed-in users keep their selected theme synchronized with their AMTLIS profile.',
 
     currentTheme:
       'Current theme',
@@ -22,16 +22,16 @@ const themesEn = {
       'visual families',
 
     local:
-      'Local',
+      'Profile',
 
     persistence:
-      'v1 persistence',
+      'account sync',
 
     ready:
-      'Ready',
+      'Active',
 
     profileContract:
-      'profile contract',
+      'User API sync',
 
     familyLabel:
       'THEME FAMILY',
@@ -46,13 +46,13 @@ const themesEn = {
       'Achievement',
 
     futureIntegration:
-      'FUTURE INTEGRATION',
+      'NEXT INTEGRATION',
 
     achievementContracts:
       'Achievement contracts',
 
     noUserApi:
-      'No User API yet',
+      'Theme sync is active',
 
     variant_one:
       '{{count}} variant',

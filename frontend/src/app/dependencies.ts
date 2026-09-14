@@ -2,11 +2,20 @@ import {
   createAuthService,
 } from '../application/auth/service'
 import {
+  createChannelService,
+} from '../application/channel/service'
+import {
+  createCommentService,
+} from '../application/comment/service'
+import {
   createDiscoveryService,
 } from '../application/discovery/service'
 import {
   createLibraryService,
 } from '../application/library/service'
+import {
+  createPlaylistService,
+} from '../application/playlist/service'
 import {
   createStreamService,
 } from '../application/stream/service'
@@ -20,11 +29,20 @@ import {
   authGateway,
 } from '../infrastructure/api/auth'
 import {
+  channelGateway,
+} from '../infrastructure/api/channels'
+import {
+  commentGateway,
+} from '../infrastructure/api/comments'
+import {
   discoveryGateway,
 } from '../infrastructure/api/discovery'
 import {
   libraryGateway,
 } from '../infrastructure/api/library'
+import {
+  playlistGateway,
+} from '../infrastructure/api/playlists'
 import {
   streamGateway,
 } from '../infrastructure/api/streams'
@@ -52,6 +70,16 @@ export const authService =
     authGateway,
   )
 
+export const channelService =
+  createChannelService(
+    channelGateway,
+  )
+
+export const commentService =
+  createCommentService(
+    commentGateway,
+  )
+
 export const discoveryService =
   createDiscoveryService(
     discoveryGateway,
@@ -60,6 +88,11 @@ export const discoveryService =
 export const libraryService =
   createLibraryService(
     libraryGateway,
+  )
+
+export const playlistService =
+  createPlaylistService(
+    playlistGateway,
   )
 
 export const streamService =

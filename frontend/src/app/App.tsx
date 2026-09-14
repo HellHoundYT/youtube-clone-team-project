@@ -7,6 +7,7 @@ import {
   useEffect,
 } from 'react'
 import AppLayout from '../presentation/components/layout/AppLayout'
+import RequireAuth from '../presentation/components/auth/RequireAuth'
 import AuthPage from '../presentation/pages/AuthPage'
 import ChannelPage from '../presentation/pages/ChannelPage'
 import CategoryPage from '../presentation/pages/CategoryPage'
@@ -31,10 +32,12 @@ import {
   useAuthStore,
 } from '../presentation/features/auth/authStore'
 import {
+  channelService,
   discoveryService,
   videoService,
   streamService,
   libraryService,
+  playlistService,
   uploadService,
   liveChatClientFactory,
   liveChatSessionStore,
@@ -73,12 +76,19 @@ function App() {
 
         <Route
           path="subscriptions"
-          element={<SubscriptionsPage videoService={videoService} />}
+          element={
+            <SubscriptionsPage channelService={channelService} />
+          }
         />
 
         <Route
           path="channels/:channelId"
-          element={<ChannelPage />}
+          element={
+            <ChannelPage
+              channelService={channelService}
+              videoService={videoService}
+            />
+          }
         />
 
         <Route
@@ -100,11 +110,6 @@ function App() {
           element={
             <FavoritesPage libraryService={libraryService} />
           }
-        />
-
-        <Route
-          path="playlists"
-          element={<PlaylistsPage />}
         />
 
         <Route
@@ -146,17 +151,26 @@ function App() {
           }
         />
 
-        <Route
-          path="upload"
-          element={
-            <UploadPage uploadService={uploadService} />
-          }
-        />
+        <Route element={<RequireAuth />}>
+          <Route
+            path="upload"
+            element={
+              <UploadPage uploadService={uploadService} />
+            }
+          />
 
-        <Route
-          path="profile"
-          element={<ProfilePage />}
-        />
+          <Route
+            path="profile"
+            element={<ProfilePage />}
+          />
+
+          <Route
+            path="playlists"
+            element={
+              <PlaylistsPage playlistService={playlistService} />
+            }
+          />
+        </Route>
 
         <Route
           path="watch-party"
