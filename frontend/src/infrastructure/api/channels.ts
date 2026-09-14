@@ -11,6 +11,20 @@ import {
   withAuthenticatedRequest,
 } from './authSession'
 
+function createImageForm(
+  file: File,
+) {
+  const form =
+    new FormData()
+
+  form.append(
+    'file',
+    file,
+  )
+
+  return form
+}
+
 export const channelGateway:
 ChannelGateway = {
   async listChannels() {
@@ -83,6 +97,50 @@ ChannelGateway = {
           axios.put<Channel>(
             `/api/v1/channels/${channelId}`,
             request,
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async uploadAvatar(
+    channelId,
+    file,
+  ) {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.post<Channel>(
+            `/api/v1/channels/${channelId}/avatar`,
+            createImageForm(file),
+            {
+              withCredentials:
+                true,
+
+              ...createAuthorizedConfig(token),
+            },
+          ),
+      )
+
+    return response.data
+  },
+
+  async uploadBanner(
+    channelId,
+    file,
+  ) {
+    const response =
+      await withAuthenticatedRequest(
+        (token) =>
+          axios.post<Channel>(
+            `/api/v1/channels/${channelId}/banner`,
+            createImageForm(file),
             {
               withCredentials:
                 true,
