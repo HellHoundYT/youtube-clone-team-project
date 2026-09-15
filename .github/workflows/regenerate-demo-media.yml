@@ -30,7 +30,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           output=/tmp/amtlis-demo.mp4
 
           ffmpeg \
@@ -64,7 +63,6 @@ jobs:
           test "$declared" = "144"
           test "$decoded" = "144"
           awk -v d="$duration" 'BEGIN { exit !(d >= 5.99 && d <= 6.01) }'
-
           ffmpeg -v error -xerror -i "$output" -f null -
 
           sha256sum "$output"
@@ -106,6 +104,7 @@ jobs:
           rm .github/workflows/regenerate-demo-media.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add backend/Storage/media/videos .github/workflows/regenerate-demo-media.yml
+          git add -f backend/Storage/media/videos/*.mp4
+          git add .github/workflows/regenerate-demo-media.yml
           git commit -m "fix: replace demo media with runner-validated MP4"
           git push origin HEAD:fix/demo-media-integrity-v3
