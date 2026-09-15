@@ -7,7 +7,11 @@ namespace YouTubeClone.Infrastructure.Channels;
 
 public sealed class EfChannelRepository : IChannelRepository
 {
+    private static readonly SemaphoreSlim SeedLock =
+        new(1, 1);
+
     private readonly AppDbContext _db;
+    private bool _seedChecked;
 
     public EfChannelRepository(AppDbContext db)
     {
@@ -16,53 +20,86 @@ public sealed class EfChannelRepository : IChannelRepository
 
     public async Task<IReadOnlyList<ChannelModel>> ListAsync(
         Guid? subscriberId,
-        CancellationToken cancellationToken) =>
-        await Query(subscriberId)
+        CancellationToken cancellationToken)
+    {
+        await EnsureSeedDataAsync(cancellationToken);
+
+        return await Query(subscriberId)
             .OrderBy(channel => channel.Name)
             .ToListAsync(cancellationToken);
+    }
 
-    public Task<ChannelModel?> GetAsync(
+    public async Task<ChannelModel?> GetAsync(
         Guid channelId,
         Guid? subscriberId,
-        CancellationToken cancellationToken) =>
-        Project(
+        CancellationToken cancellationToken)
+    {
+        await EnsureSeedDataAsync(cancellationToken);
+
+        return await Project(
                 _db.Channels.Where(
                     channel => channel.Id == channelId),
                 subscriberId)
             .SingleOrDefaultAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<ChannelModel>> ListSubscriptionsAsync(
         Guid subscriberId,
-        CancellationToken cancellationToken) =>
-        await Query(subscriberId)
-            .Where(channel => channel.IsSubscribed)
+        CancellationToken cancellationToken)
+    {
+        await EnsureSeedDataAsync(cancellationToken);
+
+        var subscribedChannels =
+            _db.Channels.Where(
+                channel =>
+                    _db.Subscriptions.Any(
+                        subscription =>
+                            subscription.SubscriberId == subscriberId &&
+                            subscription.ChannelId == channel.Id));
+
+        return await Project(
+                subscribedChannels,
+                subscriberId)
             .OrderBy(channel => channel.Name)
             .ToListAsync(cancellationToken);
+    }
 
-    public Task<Channel?> FindByIdAsync(
+    public async Task<Channel?> FindByIdAsync(
         Guid channelId,
-        CancellationToken cancellationToken) =>
-        _db.Channels.SingleOrDefaultAsync(
+        CancellationToken cancellationToken)
+    {
+        await EnsureSeedDataAsync(cancellationToken);
+
+        return await _db.Channels.SingleOrDefaultAsync(
             channel => channel.Id == channelId,
             cancellationToken);
+    }
 
-    public Task<Channel?> FindByOwnerIdAsync(
+    public async Task<Channel?> FindByOwnerIdAsync(
         Guid ownerId,
-        CancellationToken cancellationToken) =>
-        _db.Channels.SingleOrDefaultAsync(
+        CancellationToken cancellationToken)
+    {
+        await EnsureSeedDataAsync(cancellationToken);
+
+        return await _db.Channels.SingleOrDefaultAsync(
             channel => channel.OwnerId == ownerId,
             cancellationToken);
+    }
 
-    public Task<bool> HandleExistsAsync(
+    public async Task<bool> HandleExistsAsync(
         string handle,
         Guid? excludingChannelId,
-        CancellationToken cancellationToken) =>
-        _db.Channels.AnyAsync(
+        CancellationToken cancellationToken)
+    {
+        await EnsureSeedDataAsync(cancellationToken);
+
+        return await _db.Channels.AnyAsync(
             channel =>
                 channel.Handle == handle &&
                 (!excludingChannelId.HasValue ||
                  channel.Id != excludingChannelId.Value),
             cancellationToken);
+    }
 
     public Task<Subscription?> FindSubscriptionAsync(
         Guid subscriberId,
@@ -117,4 +154,68 @@ public sealed class EfChannelRepository : IChannelRepository
                         subscription =>
                             subscription.SubscriberId == subscriberId.Value &&
                             subscription.ChannelId == channel.Id)));
+
+    private async Task EnsureSeedDataAsync(
+        CancellationToken cancellationToken)
+    {
+        if (_seedChecked)
+        {
+            return;
+        }
+
+        await SeedLock.WaitAsync(cancellationToken);
+
+        try
+        {
+            if (_seedChecked)
+            {
+                return;
+            }
+
+            var seedOwners = ChannelSeedData.CreateOwners();
+            var seedChannels = ChannelSeedData.CreateChannels();
+            var ownerIds = seedOwners.Select(owner => owner.Id).ToArray();
+            var channelIds = seedChannels.Select(channel => channel.Id).ToArray();
+
+            var existingOwnerIds = await _db.Users
+                .Where(user => ownerIds.Contains(user.Id))
+                .Select(user => user.Id)
+                .ToListAsync(cancellationToken);
+
+            var existingChannelIds = await _db.Channels
+                .Where(channel => channelIds.Contains(channel.Id))
+                .Select(channel => channel.Id)
+                .ToListAsync(cancellationToken);
+
+            var existingOwners = existingOwnerIds.ToHashSet();
+            var existingChannels = existingChannelIds.ToHashSet();
+            var missingOwners = seedOwners
+                .Where(owner => !existingOwners.Contains(owner.Id))
+                .ToList();
+            var missingChannels = seedChannels
+                .Where(channel => !existingChannels.Contains(channel.Id))
+                .ToList();
+
+            if (missingOwners.Count > 0)
+            {
+                _db.Users.AddRange(missingOwners);
+            }
+
+            if (missingChannels.Count > 0)
+            {
+                _db.Channels.AddRange(missingChannels);
+            }
+
+            if (missingOwners.Count > 0 || missingChannels.Count > 0)
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            _seedChecked = true;
+        }
+        finally
+        {
+            SeedLock.Release();
+        }
+    }
 }
