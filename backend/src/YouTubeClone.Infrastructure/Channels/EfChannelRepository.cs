@@ -24,8 +24,10 @@ public sealed class EfChannelRepository : IChannelRepository
     {
         await EnsureSeedDataAsync(cancellationToken);
 
-        return await Query(subscriberId)
-            .OrderBy(channel => channel.Name)
+        var channels = _db.Channels
+            .OrderBy(channel => channel.Name);
+
+        return await Project(channels, subscriberId)
             .ToListAsync(cancellationToken);
     }
 
@@ -49,18 +51,18 @@ public sealed class EfChannelRepository : IChannelRepository
     {
         await EnsureSeedDataAsync(cancellationToken);
 
-        var subscribedChannels =
-            _db.Channels.Where(
+        var subscribedChannels = _db.Channels
+            .Where(
                 channel =>
                     _db.Subscriptions.Any(
                         subscription =>
                             subscription.SubscriberId == subscriberId &&
-                            subscription.ChannelId == channel.Id));
+                            subscription.ChannelId == channel.Id))
+            .OrderBy(channel => channel.Name);
 
         return await Project(
                 subscribedChannels,
                 subscriberId)
-            .OrderBy(channel => channel.Name)
             .ToListAsync(cancellationToken);
     }
 
@@ -129,9 +131,6 @@ public sealed class EfChannelRepository : IChannelRepository
     public Task SaveChangesAsync(
         CancellationToken cancellationToken) =>
         _db.SaveChangesAsync(cancellationToken);
-
-    private IQueryable<ChannelModel> Query(Guid? subscriberId) =>
-        Project(_db.Channels, subscriberId);
 
     private IQueryable<ChannelModel> Project(
         IQueryable<Channel> channels,
