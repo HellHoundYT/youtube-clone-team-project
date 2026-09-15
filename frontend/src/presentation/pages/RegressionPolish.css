@@ -22,3 +22,35 @@
   border-radius: inherit;
   object-fit: cover;
 }
+
+.watch-channel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.watch-channel-identity {
+  min-width: 0;
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+html[data-theme-family="city"] .app-shell.app-shell {
+  background:
+    var(--theme-pattern),
+    var(--theme-app-background);
+}
+
+@media (max-width: 620px) {
+  .watch-channel-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .watch-channel-row .watch-start-party-button {
+    width: fit-content;
+  }
+}
