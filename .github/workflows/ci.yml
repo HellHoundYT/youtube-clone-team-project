@@ -155,7 +155,14 @@ jobs:
               -f null \
               -
 
-            frame_count=$(ffprobe \
+            declared_frames=$(ffprobe \
+              -v error \
+              -select_streams v:0 \
+              -show_entries stream=nb_frames \
+              -of default=nokey=1:noprint_wrappers=1 \
+              "$file")
+
+            decoded_frames=$(ffprobe \
               -v error \
               -count_frames \
               -select_streams v:0 \
@@ -169,12 +176,22 @@ jobs:
               -of default=nokey=1:noprint_wrappers=1 \
               "$file")
 
-            if [ -z "$frame_count" ] || [ "$frame_count" -le 0 ]; then
-              echo "Bundled demo video has no decodable frames: $file"
+            if ! [[ "$declared_frames" =~ ^[0-9]+$ ]] || [ "$declared_frames" -le 0 ]; then
+              echo "Bundled demo video has invalid declared frame count ($declared_frames): $file"
               exit 1
             fi
 
-            echo "Decoded frames: $frame_count; duration: $duration"
+            if ! [[ "$decoded_frames" =~ ^[0-9]+$ ]] || [ "$decoded_frames" -le 0 ]; then
+              echo "Bundled demo video has invalid decoded frame count ($decoded_frames): $file"
+              exit 1
+            fi
+
+            if [ "$decoded_frames" -ne "$declared_frames" ]; then
+              echo "Bundled demo video is incomplete: decoded $decoded_frames of $declared_frames frames: $file"
+              exit 1
+            fi
+
+            echo "Fully decoded $decoded_frames/$declared_frames frames; duration: $duration"
           done
 
       - name: Run backend tests
@@ -252,4 +269,24 @@ jobs:
             -f null \
             -
 
-          echo "Bundled demo video range and full decode smoke tests passed."
+          declared_frames=$(ffprobe \
+            -v error \
+            -select_streams v:0 \
+            -show_entries stream=nb_frames \
+            -of default=nokey=1:noprint_wrappers=1 \
+            demo-video.mp4)
+
+          decoded_frames=$(ffprobe \
+            -v error \
+            -count_frames \
+            -select_streams v:0 \
+            -show_entries stream=nb_read_frames \
+            -of default=nokey=1:noprint_wrappers=1 \
+            demo-video.mp4)
+
+          if [ "$decoded_frames" -ne "$declared_frames" ]; then
+            echo "Served demo video is incomplete: decoded $decoded_frames of $declared_frames frames."
+            exit 1
+          fi
+
+          echo "Bundled demo video range and full decode smoke tests passed: $decoded_frames/$declared_frames frames."
