@@ -128,11 +128,54 @@ jobs:
 
           echo "SQL Server migration script generated successfully."
 
-      - name: Install ffprobe
+      - name: Install ffmpeg
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install --yes ffmpeg
+
+      - name: Validate bundled demo media
+        shell: bash
+        run: |
+          shopt -s nullglob
+          demo_files=(backend/Storage/media/videos/*.mp4)
+
+          if [ "${#demo_files[@]}" -eq 0 ]; then
+            echo "No bundled demo MP4 files were found."
+            exit 1
+          fi
+
+          for file in "${demo_files[@]}"; do
+            echo "Validating $file"
+
+            ffmpeg \
+              -v error \
+              -xerror \
+              -i "$file" \
+              -f null \
+              -
+
+            frame_count=$(ffprobe \
+              -v error \
+              -count_frames \
+              -select_streams v:0 \
+              -show_entries stream=nb_read_frames \
+              -of default=nokey=1:noprint_wrappers=1 \
+              "$file")
+
+            duration=$(ffprobe \
+              -v error \
+              -show_entries format=duration \
+              -of default=nokey=1:noprint_wrappers=1 \
+              "$file")
+
+            if [ -z "$frame_count" ] || [ "$frame_count" -le 0 ]; then
+              echo "Bundled demo video has no decodable frames: $file"
+              exit 1
+            fi
+
+            echo "Decoded frames: $frame_count; duration: $duration"
+          done
 
       - name: Run backend tests
         run: >
@@ -187,13 +230,26 @@ jobs:
             --fail \
             --silent \
             --show-error \
+            --dump-header demo-range-headers.txt \
             --header "Range: bytes=0-1023" \
             http://127.0.0.1:5276/api/v1/videos/11111111-1111-1111-1111-111111111111/stream \
-            > demo-video.bin
+            > demo-video-range.bin
 
-          if [ ! -s demo-video.bin ]; then
-            echo "Bundled demo video stream returned an empty response."
-            exit 1
-          fi
+          grep -Eq '^HTTP/.* 206' demo-range-headers.txt
+          grep -Eqi '^content-range: bytes 0-1023/' demo-range-headers.txt
 
-          echo "Bundled demo video stream passed."
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            http://127.0.0.1:5276/api/v1/videos/11111111-1111-1111-1111-111111111111/stream \
+            > demo-video.mp4
+
+          ffmpeg \
+            -v error \
+            -xerror \
+            -i demo-video.mp4 \
+            -f null \
+            -
+
+          echo "Bundled demo video range and full decode smoke tests passed."
