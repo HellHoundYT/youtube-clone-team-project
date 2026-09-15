@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -127,6 +128,7 @@ function WatchPage({
   const [isSubscriptionBusy, setIsSubscriptionBusy] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
   const [isFavoriteBusy, setIsFavoriteBusy] = useState(false)
+  const historyUpdateQueueRef = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
     if (!videoId) {
@@ -373,7 +375,35 @@ function WatchPage({
     }
   }
 
+  const queueHistoryUpdate = (
+    progressSeconds: number,
+    completed: boolean,
+  ) => {
+    const targetVideoId = video.id
+
+    historyUpdateQueueRef.current = historyUpdateQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        try {
+          await libraryService.updateWatchHistory(
+            targetVideoId,
+            {
+              progressSeconds,
+              completed,
+            },
+          )
+        } catch {
+          // History errors must not interrupt playback.
+        }
+      })
+  }
+
   const handleFirstPlay = async (currentTime: number) => {
+    queueHistoryUpdate(
+      Math.max(0, Math.floor(currentTime)),
+      false,
+    )
+
     try {
       await videoService.registerVideoView(video.id)
       setLoadState((current) => {
@@ -396,36 +426,17 @@ function WatchPage({
     } catch {
       // Playback must not be interrupted by a view counter failure.
     }
-
-    try {
-      await libraryService.updateWatchHistory(
-        video.id,
-        {
-          progressSeconds: Math.max(0, Math.floor(currentTime)),
-          completed: false,
-        },
-      )
-    } catch {
-      // History errors must not interrupt playback.
-    }
   }
 
-  const handleProgress = async (
+  const handleProgress = (
     currentTime: number,
     duration: number,
     completed: boolean,
   ) => {
-    try {
-      await libraryService.updateWatchHistory(
-        video.id,
-        {
-          progressSeconds: completed ? duration : currentTime,
-          completed,
-        },
-      )
-    } catch {
-      // History errors must not interrupt playback.
-    }
+    queueHistoryUpdate(
+      completed ? duration : currentTime,
+      completed,
+    )
   }
 
   return (
@@ -440,7 +451,7 @@ function WatchPage({
             void handleFirstPlay(currentTime)
           }}
           onProgress={(currentTime, duration, completed) => {
-            void handleProgress(currentTime, duration, completed)
+            handleProgress(currentTime, duration, completed)
           }}
         />
 
