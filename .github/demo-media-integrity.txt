@@ -1,0 +1,11 @@
+Generated and validated in GitHub Actions on 2026-09-15
+source_sha256=36befce84538f0c04f3f1106964ed9cbc207382137b58ea1da7578d960967406
+git_blob_sha=630b1a56d9fe9007dc05cf27f2a10df7c5f1eccc
+size_bytes=325773
+duration_seconds=6.000000
+codec=h264
+resolution=640x360
+fps=24/1
+nb_frames=144
+nb_read_frames=144
+ffmpeg_xerror_exit=0
