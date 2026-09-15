@@ -134,13 +134,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes ffmpeg
 
-      - name: Run channel repository regression tests
+      - name: Test channel GetAsync projection
         run: >
           dotnet test
           backend/YouTubeClone.Api.slnx
           --configuration Release
           --no-build
-          --filter FullyQualifiedName~ChannelRepositoryRelationalTests
+          --filter FullyQualifiedName~GetAsync_filters_channel_entity_before_projection
+          --verbosity normal
+
+      - name: Test subscription reload query
+        run: >
+          dotnet test
+          backend/YouTubeClone.Api.slnx
+          --configuration Release
+          --no-build
+          --filter FullyQualifiedName~ListSubscriptionsAsync_filters_entities_before_projection
+          --verbosity normal
+
+      - name: Test streamer channel seeding
+        run: >
+          dotnet test
+          backend/YouTubeClone.Api.slnx
+          --configuration Release
+          --no-build
+          --filter FullyQualifiedName~GetAsync_seeds_every_demo_streamer_channel
           --verbosity normal
 
       - name: Run backend tests
