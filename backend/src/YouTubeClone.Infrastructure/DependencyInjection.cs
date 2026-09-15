@@ -41,12 +41,34 @@ public static class DependencyInjection
             configuration.GetConnectionString(
                 "DefaultConnection");
 
+        var databaseProvider =
+            configuration["Database:Provider"]?.Trim();
+
         services.AddDbContext<AppDbContext>(
             options =>
             {
-                if (configuration["Database:Provider"] == "InMemory")
+                if (string.Equals(
+                        databaseProvider,
+                        "InMemory",
+                        StringComparison.OrdinalIgnoreCase))
                 {
                     options.UseInMemoryDatabase("YouTubeCloneTests");
+                    return;
+                }
+
+                if (string.Equals(
+                        databaseProvider,
+                        "PostgreSQL",
+                        StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(
+                        databaseProvider,
+                        "Postgres",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    options.UseNpgsql(
+                        connectionString,
+                        npgsqlOptions =>
+                            npgsqlOptions.EnableRetryOnFailure());
                     return;
                 }
 
