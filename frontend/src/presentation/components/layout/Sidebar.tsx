@@ -354,7 +354,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`app-sidebar ${
+      className={`app-sidebar glass ${
         collapsed
           ? 'is-collapsed'
           : ''

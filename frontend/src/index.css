@@ -112,3 +112,69 @@ button {
 #root {
   min-height: 100vh;
 }
+
+.glass {
+  --liquid-glass-background:
+    linear-gradient(
+      112deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.065) 36%,
+      rgba(151, 120, 255, 0.1) 100%
+    ),
+    rgba(17, 19, 30, 0.3);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  background: var(--liquid-glass-background);
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  box-shadow:
+    0 20px 45px rgba(3, 4, 14, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07);
+
+  backdrop-filter: blur(40px) saturate(155%) brightness(1.08);
+  -webkit-backdrop-filter: blur(40px) saturate(155%) brightness(1.08);
+}
+
+.glass::before {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  left: 0;
+
+  height: 46%;
+
+  content: '';
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0)
+  );
+
+  pointer-events: none;
+}
+
+.glass::after {
+  position: absolute;
+  z-index: 0;
+  inset: 1px;
+
+  content: '';
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: inherit;
+
+  pointer-events: none;
+}
+
+.glass > * {
+  position: relative;
+  z-index: 1;
+}
