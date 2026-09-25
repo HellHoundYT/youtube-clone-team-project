@@ -136,14 +136,14 @@
       145deg,
       rgba(255, 255, 255, 0.36) 0%,
       rgba(255, 255, 255, 0.11) 34%,
-      rgba(130, 91, 255, 0.82) 35%,
-      rgba(91, 57, 220, 0.94) 100%
+      var(--theme-accent-strong) 35%,
+      var(--theme-accent) 100%
     );
 
   border: 2px solid rgba(255, 255, 255, 0.42);
 
   box-shadow:
-    0 9px 20px rgba(52, 29, 136, 0.36),
+    0 9px 20px var(--theme-glow),
     0 3px 6px rgba(0, 0, 0, 0.24),
     inset 0 1px 1px rgba(255, 255, 255, 0.72),
     inset 0 -2px 1px rgba(31, 11, 99, 0.42);
@@ -1192,11 +1192,25 @@
 
   padding: 0;
 
-  color: #747988;
-  background: #101117;
+  color: rgba(218, 225, 241, 0.8);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.045)
+    ),
+    rgba(17, 19, 30, 0.42);
 
-  border: 1px solid #1e2028;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 7px;
+
+  box-shadow:
+    0 5px 12px rgba(3, 4, 14, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
 
   transition:
     color 160ms ease,
@@ -1207,8 +1221,14 @@
 
 .section-arrow:hover {
   color: #ffffff;
-  background: #17181f;
-  border-color: #2c2e38;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.25),
+      rgba(142, 109, 255, 0.13)
+    ),
+    rgba(25, 23, 44, 0.55);
+  border-color: rgba(255, 255, 255, 0.34);
 }
 
 .section-arrow:active {
