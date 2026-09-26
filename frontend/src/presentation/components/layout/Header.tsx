@@ -109,7 +109,7 @@ function Header({
   }
 
   return (
-    <header className="app-header">
+    <header className="app-header glass">
       <div className="header-left">
         <button
           type="button"
