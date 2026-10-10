@@ -460,11 +460,19 @@ function FriendsPage({
   const outgoingRequestMap =
     useMemo(
       () =>
-        new Map(
+        new Map<
+          string,
+          FriendRequest
+        >(
           overview
             ?.outgoingRequests
             .map(
-              (request) => [
+              (
+                request,
+              ): [
+                string,
+                FriendRequest,
+              ] => [
                 request.user.id,
                 request,
               ],
