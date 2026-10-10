@@ -282,7 +282,7 @@
 }
 
 .watch-party-invite-dialog {
-  width: min(520px, 100%);
+  width: min(620px, 100%);
   padding: 22px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--theme-large-radius);
@@ -372,6 +372,122 @@
 
 .watch-party-invite-actions > * {
   flex: 1;
+}
+
+.watch-party-friend-invite {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 13px;
+  background: var(--theme-app-background);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-small-radius);
+}
+
+.watch-party-friend-invite-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.watch-party-friend-invite-heading strong {
+  color: var(--theme-text);
+  font-size: 10px;
+}
+
+.watch-party-friend-invite-heading span {
+  color: var(--theme-muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.watch-party-friend-invite-list {
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  overflow-y: auto;
+}
+
+.watch-party-friend-invite-row {
+  display: grid;
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--theme-surface-hover);
+  border: 1px solid var(--theme-border);
+  border-radius: 10px;
+}
+
+.watch-party-friend-avatar {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    linear-gradient(
+      135deg,
+      var(--theme-accent-strong),
+      var(--theme-accent)
+    );
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.watch-party-friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.watch-party-friend-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.watch-party-friend-copy strong,
+.watch-party-friend-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watch-party-friend-copy strong {
+  color: var(--theme-text);
+  font-size: 10px;
+}
+
+.watch-party-friend-copy span {
+  color: var(--theme-muted);
+  font-size: 8px;
+}
+
+.watch-party-friend-copy small {
+  color: #ff7894;
+  font-size: 8px;
+}
+
+.watch-party-friend-invite-empty {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  color: var(--theme-muted);
+  background: var(--theme-surface-hover);
+  border-radius: 9px;
+  font-size: 9px;
 }
 
 .watch-party-invite-code {
