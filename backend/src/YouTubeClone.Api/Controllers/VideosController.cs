@@ -19,6 +19,23 @@ public sealed class VideosController :
     private const long MaxVideoFileSize =
         500L * 1024L * 1024L;
 
+    private const long MaxThumbnailFileSize =
+        10L * 1024L * 1024L;
+
+    private const long MaxUploadRequestSize =
+        512L * 1024L * 1024L;
+
+    private static readonly HashSet<string>
+        AllowedThumbnailExtensions =
+        new(
+            StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp"
+        };
+
     private static readonly HashSet<string>
         AllowedCategories =
         new(
@@ -191,6 +208,76 @@ public sealed class VideosController :
                 true);
     }
 
+    [HttpGet("{videoId:guid}/thumbnail/{extension}")]
+    public async Task<IActionResult>
+        GetThumbnail(
+            Guid videoId,
+            string extension,
+            CancellationToken cancellationToken = default)
+    {
+        var video =
+            await _videoService
+                .GetVideoByIdAsync(
+                    videoId,
+                    cancellationToken);
+
+        if (video is null ||
+            string.IsNullOrWhiteSpace(
+                video.ThumbnailPath))
+        {
+            return NotFound(
+                new
+                {
+                    message =
+                        "Video thumbnail was not found."
+                });
+        }
+
+        var normalizedExtension =
+            $".{extension.Trim().TrimStart('.')}"
+                .ToLowerInvariant();
+
+        if (!AllowedThumbnailExtensions.Contains(
+                normalizedExtension) ||
+            !video.ThumbnailPath.EndsWith(
+                $"/{normalizedExtension.TrimStart('.')}",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return NotFound(
+                new
+                {
+                    message =
+                        "Video thumbnail was not found."
+                });
+        }
+
+        var relativePath =
+            Path.Combine(
+                "thumbnails",
+                $"{videoId}{normalizedExtension}");
+
+        if (!_fileStorageService.Exists(
+                relativePath))
+        {
+            return NotFound(
+                new
+                {
+                    message =
+                        "Video thumbnail file was not found."
+                });
+        }
+
+        var stream =
+            _fileStorageService
+                .OpenRead(
+                    relativePath);
+
+        return File(
+            stream,
+            _fileStorageService.GetContentType(
+                relativePath));
+    }
+
     [HttpPost("{videoId:guid}/view")]
     public async Task<IActionResult>
         RegisterView(
@@ -219,7 +306,7 @@ public sealed class VideosController :
     [Authorize]
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(MaxVideoFileSize)]
+    [RequestSizeLimit(MaxUploadRequestSize)]
     public async Task<
         ActionResult<VideoDetailsDto>>
         UploadVideo(
@@ -271,7 +358,13 @@ public sealed class VideosController :
                 "videos",
                 $"{videoId}.mp4");
 
-        var keepStoredFile =
+        string? thumbnailRelativePath =
+            null;
+
+        string? thumbnailPublicPath =
+            null;
+
+        var keepStoredFiles =
             false;
 
         try
@@ -285,6 +378,33 @@ public sealed class VideosController :
                     relativePath,
                     source,
                     cancellationToken);
+
+            if (request.Thumbnail is not null &&
+                request.Thumbnail.Length > 0)
+            {
+                var thumbnailExtension =
+                    Path.GetExtension(
+                            request.Thumbnail.FileName)
+                        .ToLowerInvariant();
+
+                thumbnailRelativePath =
+                    Path.Combine(
+                        "thumbnails",
+                        $"{videoId}{thumbnailExtension}");
+
+                await using var thumbnailSource =
+                    request.Thumbnail
+                        .OpenReadStream();
+
+                await _fileStorageService
+                    .SaveAsync(
+                        thumbnailRelativePath,
+                        thumbnailSource,
+                        cancellationToken);
+
+                thumbnailPublicPath =
+                    $"/api/v1/videos/{videoId}/thumbnail/{thumbnailExtension.TrimStart('.')}";
+            }
 
             var physicalPath =
                 _fileStorageService
@@ -343,7 +463,7 @@ public sealed class VideosController :
                     VideoPath =
                         $"/api/v1/videos/{videoId}/stream",
                     ThumbnailPath =
-                        null,
+                        thumbnailPublicPath,
                     DurationSeconds =
                         durationSeconds,
                     ViewCount =
@@ -360,7 +480,7 @@ public sealed class VideosController :
                         video,
                         cancellationToken);
 
-            keepStoredFile =
+            keepStoredFiles =
                 true;
 
             return CreatedAtAction(
@@ -374,10 +494,17 @@ public sealed class VideosController :
         }
         finally
         {
-            if (!keepStoredFile)
+            if (!keepStoredFiles)
             {
                 _fileStorageService.Delete(
                     relativePath);
+
+                if (!string.IsNullOrWhiteSpace(
+                        thumbnailRelativePath))
+                {
+                    _fileStorageService.Delete(
+                        thumbnailRelativePath);
+                }
             }
         }
     }
@@ -482,6 +609,36 @@ public sealed class VideosController :
                     message =
                         "Only MP4 video files are supported."
                 });
+        }
+
+        if (request.Thumbnail is not null &&
+            request.Thumbnail.Length > 0)
+        {
+            if (request.Thumbnail.Length >
+                MaxThumbnailFileSize)
+            {
+                return BadRequest(
+                    new
+                    {
+                        message =
+                            "Video thumbnail must not exceed 10 MB."
+                    });
+            }
+
+            var thumbnailExtension =
+                Path.GetExtension(
+                    request.Thumbnail.FileName);
+
+            if (!AllowedThumbnailExtensions.Contains(
+                    thumbnailExtension))
+            {
+                return BadRequest(
+                    new
+                    {
+                        message =
+                            "Video thumbnail must be a PNG, JPEG, or WebP image."
+                    });
+            }
         }
 
         return null;
