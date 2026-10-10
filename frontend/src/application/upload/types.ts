@@ -17,9 +17,11 @@ export type UploadFailureCode =
 
 export class UploadFailure
   extends Error {
+  readonly code:
+    UploadFailureCode
+
   constructor(
-    public readonly code:
-      UploadFailureCode,
+    code: UploadFailureCode,
     message?: string,
   ) {
     super(
@@ -28,6 +30,9 @@ export class UploadFailure
 
     this.name =
       'UploadFailure'
+
+    this.code =
+      code
   }
 }
 
