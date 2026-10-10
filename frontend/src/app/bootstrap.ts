@@ -6,6 +6,9 @@ import {
   configureCommentService,
 } from '../presentation/features/comments/commentServiceProvider'
 import {
+  configureSocialStore,
+} from '../presentation/features/social/socialStore'
+import {
   browserKeyValueStore,
 } from '../infrastructure/storage/browserKeyValueStore'
 import {
@@ -17,6 +20,7 @@ import {
 import {
   authService,
   commentService,
+  socialService,
 } from './dependencies'
 
 export async function initializeApplication() {
@@ -26,6 +30,10 @@ export async function initializeApplication() {
 
   configureCommentService(
     commentService,
+  )
+
+  configureSocialStore(
+    socialService,
   )
 
   configureThemeProfileSync(
