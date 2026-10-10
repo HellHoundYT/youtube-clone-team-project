@@ -1,5 +1,6 @@
 import {
   type FormEvent,
+  useEffect,
   useState,
 } from 'react'
 import {
@@ -12,6 +13,9 @@ import {
 import {
   useAuthStore,
 } from '../../features/auth/authStore'
+import {
+  useSocialStore,
+} from '../../features/social/socialStore'
 import LanguageSwitcher from './LanguageSwitcher'
 
 interface HeaderProps {
@@ -42,6 +46,19 @@ function SearchIcon() {
       />
 
       <path d="m16 16 4 4" />
+    </svg>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M6.5 10a5.5 5.5 0 0 1 11 0v3.7l1.7 2.8H4.8l1.7-2.8Z" />
+
+      <path d="M10 19h4" />
     </svg>
   )
 }
@@ -78,6 +95,54 @@ function Header({
   ] = useState('')
   const profile =
     useAuthStore((state) => state.profile)
+
+  const unreadCount =
+    useSocialStore(
+      (state) =>
+        state.unreadCount,
+    )
+
+  const refreshUnreadCount =
+    useSocialStore(
+      (state) =>
+        state.refreshUnreadCount,
+    )
+
+  const clearSocial =
+    useSocialStore(
+      (state) =>
+        state.clear,
+    )
+
+  useEffect(
+    () => {
+      if (!profile) {
+        clearSocial()
+        return
+      }
+
+      void refreshUnreadCount()
+
+      const timer =
+        window.setInterval(
+          () => {
+            void refreshUnreadCount()
+          },
+          30000,
+        )
+
+      return () => {
+        window.clearInterval(
+          timer,
+        )
+      }
+    },
+    [
+      clearSocial,
+      profile,
+      refreshUnreadCount,
+    ],
+  )
 
   const profileInitials =
     profile?.displayName
@@ -184,6 +249,33 @@ function Header({
 
       <div className="header-actions">
         <LanguageSwitcher />
+
+        {profile && (
+          <button
+            type="button"
+            className="header-notification-button"
+            aria-label={t(
+              'social.tabs.notifications',
+            )}
+            onClick={() =>
+              navigate(
+                '/friends?tab=notifications',
+              )
+            }
+          >
+            <BellIcon />
+
+            {unreadCount > 0 && (
+              <span>
+                {
+                  unreadCount > 99
+                    ? '99+'
+                    : unreadCount
+                }
+              </span>
+            )}
+          </button>
+        )}
 
         <button
           type="button"
