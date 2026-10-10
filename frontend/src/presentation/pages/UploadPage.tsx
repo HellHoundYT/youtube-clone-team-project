@@ -297,6 +297,20 @@ function UploadPage({
       }
 
       if (
+        selectedFile.size >
+        500 * 1024 * 1024
+      ) {
+        setErrorKey(
+          'upload.errors.fileTooLarge',
+        )
+
+        event.target.value =
+          ''
+
+        return
+      }
+
+      if (
         !selectedFile.name
           .toLowerCase()
           .endsWith(
