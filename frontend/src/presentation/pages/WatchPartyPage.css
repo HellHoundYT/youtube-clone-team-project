@@ -269,6 +269,131 @@
   background: #ff496f;
 }
 
+.watch-party-invite-backdrop {
+  position: fixed;
+  z-index: 500;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(3, 4, 10, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.watch-party-invite-dialog {
+  width: min(520px, 100%);
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--theme-large-radius);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(126, 92, 244, 0.06)
+    ),
+    var(--theme-surface);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.45);
+}
+
+.watch-party-invite-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.watch-party-invite-dialog > header span {
+  color: var(--theme-accent-strong);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.watch-party-invite-dialog h2 {
+  margin: 5px 0 0;
+  font-size: 22px;
+}
+
+.watch-party-invite-dialog > p {
+  margin: 14px 0 18px;
+  color: var(--theme-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.watch-party-invite-close {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  padding: 0;
+  color: var(--theme-muted);
+  background: var(--theme-surface-hover);
+  border: 1px solid var(--theme-border);
+  border-radius: 9px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.watch-party-invite-close:hover {
+  color: var(--theme-text);
+}
+
+.watch-party-invite-link {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--theme-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.watch-party-invite-link input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  color: var(--theme-text);
+  background: var(--theme-app-background);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-small-radius);
+  outline: none;
+  font: inherit;
+  font-size: 10px;
+}
+
+.watch-party-invite-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.watch-party-invite-actions > * {
+  flex: 1;
+}
+
+.watch-party-invite-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 11px 12px;
+  color: var(--theme-muted);
+  background: var(--theme-app-background);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-small-radius);
+  font-size: 10px;
+}
+
+.watch-party-invite-code strong {
+  color: var(--theme-accent-strong);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+}
+
 .watch-party-danger-button {
   border: 1px solid
     rgba(255, 73, 111, 0.24);
