@@ -15,6 +15,8 @@ import playmeEn from './locales/playme.en'
 import playmeUk from './locales/playme.uk'
 import systemEn from './locales/system.en'
 import systemUk from './locales/system.uk'
+import socialEn from './locales/social.en'
+import socialUk from './locales/social.uk'
 import themesEn from './locales/themes.en'
 import themesUk from './locales/themes.uk'
 import watchPartyEn from './locales/watchParty.en'
@@ -158,6 +160,7 @@ export async function initializeAppI18n(
               ...liveEn,
               ...playmeEn,
               ...systemEn,
+              ...socialEn,
               ...themesEn,
               ...watchPartyEn,
             },
@@ -170,6 +173,7 @@ export async function initializeAppI18n(
               ...liveUk,
               ...playmeUk,
               ...systemUk,
+              ...socialUk,
               ...themesUk,
               ...watchPartyUk,
             },
