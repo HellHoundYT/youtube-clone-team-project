@@ -191,6 +191,7 @@ function App() {
           element={
             <WatchPartyPage
               videoService={videoService}
+              socialService={socialService}
               watchPartyClientFactory={watchPartyClientFactory}
               watchPartySessionStore={watchPartySessionStore}
             />
