@@ -6,6 +6,7 @@ using YouTubeClone.Domain.Comments;
 using YouTubeClone.Domain.Favorites;
 using YouTubeClone.Domain.History;
 using YouTubeClone.Domain.Playlists;
+using YouTubeClone.Domain.Social;
 using YouTubeClone.Domain.Users;
 using YouTubeClone.Domain.Videos;
 using YouTubeClone.Infrastructure.Persistence;
@@ -223,6 +224,82 @@ namespace YouTubeClone.Infrastructure.Persistence.Migrations
                     entry.UserId,
                     entry.CreatedAt
                 });
+            });
+
+            modelBuilder.Entity<Friendship>(entity =>
+            {
+                entity.ToTable("Friendships");
+                entity.HasKey(friendship => friendship.Id);
+                entity.Property(friendship => friendship.Status).HasMaxLength(24).IsRequired();
+                entity.Property(friendship => friendship.CreatedAt);
+                entity.Property(friendship => friendship.UpdatedAt);
+                entity.HasIndex(friendship => new
+                {
+                    friendship.UserAId,
+                    friendship.UserBId
+                }).IsUnique();
+                entity.HasIndex(friendship => friendship.UserBId);
+                entity.HasIndex(friendship => friendship.RequestedById);
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(friendship => friendship.UserAId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(friendship => friendship.UserBId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(friendship => friendship.RequestedById)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<SocialNotification>(entity =>
+            {
+                entity.ToTable("SocialNotifications");
+                entity.HasKey(notification => notification.Id);
+                entity.Property(notification => notification.Type).HasMaxLength(40).IsRequired();
+                entity.Property(notification => notification.TargetPath).HasMaxLength(512);
+                entity.Property(notification => notification.CreatedAt);
+                entity.Property(notification => notification.ReadAt);
+                entity.HasIndex(notification => notification.ActorUserId);
+                entity.HasIndex(notification => new
+                {
+                    notification.UserId,
+                    notification.ReadAt,
+                    notification.CreatedAt
+                });
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(notification => notification.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(notification => notification.ActorUserId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<WatchPartyInvitation>(entity =>
+            {
+                entity.ToTable("WatchPartyInvitations");
+                entity.HasKey(invitation => invitation.Id);
+                entity.Property(invitation => invitation.RoomCode).HasMaxLength(12).IsRequired();
+                entity.Property(invitation => invitation.CreatedAt);
+                entity.Property(invitation => invitation.ExpiresAt);
+                entity.HasIndex(invitation => new
+                {
+                    invitation.RecipientId,
+                    invitation.CreatedAt
+                });
+                entity.HasIndex(invitation => invitation.SenderId);
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(invitation => invitation.SenderId)
+                    .OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(invitation => invitation.RecipientId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 #pragma warning restore 612, 618
         }
