@@ -1,4 +1,6 @@
 import {
+  useEffect,
+  useMemo,
   useState,
   type ChangeEvent,
   type FormEvent,
@@ -9,6 +11,9 @@ import {
 import type {
   UploadService,
 } from '../../application/upload/service'
+import {
+  UploadFailure,
+} from '../../application/upload/types'
 import {
   useAppTranslation,
 } from '../../shared/i18n'
@@ -200,6 +205,42 @@ function UploadPage({
     )
 
   const [
+    thumbnailFile,
+    setThumbnailFile,
+  ] =
+    useState<File | null>(
+      null,
+    )
+
+  const thumbnailPreviewUrl =
+    useMemo(
+      () =>
+        thumbnailFile
+          ? URL.createObjectURL(
+              thumbnailFile,
+            )
+          : null,
+      [
+        thumbnailFile,
+      ],
+    )
+
+  useEffect(
+    () => () => {
+      if (
+        thumbnailPreviewUrl
+      ) {
+        URL.revokeObjectURL(
+          thumbnailPreviewUrl,
+        )
+      }
+    },
+    [
+      thumbnailPreviewUrl,
+    ],
+  )
+
+  const [
     durationSeconds,
     setDurationSeconds,
   ] =
@@ -306,6 +347,77 @@ function UploadPage({
       }
     }
 
+  const handleThumbnailChange =
+    (
+      event:
+        ChangeEvent<HTMLInputElement>,
+    ) => {
+      const selectedFile =
+        event.target
+          .files?.[0] ??
+        null
+
+      setErrorKey(
+        null,
+      )
+
+      if (!selectedFile) {
+        setThumbnailFile(
+          null,
+        )
+
+        return
+      }
+
+      const allowedTypes =
+        new Set([
+          'image/png',
+          'image/jpeg',
+          'image/webp',
+        ])
+
+      if (
+        !allowedTypes.has(
+          selectedFile.type,
+        )
+      ) {
+        setErrorKey(
+          'upload.errors.invalidThumbnail',
+        )
+
+        setThumbnailFile(
+          null,
+        )
+
+        event.target.value =
+          ''
+
+        return
+      }
+
+      if (
+        selectedFile.size >
+        10 * 1024 * 1024
+      ) {
+        setErrorKey(
+          'upload.errors.thumbnailTooLarge',
+        )
+
+        setThumbnailFile(
+          null,
+        )
+
+        event.target.value =
+          ''
+
+        return
+      }
+
+      setThumbnailFile(
+        selectedFile,
+      )
+    }
+
   const handleSubmit =
     async (
       event:
@@ -377,6 +489,18 @@ function UploadPage({
                 size: file.size,
                 native: file,
               },
+
+              thumbnail:
+                thumbnailFile
+                  ? {
+                      name:
+                        thumbnailFile.name,
+                      size:
+                        thumbnailFile.size,
+                      native:
+                        thumbnailFile,
+                    }
+                  : null,
             },
             setProgress,
           )
@@ -384,10 +508,19 @@ function UploadPage({
         navigate(
           `/watch/${video.id}`,
         )
-      } catch {
-        setErrorKey(
-          'upload.errors.uploadFailed',
-        )
+      } catch (error) {
+        if (
+          error instanceof
+          UploadFailure
+        ) {
+          setErrorKey(
+            `upload.errors.${error.code}`,
+          )
+        } else {
+          setErrorKey(
+            'upload.errors.requestFailed',
+          )
+        }
       } finally {
         setIsUploading(
           false,
@@ -485,6 +618,94 @@ function UploadPage({
         </div>
 
         <div className="upload-fields">
+          <div className="upload-thumbnail-field">
+            <div className="upload-thumbnail-copy">
+              <span>
+                {t(
+                  'upload.thumbnailLabel',
+                )}
+              </span>
+
+              <p>
+                {t(
+                  'upload.thumbnailHint',
+                )}
+              </p>
+            </div>
+
+            <div className="upload-thumbnail-row">
+              <div className="upload-thumbnail-preview">
+                {thumbnailPreviewUrl
+                  ? (
+                    <img
+                      src={
+                        thumbnailPreviewUrl
+                      }
+                      alt={t(
+                        'upload.thumbnailPreviewAlt',
+                      )}
+                    />
+                  )
+                  : (
+                    <span>
+                      {t(
+                        'upload.thumbnailEmpty',
+                      )}
+                    </span>
+                  )}
+              </div>
+
+              <div className="upload-thumbnail-actions">
+                <label className="upload-thumbnail-button">
+                  {thumbnailFile
+                    ? t(
+                        'upload.replaceThumbnail',
+                      )
+                    : t(
+                        'upload.chooseThumbnail',
+                      )}
+
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
+                    disabled={
+                      isUploading
+                    }
+                    onChange={
+                      handleThumbnailChange
+                    }
+                  />
+                </label>
+
+                {thumbnailFile && (
+                  <>
+                    <span className="upload-thumbnail-name">
+                      {
+                        thumbnailFile.name
+                      }
+                    </span>
+
+                    <button
+                      type="button"
+                      className="upload-thumbnail-remove"
+                      disabled={
+                        isUploading
+                      }
+                      onClick={() => {
+                        setThumbnailFile(
+                          null,
+                        )
+                      }}
+                    >
+                      {t(
+                        'upload.removeThumbnail',
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
           <label className="upload-field">
             <span>
               {t(
