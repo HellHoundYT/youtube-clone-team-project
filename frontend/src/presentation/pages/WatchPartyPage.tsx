@@ -25,6 +25,12 @@ import type {
   VideoService,
 } from '../../application/video/service'
 import type {
+  SocialService,
+} from '../../application/social/service'
+import type {
+  SocialUser,
+} from '../../domain/social/types'
+import type {
   WatchPartyMessage,
   WatchPartyRoomState,
 } from '../../domain/watchParty/types'
@@ -32,6 +38,9 @@ import WatchPartyVideoStage from '../components/watchParty/WatchPartyVideoStage'
 import {
   useAppTranslation,
 } from '../../shared/i18n'
+import {
+  useAuthStore,
+} from '../features/auth/authStore'
 import './WatchPartyPage.css'
 
 function normalizeRoomCode(
@@ -52,12 +61,14 @@ function normalizeRoomCode(
 
 interface WatchPartyPageProps {
   videoService: VideoService
+  socialService: SocialService
   watchPartyClientFactory: WatchPartyClientFactory
   watchPartySessionStore: WatchPartySessionStore
 }
 
 function WatchPartyPage({
   videoService,
+  socialService,
   watchPartyClientFactory,
   watchPartySessionStore,
 }: WatchPartyPageProps) {
@@ -89,6 +100,12 @@ function WatchPartyPage({
     i18n,
   } =
     useAppTranslation()
+
+  const profile =
+    useAuthStore(
+      (state) =>
+        state.profile,
+    )
 
   const sessionId =
     useMemo(
@@ -192,6 +209,104 @@ function WatchPartyPage({
     setInviteCopied,
   ] =
     useState(false)
+
+  const [
+    inviteFriends,
+    setInviteFriends,
+  ] =
+    useState<
+      SocialUser[]
+    >([])
+
+  const [
+    inviteFriendsLoading,
+    setInviteFriendsLoading,
+  ] =
+    useState(false)
+
+  const [
+    friendInviteStates,
+    setFriendInviteStates,
+  ] =
+    useState<
+      Record<
+        string,
+        'sending' |
+        'sent' |
+        'error'
+      >
+    >({})
+
+  useEffect(
+    () => {
+      if (
+        !inviteOpen ||
+        !profile
+      ) {
+        setInviteFriends(
+          [],
+        )
+
+        setFriendInviteStates(
+          {},
+        )
+
+        return
+      }
+
+      let disposed =
+        false
+
+      const loadFriends =
+        async () => {
+          try {
+            setInviteFriendsLoading(
+              true,
+            )
+
+            const overview =
+              await socialService
+                .getOverview()
+
+            if (!disposed) {
+              setInviteFriends(
+                overview.friends,
+              )
+            }
+          } catch (
+            loadError
+          ) {
+            console.error(
+              loadError,
+            )
+
+            if (!disposed) {
+              setInviteFriends(
+                [],
+              )
+            }
+          } finally {
+            if (!disposed) {
+              setInviteFriendsLoading(
+                false,
+              )
+            }
+          }
+        }
+
+      void loadFriends()
+
+      return () => {
+        disposed =
+          true
+      }
+    },
+    [
+      inviteOpen,
+      profile,
+      socialService,
+    ],
+  )
 
   const connectionRef =
     useRef<
@@ -850,6 +965,61 @@ function WatchPartyPage({
       }
     }
 
+  const handleInviteFriend =
+    async (
+      friend: SocialUser,
+    ) => {
+      if (
+        !room ||
+        friendInviteStates[
+          friend.id
+        ] === 'sending' ||
+        friendInviteStates[
+          friend.id
+        ] === 'sent'
+      ) {
+        return
+      }
+
+      try {
+        setFriendInviteStates(
+          (current) => ({
+            ...current,
+            [friend.id]:
+              'sending',
+          }),
+        )
+
+        await socialService
+          .inviteToWatchParty(
+            friend.id,
+            room.roomCode,
+          )
+
+        setFriendInviteStates(
+          (current) => ({
+            ...current,
+            [friend.id]:
+              'sent',
+          }),
+        )
+      } catch (
+        inviteError
+      ) {
+        console.error(
+          inviteError,
+        )
+
+        setFriendInviteStates(
+          (current) => ({
+            ...current,
+            [friend.id]:
+              'error',
+          }),
+        )
+      }
+    }
+
   const handleLeave =
     async () => {
       const connection =
@@ -1358,6 +1528,195 @@ function WatchPartyPage({
                 'watchParty.inviteDescription',
               )}
             </p>
+
+            <div className="watch-party-friend-invite">
+              <div className="watch-party-friend-invite-heading">
+                <strong>
+                  {t(
+                    'watchParty.inviteFriendsTitle',
+                  )}
+                </strong>
+
+                <span>
+                  {t(
+                    'watchParty.inviteFriendsLead',
+                  )}
+                </span>
+              </div>
+
+              {!profile
+                ? (
+                  <div className="watch-party-friend-invite-empty">
+                    <span>
+                      {t(
+                        'watchParty.inviteFriendsSignIn',
+                      )}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="watch-party-secondary-button"
+                      onClick={() => {
+                        setInviteOpen(
+                          false,
+                        )
+
+                        navigate(
+                          '/auth',
+                        )
+                      }}
+                    >
+                      {t(
+                        'watchParty.inviteFriendsSignInAction',
+                      )}
+                    </button>
+                  </div>
+                )
+                : inviteFriendsLoading
+                  ? (
+                    <div className="watch-party-friend-invite-empty">
+                      {t(
+                        'watchParty.inviteFriendsLoading',
+                      )}
+                    </div>
+                  )
+                  : inviteFriends.length ===
+                      0
+                    ? (
+                      <div className="watch-party-friend-invite-empty">
+                        <span>
+                          {t(
+                            'watchParty.inviteFriendsEmpty',
+                          )}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="watch-party-secondary-button"
+                          onClick={() => {
+                            setInviteOpen(
+                              false,
+                            )
+
+                            navigate(
+                              '/friends?tab=discover',
+                            )
+                          }}
+                        >
+                          {t(
+                            'watchParty.inviteFriendsFind',
+                          )}
+                        </button>
+                      </div>
+                    )
+                    : (
+                      <div className="watch-party-friend-invite-list">
+                        {inviteFriends.map(
+                          (
+                            friend,
+                          ) => {
+                            const inviteState =
+                              friendInviteStates[
+                                friend.id
+                              ]
+
+                            const initials =
+                              friend.displayName
+                                .split(
+                                  ' ',
+                                )
+                                .map(
+                                  (part) =>
+                                    part[0],
+                                )
+                                .join(
+                                  '',
+                                )
+                                .slice(
+                                  0,
+                                  2,
+                                )
+                                .toUpperCase()
+
+                            return (
+                              <div
+                                className="watch-party-friend-invite-row"
+                                key={
+                                  friend.id
+                                }
+                              >
+                                <div className="watch-party-friend-avatar">
+                                  {friend.avatarUrl
+                                    ? (
+                                      <img
+                                        src={
+                                          friend.avatarUrl
+                                        }
+                                        alt=""
+                                      />
+                                    )
+                                    : initials}
+                                </div>
+
+                                <div className="watch-party-friend-copy">
+                                  <strong>
+                                    {
+                                      friend.displayName
+                                    }
+                                  </strong>
+
+                                  <span>
+                                    {
+                                      friend.handle
+                                    }
+                                  </span>
+
+                                  {inviteState ===
+                                    'error' && (
+                                    <small>
+                                      {t(
+                                        'watchParty.inviteFriendFailed',
+                                      )}
+                                    </small>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  className="watch-party-secondary-button"
+                                  disabled={
+                                    inviteState ===
+                                      'sending' ||
+                                    inviteState ===
+                                      'sent'
+                                  }
+                                  onClick={() => {
+                                    void handleInviteFriend(
+                                      friend,
+                                    )
+                                  }}
+                                >
+                                  {inviteState ===
+                                    'sending'
+                                    ? t(
+                                        'watchParty.inviteFriendSending',
+                                      )
+                                    : inviteState ===
+                                        'sent'
+                                      ? t(
+                                          'watchParty.inviteFriendSent',
+                                        )
+                                      : t(
+                                          'watchParty.inviteFriend',
+                                        )}
+                                </button>
+                              </div>
+                            )
+                          },
+                        )}
+                      </div>
+                    )}
+            </div>
 
             <label className="watch-party-invite-link">
               <span>
