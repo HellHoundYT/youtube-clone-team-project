@@ -181,6 +181,18 @@ function WatchPartyPage({
   ] =
     useState(false)
 
+  const [
+    inviteOpen,
+    setInviteOpen,
+  ] =
+    useState(false)
+
+  const [
+    inviteCopied,
+    setInviteCopied,
+  ] =
+    useState(false)
+
   const connectionRef =
     useRef<
       WatchPartyClient | null
@@ -739,6 +751,105 @@ function WatchPartyPage({
       }
     }
 
+  const getInviteUrl =
+    () => {
+      if (!room) {
+        return ''
+      }
+
+      if (
+        typeof window ===
+        'undefined'
+      ) {
+        return `/watch-party/${room.roomCode}`
+      }
+
+      return new URL(
+        `/watch-party/${room.roomCode}`,
+        window.location.origin,
+      ).toString()
+    }
+
+  const handleCopyInvite =
+    async () => {
+      const inviteUrl =
+        getInviteUrl()
+
+      if (!inviteUrl) {
+        return
+      }
+
+      try {
+        await navigator.clipboard
+          .writeText(
+            inviteUrl,
+          )
+
+        setInviteCopied(
+          true,
+        )
+
+        window.setTimeout(
+          () => {
+            setInviteCopied(
+              false,
+            )
+          },
+          1800,
+        )
+      } catch (
+        copyError
+      ) {
+        console.error(
+          copyError,
+        )
+      }
+    }
+
+  const handleShareInvite =
+    async () => {
+      const inviteUrl =
+        getInviteUrl()
+
+      if (!inviteUrl) {
+        return
+      }
+
+      try {
+        if (
+          typeof navigator.share ===
+          'function'
+        ) {
+          await navigator.share(
+            {
+              title:
+                'AMTLIS Watch Party',
+              text: t(
+                'watchParty.inviteShareText',
+              ),
+              url: inviteUrl,
+            },
+          )
+
+          return
+        }
+
+        await handleCopyInvite()
+      } catch (shareError) {
+        if (
+          shareError instanceof DOMException &&
+          shareError.name ===
+            'AbortError'
+        ) {
+          return
+        }
+
+        console.error(
+          shareError,
+        )
+      }
+    }
+
   const handleLeave =
     async () => {
       const connection =
@@ -1141,6 +1252,20 @@ function WatchPartyPage({
 
           <button
             type="button"
+            className="watch-party-primary-button"
+            onClick={() => {
+              setInviteOpen(
+                true,
+              )
+            }}
+          >
+            {t(
+              'watchParty.invite',
+            )}
+          </button>
+
+          <button
+            type="button"
             className="watch-party-code-button"
             onClick={() => {
               void handleCopyCode()
@@ -1175,6 +1300,129 @@ function WatchPartyPage({
           </button>
         </div>
       </header>
+
+      {inviteOpen && (
+        <div
+          className="watch-party-invite-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setInviteOpen(
+                false,
+              )
+            }
+          }}
+        >
+          <section
+            className="watch-party-invite-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="watch-party-invite-title"
+          >
+            <header>
+              <div>
+                <span>
+                  {t(
+                    'watchParty.eyebrow',
+                  )}
+                </span>
+
+                <h2 id="watch-party-invite-title">
+                  {t(
+                    'watchParty.inviteTitle',
+                  )}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="watch-party-invite-close"
+                aria-label={t(
+                  'watchParty.closeInvite',
+                )}
+                onClick={() => {
+                  setInviteOpen(
+                    false,
+                  )
+                }}
+              >
+                ×
+              </button>
+            </header>
+
+            <p>
+              {t(
+                'watchParty.inviteDescription',
+              )}
+            </p>
+
+            <label className="watch-party-invite-link">
+              <span>
+                {t(
+                  'watchParty.inviteLink',
+                )}
+              </span>
+
+              <input
+                readOnly
+                value={
+                  getInviteUrl()
+                }
+                onFocus={(event) => {
+                  event.currentTarget.select()
+                }}
+              />
+            </label>
+
+            <div className="watch-party-invite-actions">
+              <button
+                type="button"
+                className="watch-party-secondary-button"
+                onClick={() => {
+                  void handleCopyInvite()
+                }}
+              >
+                {inviteCopied
+                  ? t(
+                      'watchParty.linkCopied',
+                    )
+                  : t(
+                      'watchParty.copyLink',
+                    )}
+              </button>
+
+              <button
+                type="button"
+                className="watch-party-primary-button"
+                onClick={() => {
+                  void handleShareInvite()
+                }}
+              >
+                {t(
+                  'watchParty.shareInvite',
+                )}
+              </button>
+            </div>
+
+            <div className="watch-party-invite-code">
+              <span>
+                {t(
+                  'watchParty.roomCode',
+                )}
+              </span>
+
+              <strong>
+                {
+                  room.roomCode
+                }
+              </strong>
+            </div>
+          </section>
+        </div>
+      )}
 
       {errorKey && (
         <div className="watch-party-error">
