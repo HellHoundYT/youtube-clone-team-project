@@ -12,4 +12,6 @@ public sealed class VideoUploadFormDto
     public int DurationSeconds { get; init; }
 
     public IFormFile? File { get; init; }
+
+    public IFormFile? Thumbnail { get; init; }
 }
