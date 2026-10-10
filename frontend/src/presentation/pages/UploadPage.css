@@ -228,6 +228,118 @@
     0 0 0 1px #7355e8;
 }
 
+.upload-thumbnail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: #111218;
+  border: 1px solid #292b34;
+  border-radius: 10px;
+}
+
+.upload-thumbnail-copy > span {
+  color: #b7bac5;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.upload-thumbnail-copy p {
+  margin: 5px 0 0;
+  color: #727683;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.upload-thumbnail-row {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.95fr) minmax(0, 1.05fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.upload-thumbnail-preview {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #6f7380;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(126, 92, 244, 0.08),
+      rgba(255, 255, 255, 0.02)
+    ),
+    #0d0e13;
+  border: 1px dashed #30323d;
+  border-radius: 9px;
+  font-size: 9px;
+  text-align: center;
+}
+
+.upload-thumbnail-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-thumbnail-actions {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.upload-thumbnail-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 13px;
+  color: #ffffff;
+  background: rgba(104, 73, 223, 0.9);
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.upload-thumbnail-button:hover {
+  background: #7758ed;
+}
+
+.upload-thumbnail-button input {
+  display: none;
+}
+
+.upload-thumbnail-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: #a6a9b4;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-thumbnail-remove {
+  padding: 0;
+  color: #8f93a0;
+  background: transparent;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.upload-thumbnail-remove:hover:not(:disabled) {
+  color: #ffffff;
+}
+
+.upload-thumbnail-remove:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .upload-error {
   padding: 11px 13px;
 
@@ -324,5 +436,9 @@
 
   .upload-file-card {
     min-height: 280px;
+  }
+
+  .upload-thumbnail-row {
+    grid-template-columns: 1fr;
   }
 }

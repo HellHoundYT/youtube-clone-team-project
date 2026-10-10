@@ -27,7 +27,7 @@ var builder =
     WebApplication.CreateBuilder(args);
 
 const long maxUploadSize =
-    500L * 1024L * 1024L;
+    512L * 1024L * 1024L;
 
 builder.WebHost.ConfigureKestrel(
     options =>

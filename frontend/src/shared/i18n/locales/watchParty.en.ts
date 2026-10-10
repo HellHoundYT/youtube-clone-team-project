@@ -63,6 +63,33 @@ const watchPartyEn = {
     copied:
       'Copied',
 
+    invite:
+      'Invite',
+
+    inviteTitle:
+      'Invite to Watch Party',
+
+    inviteDescription:
+      'Send this link to a friend. They can open it and join this room directly.',
+
+    inviteLink:
+      'Invitation link',
+
+    copyLink:
+      'Copy link',
+
+    linkCopied:
+      'Link copied',
+
+    shareInvite:
+      'Share invitation',
+
+    closeInvite:
+      'Close invitation',
+
+    inviteShareText:
+      'Join my AMTLIS Watch Party.',
+
     participants:
       'Participants',
 

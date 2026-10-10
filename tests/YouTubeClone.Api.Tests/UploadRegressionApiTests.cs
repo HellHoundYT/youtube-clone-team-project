@@ -45,6 +45,28 @@ public sealed class UploadRegressionApiTests : IClassFixture<AuthApiFactory>
         file.Headers.ContentType = new MediaTypeHeaderValue("video/mp4");
 
         form.Add(file, "file", "first-upload.mp4");
+
+        var thumbnailBytes =
+            new byte[]
+            {
+                137, 80, 78, 71,
+                13, 10, 26, 10,
+                1, 2, 3, 4
+            };
+
+        using var thumbnail =
+            new ByteArrayContent(
+                thumbnailBytes);
+
+        thumbnail.Headers.ContentType =
+            new MediaTypeHeaderValue(
+                "image/png");
+
+        form.Add(
+            thumbnail,
+            "thumbnail",
+            "preview.png");
+
         form.Add(new StringContent("First upload regression"), "title");
         form.Add(new StringContent("Regression upload through ffprobe."), "description");
         form.Add(new StringContent("Education"), "category");
@@ -65,6 +87,31 @@ public sealed class UploadRegressionApiTests : IClassFixture<AuthApiFactory>
         Assert.NotEqual(Guid.Empty, channelId);
         Assert.Equal("First upload regression", uploaded.GetProperty("title").GetString());
         Assert.Equal(6, uploaded.GetProperty("durationSeconds").GetInt32());
+
+        var thumbnailPath =
+            uploaded
+                .GetProperty("thumbnailPath")
+                .GetString();
+
+        Assert.Equal(
+            $"/api/v1/videos/{videoId}/thumbnail/png",
+            thumbnailPath);
+
+        var thumbnailResponse =
+            await client.GetAsync(
+                thumbnailPath);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            thumbnailResponse.StatusCode);
+
+        Assert.Equal(
+            "image/png",
+            thumbnailResponse.Content.Headers.ContentType?.MediaType);
+
+        Assert.Equal(
+            thumbnailBytes,
+            await thumbnailResponse.Content.ReadAsByteArrayAsync());
 
         var channelResponse = await client.GetAsync("/api/v1/channels/me");
         Assert.Equal(HttpStatusCode.OK, channelResponse.StatusCode);
