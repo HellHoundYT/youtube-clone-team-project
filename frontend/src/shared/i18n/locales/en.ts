@@ -49,6 +49,7 @@ const en = {
       home: 'Home',
       playme: 'Playme',
       subscriptions: 'Subscriptions',
+      friends: 'Friends',
       library: 'Library',
       history: 'History',
       favorites: 'Favorites',
