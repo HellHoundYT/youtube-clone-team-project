@@ -243,14 +243,6 @@ function WatchPartyPage({
         !inviteOpen ||
         !profile
       ) {
-        setInviteFriends(
-          [],
-        )
-
-        setFriendInviteStates(
-          {},
-        )
-
         return
       }
 
