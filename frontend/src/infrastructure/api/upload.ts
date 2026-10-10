@@ -84,6 +84,20 @@ function mapUploadFailure(
   if (
     normalizedMessage.includes(
       'thumbnail',
+    ) &&
+    normalizedMessage.includes(
+      '10 mb',
+    )
+  ) {
+    return new UploadFailure(
+      'thumbnailTooLarge',
+      message,
+    )
+  }
+
+  if (
+    normalizedMessage.includes(
+      'thumbnail',
     )
   ) {
     return new UploadFailure(
