@@ -90,6 +90,39 @@ const watchPartyUk = {
     inviteShareText:
       'Приєднуйся до моєї кімнати AMTLIS Watch Party.',
 
+    inviteFriendsTitle:
+      'Запросити друзів AMTLIS',
+
+    inviteFriendsLead:
+      'Надішліть збережене запрошення користувачу зі списку друзів.',
+
+    inviteFriendsLoading:
+      'Завантаження друзів...',
+
+    inviteFriendsEmpty:
+      'У вас поки немає друзів, яких можна запросити.',
+
+    inviteFriendsFind:
+      'Знайти людей',
+
+    inviteFriendsSignIn:
+      'Увійдіть, щоб напряму запрошувати друзів AMTLIS.',
+
+    inviteFriendsSignInAction:
+      'Увійти',
+
+    inviteFriend:
+      'Запросити',
+
+    inviteFriendSending:
+      'Надсилання...',
+
+    inviteFriendSent:
+      'Надіслано',
+
+    inviteFriendFailed:
+      'Не вдалося надіслати запрошення. Спробуйте ще раз.',
+
     participants:
       'Учасники',
 
