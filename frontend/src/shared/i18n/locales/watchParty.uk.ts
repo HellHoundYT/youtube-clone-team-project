@@ -63,6 +63,33 @@ const watchPartyUk = {
     copied:
       'Скопійовано',
 
+    invite:
+      'Запросити',
+
+    inviteTitle:
+      'Запросити до Watch Party',
+
+    inviteDescription:
+      'Надішліть це посилання другу. Він зможе відкрити його та одразу приєднатися до цієї кімнати.',
+
+    inviteLink:
+      'Посилання-запрошення',
+
+    copyLink:
+      'Копіювати посилання',
+
+    linkCopied:
+      'Посилання скопійовано',
+
+    shareInvite:
+      'Поділитися запрошенням',
+
+    closeInvite:
+      'Закрити запрошення',
+
+    inviteShareText:
+      'Приєднуйся до моєї кімнати AMTLIS Watch Party.',
+
     participants:
       'Учасники',
 
