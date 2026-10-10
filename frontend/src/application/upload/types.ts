@@ -12,6 +12,7 @@ export type UploadFailureCode =
   | 'analysisUnavailable'
   | 'analysisTimeout'
   | 'invalidThumbnail'
+  | 'thumbnailTooLarge'
   | 'requestFailed'
 
 export class UploadFailure
