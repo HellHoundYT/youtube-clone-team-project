@@ -262,6 +262,8 @@ namespace YouTubeClone.Infrastructure.Persistence.Migrations
                 entity.Property(notification => notification.TargetPath).HasMaxLength(512);
                 entity.Property(notification => notification.CreatedAt);
                 entity.Property(notification => notification.ReadAt);
+                entity.Property(notification => notification.FriendshipId);
+                entity.Property(notification => notification.WatchPartyInvitationId);
                 entity.HasIndex(notification => notification.ActorUserId);
                 entity.HasIndex(notification => new
                 {
