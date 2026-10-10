@@ -12,6 +12,7 @@ import AuthPage from '../presentation/pages/AuthPage'
 import ChannelPage from '../presentation/pages/ChannelPage'
 import CategoryPage from '../presentation/pages/CategoryPage'
 import FavoritesPage from '../presentation/pages/FavoritesPage'
+import FriendsPage from '../presentation/pages/FriendsPage'
 import HistoryPage from '../presentation/pages/HistoryPage'
 import HomePage from '../presentation/pages/HomePage'
 import LibraryPage from '../presentation/pages/LibraryPage'
@@ -39,6 +40,7 @@ import {
   streamService,
   libraryService,
   playlistService,
+  socialService,
   uploadService,
   liveChatClientFactory,
   liveChatSessionStore,
@@ -123,6 +125,15 @@ function App() {
           />
 
           <Route
+            path="friends"
+            element={
+              <FriendsPage
+                socialService={socialService}
+              />
+            }
+          />
+
+          <Route
             path="library"
             element={
               <LibraryPage
@@ -168,6 +179,7 @@ function App() {
           element={
             <WatchPartyPage
               videoService={videoService}
+              socialService={socialService}
               watchPartyClientFactory={watchPartyClientFactory}
               watchPartySessionStore={watchPartySessionStore}
             />
