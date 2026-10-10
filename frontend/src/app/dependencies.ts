@@ -20,6 +20,9 @@ import {
   createStreamService,
 } from '../application/stream/service'
 import {
+  createSocialService,
+} from '../application/social/service'
+import {
   createUploadService,
 } from '../application/upload/service'
 import {
@@ -46,6 +49,9 @@ import {
 import {
   streamGateway,
 } from '../infrastructure/api/streams'
+import {
+  socialGateway,
+} from '../infrastructure/api/social'
 import {
   uploadGateway,
 } from '../infrastructure/api/upload'
@@ -98,6 +104,11 @@ export const playlistService =
 export const streamService =
   createStreamService(
     streamGateway,
+  )
+
+export const socialService =
+  createSocialService(
+    socialGateway,
   )
 
 export const uploadService =

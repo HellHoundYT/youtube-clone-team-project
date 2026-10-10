@@ -298,6 +298,57 @@
   gap: 11px;
 }
 
+.header-notification-button {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 0;
+  color: #b6b8c2;
+  background: #101116;
+  border: 1px solid #22242c;
+  border-radius: 9px;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.header-notification-button:hover {
+  color: #ffffff;
+  background: #181920;
+  border-color: #30323d;
+}
+
+.header-notification-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.header-notification-button span {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+  color: #ffffff;
+  background: #ff496f;
+  border: 2px solid #0c0d12;
+  border-radius: 999px;
+  font-size: 7px;
+  font-weight: 900;
+}
+
 .header-create-button {
   height: 38px;
 

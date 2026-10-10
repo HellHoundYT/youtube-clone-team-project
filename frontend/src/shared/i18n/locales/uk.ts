@@ -49,6 +49,7 @@ const uk = {
       home: 'Головна',
       playme: 'Playme',
       subscriptions: 'Підписки',
+      friends: 'Друзі',
       library: 'Бібліотека',
       history: 'Історія',
       favorites: 'Обране',

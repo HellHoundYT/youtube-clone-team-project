@@ -90,6 +90,39 @@ const watchPartyEn = {
     inviteShareText:
       'Join my AMTLIS Watch Party.',
 
+    inviteFriendsTitle:
+      'Invite AMTLIS friends',
+
+    inviteFriendsLead:
+      'Send a saved in-app invitation to someone from your friends list.',
+
+    inviteFriendsLoading:
+      'Loading friends...',
+
+    inviteFriendsEmpty:
+      'You do not have friends to invite yet.',
+
+    inviteFriendsFind:
+      'Find people',
+
+    inviteFriendsSignIn:
+      'Sign in to invite AMTLIS friends directly.',
+
+    inviteFriendsSignInAction:
+      'Sign in',
+
+    inviteFriend:
+      'Invite',
+
+    inviteFriendSending:
+      'Sending...',
+
+    inviteFriendSent:
+      'Sent',
+
+    inviteFriendFailed:
+      'Invitation could not be sent. Try again.',
+
     participants:
       'Participants',
 

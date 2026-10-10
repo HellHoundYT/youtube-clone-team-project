@@ -12,6 +12,7 @@ type IconName =
   | 'library'
   | 'history'
   | 'favorites'
+  | 'friends'
   | 'playlists'
   | 'streamers'
   | 'themes'
@@ -66,6 +67,13 @@ NavigationItem[] = [
     icon:
       'play',
   },
+  {
+    labelKey:
+      'layout.navigation.friends',
+    path: '/friends',
+    icon: 'friends',
+  },
+
   {
     labelKey:
       'layout.navigation.library',
@@ -168,6 +176,33 @@ function NavigationIcon({
         <path d="m9 3 3 3 3-3" />
 
         <path d="m10 11 5 3-5 3Z" />
+      </svg>
+    )
+  }
+
+  if (
+    name === 'friends'
+  ) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <circle
+          cx="9"
+          cy="9"
+          r="3"
+        />
+
+        <circle
+          cx="16.5"
+          cy="10"
+          r="2.5"
+        />
+
+        <path d="M3.5 19c.7-3.2 2.6-4.8 5.5-4.8s4.8 1.6 5.5 4.8" />
+
+        <path d="M14 15.2c2.8-.5 5.2.8 6.1 3.8" />
       </svg>
     )
   }

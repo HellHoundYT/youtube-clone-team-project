@@ -16,6 +16,7 @@ using YouTubeClone.Application.Features.History;
 using YouTubeClone.Application.Features.LiveChat;
 using YouTubeClone.Application.Features.Playlists;
 using YouTubeClone.Application.Features.Search;
+using YouTubeClone.Application.Features.Social;
 using YouTubeClone.Application.Features.Streams;
 using YouTubeClone.Application.Features.Users;
 using YouTubeClone.Application.Features.Videos;
@@ -135,6 +136,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     ISearchService,
     SearchService>();
+
+builder.Services.AddScoped<
+    ISocialService,
+    SocialService>();
 
 var app =
     builder.Build();
